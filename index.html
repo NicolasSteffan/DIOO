@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIOO - Application de Gestion</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header avec navigation -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cube"></i>
+                    <h1>DIOO</h1>
+                </div>
+                <nav class="main-navigation">
+                    <ul>
+                        <li>
+                            <button class="nav-btn active" data-page="chargement">
+                                <i class="fas fa-upload"></i>
+                                <span>Chargement</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-btn" data-page="monitoring">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Monitoring</span>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Contenu principal -->
+        <main class="app-main">
+            <!-- Page Chargement -->
+            <div id="chargement-page" class="page active">
+                <div class="page-header">
+                    <h2><i class="fas fa-upload"></i> Chargement</h2>
+                    <p class="page-description">Page de chargement des données et fichiers</p>
+                </div>
+                <div class="page-content">
+                    <div class="empty-state">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Page Chargement</h3>
+                        <p>Cette page est prête pour l'implémentation des fonctionnalités de chargement.</p>
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <i class="fas fa-file-upload"></i>
+                                <span>Upload de fichiers</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-database"></i>
+                                <span>Import de données</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Validation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Monitoring -->
+            <div id="monitoring-page" class="page">
+                <div class="page-header">
+                    <h2><i class="fas fa-chart-line"></i> Monitoring</h2>
+                    <p class="page-description">Surveillance et monitoring des systèmes</p>
+                </div>
+                <div class="page-content">
+                    <div class="empty-state">
+                        <i class="fas fa-monitor-heart-rate"></i>
+                        <h3>Page Monitoring</h3>
+                        <p>Cette page est prête pour l'implémentation des fonctionnalités de monitoring.</p>
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Métriques en temps réel</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-bell"></i>
+                                <span>Alertes système</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Tableaux de bord</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>&copy; 2025 DIOO - Application de Gestion</p>
+                <div class="footer-info">
+                    <span class="version">v1.0.0</span>
+                    <span class="status">
+                        <i class="fas fa-circle status-online"></i>
+                        En ligne
+                    </span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="scripts/main.js"></script>
+</body>
+</html>
