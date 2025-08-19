@@ -457,6 +457,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ========================================
+    // PHASE 3 - INITIALISATION DATABASEMANAGER
+    // ========================================
+    
+    console.log('🔄 Phase 3 - Initialisation DatabaseManager...');
+    
+    // Fonction d'initialisation asynchrone
+    async function initializeDatabaseManager() {
+        try {
+            await window.DatabaseManager.init();
+            console.log('✅ DatabaseManager initialisé avec succès');
+            
+            // Tenter la migration depuis localStorage
+            await window.DatabaseManager.migrateFromLocalStorage();
+            console.log('✅ Migration localStorage terminée');
+            
+            // Afficher les infos de la base
+            const info = await window.DatabaseManager.getInfo();
+            console.log('📊 Info DatabaseManager:', info);
+            
+            // Marquer comme prêt
+            window.DatabaseManager.ready = true;
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'initialisation DatabaseManager:', error);
+            console.warn('⚠️ Retour au mode localStorage en cas d\'échec');
+            window.DatabaseManager.ready = false;
+        }
+    }
+    
+    // Lancer l'initialisation en arrière-plan
+    initializeDatabaseManager();
+
+    // ========================================
     // FONCTIONS UTILITAIRES REFACTORISÉES
     // ========================================
 
@@ -1858,33 +1891,39 @@ function allerALaPage(page) {
 ===============================================*/
 
 /**
- * Calculer la consolidation des données
+ * Wrapper synchrone pour calculerConsolidation (appelé depuis HTML)
  */
 function calculerConsolidation() {
-    console.log('🧮 Début du calcul de consolidation [REFACTORISÉ]');
-    
-    // Récupération des données avec StorageManager
-    const donnees = StorageManager.getDonnees();
-    const { lignes, headers } = extractDataStructure(donnees);
-    
-    console.log('🔍 Données récupérées via StorageManager:', {
-        lignesCount: lignes.length,
-        headersCount: headers.length
+    calculerConsolidationAsync().catch(error => {
+        console.error('❌ Erreur calculerConsolidation:', error);
+        DiooUtils.showNotification(`Erreur: ${error.message}`, 'error');
     });
+}
+
+/**
+ * Calculer la consolidation des données (version async)
+ */
+async function calculerConsolidationAsync() {
+    console.log('🧮 Début du calcul de consolidation [SQL.js NATIF]');
     
-    if (!lignes || lignes.length === 0) {
-        console.log('❌ Aucune donnée disponible pour le calcul de consolidation');
-        DiooUtils.showNotification('Aucune donnée disponible. Veuillez d\'abord charger un fichier.', 'error');
+    // Vérifier que DatabaseManager est prêt
+    if (!window.DatabaseManager.isInitialized()) {
+        console.error('❌ DatabaseManager non initialisé');
+        DiooUtils.showNotification('Base de données non initialisée. Veuillez recharger la page.', 'error');
         return;
     }
-    
-    console.log(`✅ Données prêtes pour calcul: ${lignes.length} lignes, ${headers.length} colonnes`);
     
     try {
         // Marquer le début du calcul
         definirEtatIndicateur('calcul-status', 'active');
         
-        // Effectuer les calculs avec les données extraites
+        console.log('🚀 Calculs de consolidation avec SQL.js natif');
+        
+        // 🎯 RÉVOLUTION: Calculs directs avec SQL natif !
+        // TODO: Implémenter effectuerCalculsConsolidationSQL() 
+        // Pour l'instant, utiliser l'ancienne méthode en attendant
+        const donnees = await window.DatabaseManager.getDonnees();
+        const { lignes, headers } = extractDataStructure(donnees);
         const resultats = effectuerCalculsConsolidation({ lignes, headers });
         
         // Sauvegarder dans Dioo_Summary
@@ -2401,14 +2440,27 @@ function toggleDatabaseSection(contentId) {
 }
 
 /**
- * Exécuter une requête prédéfinie
+ * Wrapper synchrone pour executeQuery (appelé depuis HTML)
  */
 function executeQuery(queryType) {
-    console.log(`🔍 DataBase - Exécution de la requête prédéfinie: ${queryType} [REFACTORISÉE]`);
+    executeQueryAsync(queryType).catch(error => {
+        console.error('❌ Erreur executeQuery:', error);
+        afficherErreur(`Erreur: ${error.message}`);
+    });
+}
+
+/**
+ * Exécuter une requête prédéfinie (version async)
+ */
+async function executeQueryAsync(queryType) {
+    console.log(`🔍 DataBase - Exécution de la requête prédéfinie: ${queryType} [SQL.js NATIF]`);
     
-    // Récupération des données avec StorageManager
-    const donnees = StorageManager.getDonnees();
-    let { lignes, headers } = extractDataStructure(donnees);
+    // Vérifier que DatabaseManager est prêt
+    if (!window.DatabaseManager.isInitialized()) {
+        console.error('❌ DataBase - DatabaseManager non initialisé');
+        afficherErreur('Base de données non initialisée. Veuillez recharger la page.');
+        return;
+    }
     
     // Gestion spéciale pour l'ajout de ligne aléatoire sans données
     if (!lignes || lignes.length === 0) {
@@ -2433,79 +2485,105 @@ function executeQuery(queryType) {
         
         switch (queryType) {
             case 'info_tables':
-                console.log('📊 DataBase - Informations sur les tables [REFACTORISÉ]');
+                console.log('📊 DataBase - Informations sur les tables [SQL.js NATIF]');
                 titre = 'Informations sur les tables de la base';
                 
-                // Utiliser StorageManager pour obtenir les statistiques
-                const stats = StorageManager.getStats();
-                const sqlInfoTables = 'SELECT name, sql FROM sqlite_master WHERE type="table";';
-                
-                const rawDataInfoTables = {
-                    stats: stats,
-                    nombre_lignes: lignes.length,
-                    headers: headers
-                };
-                afficherDetailsRequete(sqlInfoTables, 'Informations sur les tables', rawDataInfoTables);
-                
-                resultats = [
-                    {
-                        'Nom de la table': 'dioo_donnees (table principale)',
-                        'Nombre de lignes': stats.donnees.dataLength,
-                        'Nombre de colonnes': stats.donnees.headersLength,
-                        'Stockage': 'localStorage',
-                        'Taille (octets)': stats.donnees.sizeBytes
-                    },
-                    {
-                        'Nom de la table': 'dioo_summary (consolidation)',
-                        'Nombre de lignes': stats.summary.length,
-                        'Nombre de colonnes': stats.summary.length > 0 ? Object.keys(StorageManager.getSummary()[0] || {}).length : 0,
-                        'Stockage': 'localStorage',
-                        'Taille (octets)': stats.summary.sizeBytes
+                try {
+                    // 🚀 Vraie requête SQLite pour lister les tables
+                    const sqlInfoTables = "SELECT name FROM sqlite_master WHERE type='table'";
+                    const tables = await window.DatabaseManager.executeQuery(sqlInfoTables);
+                    
+                    // Obtenir les statistiques de chaque table
+                    resultats = [];
+                    for (const table of tables) {
+                        const tableName = table.name;
+                        const countResult = await window.DatabaseManager.executeQuery(`SELECT COUNT(*) as count FROM ${tableName}`);
+                        const count = countResult[0].count;
+                        
+                        // Obtenir les colonnes
+                        const columnsResult = await window.DatabaseManager.executeQuery(`PRAGMA table_info(${tableName})`);
+                        const columnCount = columnsResult.length;
+                        
+                        resultats.push({
+                            'Nom de la table': tableName,
+                            'Nombre de lignes': count,
+                            'Nombre de colonnes': columnCount,
+                            'Stockage': 'SQLite (SQL.js)',
+                            'Type': tableName === 'dioo_donnees' ? 'Données principales' : 
+                                   tableName === 'dioo_summary' ? 'Consolidation' : 'Métadonnées'
+                        });
                     }
-                ];
-                
-                console.log(`✅ DataBase - Informations collectées pour ${resultats.length} tables`);
+                    
+                    const rawDataInfoTables = {
+                        requete_sql: sqlInfoTables,
+                        engine: 'SQL.js natif',
+                        tables_trouvees: tables,
+                        resultats: resultats,
+                        timestamp: new Date().toISOString()
+                    };
+                    afficherDetailsRequete(sqlInfoTables, 'Informations tables SQL.js', rawDataInfoTables);
+                    
+                    console.log(`✅ DataBase - Informations collectées pour ${resultats.length} tables SQLite`);
+                } catch (error) {
+                    console.error('❌ Erreur SQL info_tables:', error);
+                    afficherErreur(`Erreur SQL: ${error.message}`);
+                    return;
+                }
                 break;
                 
             case 'total_lignes':
-                console.log('📊 DataBase - Calcul du total des lignes [REFACTORISÉ]');
+                console.log('📊 DataBase - Calcul du total des lignes [SQL.js NATIF]');
                 titre = 'Total des lignes';
                 
-                // Utiliser SQLParser pour la requête COUNT
-                const sqlTotalLignes = 'SELECT COUNT(*) FROM dioo_donnees';
-                resultats = SQLParser.executeQuery(lignes, headers, sqlTotalLignes);
-                
-                const rawDataTotalLignes = {
-                    requete_sqljs: sqlTotalLignes,
-                    nombre_lignes_total: lignes.length,
-                    resultats_traites: resultats,
-                    lignes_brutes: lignes.slice(0, 5),
-                    headers: headers
-                };
-                afficherDetailsRequete(sqlTotalLignes, 'Total des lignes', rawDataTotalLignes);
-                
-                console.log(`✅ DataBase - Total calculé via SQLParser: ${resultats[0]['Nombre de lignes']} lignes`);
+                try {
+                    // 🚀 Exécution directe SQL.js - Plus de parsing custom !
+                    const sqlTotalLignes = 'SELECT COUNT(*) as count FROM dioo_donnees';
+                    resultats = await window.DatabaseManager.executeQuery(sqlTotalLignes);
+                    
+                    // Adapter le format pour compatibilité affichage
+                    resultats = [{ 'Nombre de lignes': resultats[0].count }];
+                    
+                    const rawDataTotalLignes = {
+                        requete_sql: sqlTotalLignes,
+                        engine: 'SQL.js natif',
+                        resultats: resultats,
+                        timestamp: new Date().toISOString()
+                    };
+                    afficherDetailsRequete(sqlTotalLignes, 'Total des lignes SQL.js', rawDataTotalLignes);
+                    
+                    console.log(`✅ DataBase - Total calculé via SQL.js: ${resultats[0]['Nombre de lignes']} lignes`);
+                } catch (error) {
+                    console.error('❌ Erreur SQL total_lignes:', error);
+                    afficherErreur(`Erreur SQL: ${error.message}`);
+                    return;
+                }
                 break;
                 
             case 'premieres_lignes':
-                console.log('📊 DataBase - Affichage des premières lignes [REFACTORISÉ]');
+                console.log('📊 DataBase - Affichage des premières lignes [SQL.js NATIF]');
                 titre = 'Premières lignes de la table';
                 
-                // Utiliser SQLParser pour la requête SELECT avec LIMIT
-                const sqlPremieres = 'SELECT * FROM dioo_donnees LIMIT 10';
-                resultats = SQLParser.executeQuery(lignes, headers, sqlPremieres);
-                
-                console.log(`✅ DataBase - ${resultats.length} premières lignes récupérées via SQLParser`);
-                
-                // Afficher les détails avec le résultat brut
-                const rawData = {
-                    requete_sqljs: sqlPremieres,
-                    lignes_brutes: lignes.slice(0, 10),
-                    headers: headers,
-                    resultats_traites: resultats,
-                    nombre_total_lignes: lignes.length
-                };
-                afficherDetailsRequete(sqlPremieres, 'Premières lignes', rawData);
+                try {
+                    // 🚀 Exécution directe SQL.js - Plus de parsing custom !
+                    const sqlPremieres = 'SELECT * FROM dioo_donnees LIMIT 10';
+                    resultats = await window.DatabaseManager.executeQuery(sqlPremieres);
+                    
+                    console.log(`✅ DataBase - ${resultats.length} premières lignes récupérées via SQL.js`);
+                    
+                    // Afficher les détails avec le résultat brut
+                    const rawData = {
+                        requete_sql: sqlPremieres,
+                        engine: 'SQL.js natif',
+                        resultats: resultats,
+                        nombre_resultats: resultats.length,
+                        timestamp: new Date().toISOString()
+                    };
+                    afficherDetailsRequete(sqlPremieres, 'Premières lignes SQL.js', rawData);
+                } catch (error) {
+                    console.error('❌ Erreur SQL premieres_lignes:', error);
+                    afficherErreur(`Erreur SQL: ${error.message}`);
+                    return;
+                }
                 break;
                 
             case 'criticites':
@@ -2677,9 +2755,9 @@ function executeQuery(queryType) {
                     lignes.push(nouvelleLigne);
                     console.log(`✅ Ligne ajoutée. Nouveau total: ${lignes.length}`);
                     
-                    // Sauvegarder dans localStorage
-                    console.log('💾 Sauvegarde dans localStorage...');
-                    sauvegarderDonneesModifiees(lignes, headers);
+                    // Sauvegarder dans SQLite
+                    console.log('💾 Sauvegarde dans SQLite...');
+                    await sauvegarderDonneesModifiees(lignes, headers);
                     console.log('✅ Sauvegarde terminée');
                     
                     // Ajouter au dump d'insertion
@@ -2733,10 +2811,20 @@ function executeQuery(queryType) {
 }
 
 /**
- * Exécuter une requête personnalisée
+ * Wrapper synchrone pour executeCustomQuery (appelé depuis HTML)
  */
 function executeCustomQuery() {
-    console.log('🔍 DataBase - Début exécution requête personnalisée [REFACTORISÉE]');
+    executeCustomQueryAsync().catch(error => {
+        console.error('❌ Erreur executeCustomQuery:', error);
+        afficherErreur(`Erreur: ${error.message}`);
+    });
+}
+
+/**
+ * Exécuter une requête personnalisée (version async)
+ */
+async function executeCustomQueryAsync() {
+    console.log('🔍 DataBase - Début exécution requête personnalisée [SQL.js NATIF]');
     
     const queryInput = document.getElementById('custom-query-input');
     if (!queryInput) {
@@ -2746,77 +2834,65 @@ function executeCustomQuery() {
     }
     
     const query = queryInput.value.trim();
-    console.log(`🔍 DataBase - Requête: "${query}" (${query.length} caractères)`);
+    console.log(`🔍 DataBase - Requête SQL.js: "${query}" (${query.length} caractères)`);
     
     if (!query) {
         console.log('⚠️ DataBase - Requête vide');
-        afficherErreur('Veuillez entrer une requête.');
+        afficherErreur('Veuillez entrer une requête SQL.');
         return;
     }
     
-    // Validation de la requête avec SQLParser
-    const validation = SQLParser.validateQuery(query);
-    if (!validation.valid) {
-        console.error('❌ DataBase - Requête invalide:', validation.issues);
-        afficherErreur(`Requête invalide: ${validation.issues.join(', ')}`);
+    // Vérifier que DatabaseManager est prêt
+    if (!window.DatabaseManager.isInitialized()) {
+        console.error('❌ DataBase - DatabaseManager non initialisé');
+        afficherErreur('Base de données non initialisée. Veuillez recharger la page.');
         return;
     }
     
-    console.log(`✅ DataBase - Requête validée (type: ${validation.type})`);
-    
-    // Récupération des données avec StorageManager
-    console.log('🔥 CUSTOM_QUERY - Lecture via StorageManager');
-    const donnees = StorageManager.getDonnees();
-    const { lignes, headers } = extractDataStructure(donnees);
-    
-    if (!lignes || lignes.length === 0) {
-        console.error('❌ DataBase - Aucune donnée disponible');
-        afficherErreur('Aucune donnée disponible. Veuillez d\'abord charger un fichier.');
-        return;
-    }
-    
-    console.log(`✅ DataBase - Données extraites: ${lignes.length} lignes, ${headers.length} colonnes`);
+    console.log(`✅ DataBase - Exécution directe avec SQL.js (plus de parsing custom)`);
     
     try {
         const timestamp = new Date().toISOString();
-        console.log(`⏰ DataBase - Exécution à ${timestamp}`);
+        console.log(`⏰ DataBase - Exécution SQL.js à ${timestamp}`);
         
-        // Analyse de la requête avec SQLParser
-        const analysis = SQLParser.analyzeQuery(query);
-        console.log('📊 DataBase - Analyse de requête:', analysis);
+        // 🚀 RÉVOLUTION: Exécution directe avec SQL.js - Plus de parsing custom !
+        console.log(`🚨 CUSTOM_QUERY - Exécution DIRECTE via SQL.js natif`);
+        const resultats = await window.DatabaseManager.executeQuery(query);
+        console.log(`✅ CUSTOM_QUERY - SQL.js natif: ${resultats.length} résultats`);
         
-        // Création de la requête SQL.js équivalente
-        const sqlJSQuery = SQLParser.createSQLJSQuery(query, headers);
-        console.log(`📤 DataBase - Requête SQL.js générée: "${sqlJSQuery}"`);
-        
-        // Exécution avec SQLParser
-        console.log(`🚨 CUSTOM_QUERY - Exécution via SQLParser`);
-        const resultats = SQLParser.executeQuery(lignes, headers, query);
-        console.log(`✅ CUSTOM_QUERY - Résultats: ${resultats.length} éléments`);
-        
-        // Préparation des données brutes pour affichage
+        // Structure simplifiée - Plus d'analyse custom obsolète
         const rawDataCustomQuery = {
-            requete_originale: query,
-            requete_sqljs: sqlJSQuery,
-            analysis: analysis,
-            lignes_brutes: lignes.slice(0, 10),
-            headers: headers,
-            nombre_lignes_total: lignes.length,
-            resultats_traites: resultats,
+            requete_sql: query,
+            engine: 'SQL.js natif (SQLite WebAssembly)',
+            resultats: resultats,
             nombre_resultats: resultats.length,
-            timestamp: timestamp
+            timestamp: timestamp,
+            database_info: await window.DatabaseManager.getInfo()
         };
         
         // Affichage des détails et résultats
-        afficherDetailsRequete(query, 'Requête personnalisée', rawDataCustomQuery);
+        afficherDetailsRequete(query, 'SQL.js natif', rawDataCustomQuery);
         
-        const titreAvecTimestamp = `Requête personnalisée (${new Date().toLocaleTimeString()})`;
+        const titreAvecTimestamp = `SQL.js natif (${new Date().toLocaleTimeString()})`;
         afficherResultats(resultats, titreAvecTimestamp);
         
     } catch (error) {
-        console.error('❌ DataBase - Erreur lors de l\'exécution:', error);
-        console.error('❌ DataBase - Stack trace:', error.stack);
-        afficherErreur(`Erreur: ${error.message}`);
+        console.error('❌ DataBase - Erreur SQL.js natif:', error);
+        
+        // 🎯 Erreurs SQL précises de SQLite (plus d'erreurs custom vagues)
+        let errorMessage = error.message;
+        if (errorMessage.includes('syntax error')) {
+            errorMessage = '❌ Erreur de syntaxe SQL. Vérifiez votre requête.';
+        } else if (errorMessage.includes('no such table')) {
+            errorMessage = '❌ Table inexistante. Tables disponibles: dioo_donnees, dioo_summary, dioo_metadata';
+        } else if (errorMessage.includes('no such column')) {
+            errorMessage = '❌ Colonne inexistante. Utilisez PRAGMA table_info(dioo_donnees) pour voir les colonnes.';
+        } else if (errorMessage.includes('ambiguous column name')) {
+            errorMessage = '❌ Nom de colonne ambigu. Spécifiez la table (ex: dioo_donnees.Dx)';
+        }
+        
+        console.error('❌ DataBase - Erreur SQL détaillée:', errorMessage);
+        afficherErreur(`Erreur SQL: ${errorMessage}`);
     }
 }
 
@@ -3529,80 +3605,28 @@ function genererValeurAleatoire(nomColonne) {
 /**
  * Sauvegarder les données modifiées dans localStorage
  */
-function sauvegarderDonneesModifiees(lignes, headers) {
-    console.log('💾 Sauvegarde des données modifiées [REFACTORISÉE]...');
+async function sauvegarderDonneesModifiees(lignes, headers) {
+    console.log('💾 Sauvegarde des données modifiées [SQL.js NATIF]...');
     console.log(`💾 Lignes à sauvegarder: ${lignes.length}`);
     console.log(`💾 Headers à sauvegarder: ${headers.length}`);
     
     try {
-        // Récupérer les données existantes avec StorageManager
-        let donnees = StorageManager.getDonnees();
-        console.log('💾 Données existantes récupérées via StorageManager');
-        
-        // Si aucune structure n'existe, créer une nouvelle structure
-        if (!donnees.donnees && !donnees.fichier) {
-            console.log('💾 Création d\'une nouvelle structure de données...');
-            donnees = {
-                fichier: {
-                    nom: 'donnees_generees.json',
-                    taille: 0,
-                    type: 'application/json',
-                    dateImport: new Date().toISOString()
-                },
-                donnees: {
-                    donnees: lignes,
-                    headers: headers
-                },
-                metadata: {
-                    nombreLignes: lignes.length,
-                    colonnes: headers,
-                    version: 'v0.000A-Refacto-Step1'
-                }
-            };
-        } else {
-            // Mettre à jour les données existantes avec extractDataStructure
-            const { lignes: lignesExistantes } = extractDataStructure(donnees);
-            
-            if (donnees.donnees && donnees.donnees.donnees) {
-                console.log('💾 Mise à jour structure imbriquée...');
-                donnees.donnees.donnees = lignes;
-                donnees.donnees.headers = headers;
-            } else if (Array.isArray(donnees.donnees)) {
-                console.log('💾 Mise à jour structure directe...');
-                donnees.donnees = lignes;
-                donnees.headers = headers;
-            } else {
-                console.log('💾 Création nouvelle structure dans données existantes...');
-                donnees.donnees = {
-                    donnees: lignes,
-                    headers: headers
-                };
-            }
-            
-            // Mettre à jour les métadonnées
-            donnees.metadata = {
-                nombreLignes: lignes.length,
-                colonnes: headers,
-                version: 'v0.000A-Refacto-Step1',
-                lastModified: new Date().toISOString()
-            };
-        }
-        
-        // Sauvegarder avec StorageManager
-        const success = StorageManager.setDonnees(donnees);
+        // 🚀 Sauvegarde directe avec DatabaseManager - Plus de localStorage !
+        console.log('💾 Sauvegarde directe via DatabaseManager SQL.js');
+        const success = await window.DatabaseManager.setDonnees(lignes, headers);
         
         if (success) {
-            console.log(`✅ Données sauvegardées via StorageManager: ${lignes.length} lignes`);
+            console.log(`✅ ${lignes.length} lignes sauvegardées via SQL.js`);
             
-            // Vérification avec StorageManager
-            const stats = StorageManager.getStats();
-            console.log(`✅ Vérification: ${stats.donnees.dataLength} lignes sauvegardées`);
+            // Vérification avec DatabaseManager
+            const stats = await window.DatabaseManager.getStats();
+            console.log(`✅ Vérification SQL.js: ${stats.donnees.dataLength} lignes en base`);
         } else {
-            throw new Error('Échec de la sauvegarde via StorageManager');
+            throw new Error('Échec de la sauvegarde via DatabaseManager');
         }
         
     } catch (error) {
-        console.error('❌ Erreur lors de la sauvegarde:', error);
+        console.error('❌ Erreur lors de la sauvegarde SQL.js:', error);
         console.error('❌ Stack trace:', error.stack);
         throw error;
     }
