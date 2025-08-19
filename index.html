@@ -6,16 +6,28 @@
     <title>DIOO - Application de Gestion</title>
     <link rel="stylesheet" href="styles/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Bibliothèque SheetJS pour lire les fichiers Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Chart.js pour les graphiques -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
+    <!-- Background effects - Style FDJ -->
+    <div class="background"></div>
+    
     <div class="app-container">
-        <!-- Header avec navigation -->
+        <!-- Header avec navigation - Style FDJ -->
         <header class="app-header">
             <div class="header-content">
+                <!-- Canvas pour effet cylindrique du menu -->
+                <canvas id="menuCanvas"></canvas>
+                
                 <div class="logo">
                     <i class="fas fa-cube"></i>
                     <h1>DIOO</h1>
                 </div>
+                
                 <nav class="main-navigation">
                     <ul>
                         <li>
@@ -28,6 +40,12 @@
                             <button class="nav-btn" data-page="monitoring">
                                 <i class="fas fa-chart-line"></i>
                                 <span>Monitoring</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-btn" data-page="database">
+                                <i class="fas fa-database"></i>
+                                <span>DataBase</span>
                             </button>
                         </li>
                     </ul>
@@ -44,24 +62,169 @@
                     <p class="page-description">Page de chargement des données et fichiers</p>
                 </div>
                 <div class="page-content">
-                    <div class="empty-state">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h3>Page Chargement</h3>
-                        <p>Cette page est prête pour l'implémentation des fonctionnalités de chargement.</p>
-                        <div class="feature-list">
-                            <div class="feature-item">
-                                <i class="fas fa-file-upload"></i>
-                                <span>Upload de fichiers</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-database"></i>
-                                <span>Import de données</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Validation</span>
+                                    <div class="empty-state">
+                    <i class="fas fa-rocket"></i>
+                    <h3>Module Chargement</h3>
+                    <p>Interface de gestion pour le chargement et l'import de données dans le système DIOO.</p>
+                                            <div class="feature-list">
+                        <!-- 1. Charger fichier DIOO -->
+                        <div class="feature-item clickable-item" id="charger-fichier" onclick="gererClicCharger()">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Charger fichier DIOO</span>
+                            <div class="state-indicator" id="charger-status">
+                                <i class="fas fa-circle"></i>
                             </div>
                         </div>
+                        
+                        <!-- 2. Import de données -->
+                        <div class="feature-item state-item" id="import-donnees">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Import de données</span>
+                            <div class="state-indicator" id="import-status">
+                                <i class="fas fa-circle"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- 3. Validation -->
+                        <div class="feature-item state-item" id="validation">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Validation</span>
+                            <div class="state-indicator" id="validation-status">
+                                <i class="fas fa-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sélecteur de fichier caché -->
+                    <input type="file" id="selecteur-fichier" accept=".xlsx,.json,.csv,.xml,.txt" style="display: none;" onchange="fichierSelectionne(this)">
+                    
+                    <!-- Zone de progression -->
+                    <div id="progress-info" class="progress-info" style="display: none;">
+                        <div class="progress-content">
+                            <h4><i class="fas fa-cog fa-spin"></i> <span id="progress-title">Traitement en cours...</span></h4>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <p id="progress-description">Initialisation...</p>
+                        </div>
+                    </div>
+
+                    <!-- Section Dump pour les requêtes d'import/validation -->
+                    <div id="import-dump-section" class="dump-section" style="display: none;">
+                        <div class="dump-header" onclick="toggleImportDumpSection()">
+                            <div class="section-title">
+                                <div class="led-indicator" id="import-dump-led"></div>
+                                <h4>Dump</h4>
+                            </div>
+                            <div class="arrow-indicator" id="import-dump-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="dump-content" id="import-dump-content">
+                            <div class="dump-info">
+                                <p><strong>Requêtes d'import/validation :</strong> <span id="import-dump-count">0</span></p>
+                                <button class="nav-btn" onclick="effacerImportDump()" title="Effacer le dump">
+                                    <i class="fas fa-trash"></i> Effacer
+                                </button>
+                            </div>
+                            
+                            <div class="dump-table-container">
+                                <div id="import-dump-list" class="insertion-list">
+                                    <div class="dump-empty" id="import-dump-empty">
+                                        <p>Aucune requête d'import/validation</p>
+                                        <p class="dump-empty-hint">Les requêtes d'import et validation apparaîtront ici</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Overview fichier pliable -->
+                    <div id="overview-section" class="dump-section" style="display: none;">
+                        <div class="dump-header" onclick="toggleOverviewSection()">
+                            <div class="section-title">
+                                <div class="led-indicator" id="overview-led"></div>
+                                <h4>Overview fichier</h4>
+                            </div>
+                            <div class="arrow-indicator" id="overview-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="dump-content" id="overview-content">
+                            <!-- Contrôles de navigation -->
+                            <div class="dump-controls">
+                                <div class="navigation-controls">
+                                    <button class="nav-btn" id="first-page" onclick="allerPremierePage()" title="Première page">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </button>
+                                    <button class="nav-btn" id="prev-page" onclick="pagePrecedente()" title="Page précédente">
+                                        <i class="fas fa-angle-left"></i>
+                                    </button>
+                                    <div class="page-info">
+                                        <span>Ligne </span>
+                                        <input type="number" id="current-page" value="1" min="1" onchange="allerALaPage(this.value)">
+                                        <span> sur <span id="total-pages">1</span></span>
+                                    </div>
+                                    <button class="nav-btn" id="next-page" onclick="pageSuivante()" title="Page suivante">
+                                        <i class="fas fa-angle-right"></i>
+                                    </button>
+                                    <button class="nav-btn" id="last-page" onclick="allerDernierePage()" title="Dernière page">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </button>
+                                </div>
+                                <div class="dump-info">
+                                    <span>Affichage : <span id="lignes-affichees">0</span> lignes</span>
+                                    <span>Total : <span id="total-lignes">0</span> lignes</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Tableau de données -->
+                            <div class="dump-table-container">
+                                <table class="dump-table" id="dump-table">
+                                    <thead id="dump-thead">
+                                        <!-- Headers générés dynamiquement -->
+                                    </thead>
+                                    <tbody id="dump-tbody">
+                                        <!-- Données générées dynamiquement -->
+                                    </tbody>
+                                </table>
+                                <div class="dump-empty" id="dump-empty">
+                                    <p>Aucune donnée à afficher</p>
+                                    <p class="dump-empty-hint">Chargez un fichier pour voir les données ici</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Dump pour les requêtes d'insertion -->
+                    <div id="insertion-dump-section" class="dump-section" style="display: none;">
+                        <div class="dump-header" onclick="toggleInsertionDumpSection()">
+                            <div class="section-title">
+                                <div class="led-indicator" id="insertion-dump-led"></div>
+                                <h4>Dump</h4>
+                            </div>
+                            <div class="arrow-indicator" id="insertion-dump-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="dump-content" id="insertion-dump-content">
+                            <div class="dump-info">
+                                <p><strong>Requêtes d'insertion :</strong> <span id="insertion-count">0</span></p>
+                                <button class="nav-btn" onclick="effacerDumpInsertion()" title="Effacer le dump">
+                                    <i class="fas fa-trash"></i> Effacer
+                                </button>
+                            </div>
+                            
+                            <div class="dump-table-container">
+                                <div id="insertion-dump-list" class="insertion-list">
+                                    <div class="dump-empty" id="insertion-dump-empty">
+                                        <p>Aucune requête d'insertion</p>
+                                        <p class="dump-empty-hint">Les requêtes d'insertion apparaîtront ici</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -74,21 +237,316 @@
                 </div>
                 <div class="page-content">
                     <div class="empty-state">
-                        <i class="fas fa-monitor-heart-rate"></i>
-                        <h3>Page Monitoring</h3>
-                        <p>Cette page est prête pour l'implémentation des fonctionnalités de monitoring.</p>
-                        <div class="feature-list">
-                            <div class="feature-item">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span>Métriques en temps réel</span>
+                        <i class="fas fa-satellite-dish"></i>
+                        <h3>Module Monitoring</h3>
+                        <p>Interface de surveillance et d'analyse des applications critiques DIOO.</p>
+                        
+                        <!-- Contrôles de monitoring -->
+                        <div class="monitoring-controls">
+                            <div class="feature-item clickable-item" id="calculer-consolidation" onclick="calculerConsolidation()">
+                                <i class="fas fa-calculator"></i>
+                                <span>Calculer consolidation</span>
+                                <div class="state-indicator" id="calcul-status">
+                                    <i class="fas fa-circle"></i>
+                                </div>
                             </div>
-                            <div class="feature-item">
-                                <i class="fas fa-bell"></i>
-                                <span>Alertes système</span>
+                        </div>
+                        
+                        <!-- Section DP -->
+                        <div class="summary-section" id="dp-section" style="display: none;">
+                            <div class="summary-header" onclick="toggleSection('dp-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="dp-led"></div>
+                                    <h4>DP - Applications Critiques</h4>
+                                </div>
+                                <div class="arrow-indicator" id="dp-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
                             </div>
-                            <div class="feature-item">
-                                <i class="fas fa-chart-bar"></i>
-                                <span>Tableaux de bord</span>
+                            <div class="summary-content" id="dp-content">
+                                <div class="dp-layout">
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="critical-business-services">0</div>
+                                        <div class="metric-label">Critical Business Services</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="still-to-onboard">0</div>
+                                        <div class="metric-label">Still to be onboarded</div>
+                                    </div>
+                                    <div class="chart-card">
+                                        <canvas id="dp-chart" width="200" height="150"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section DPA -->
+                        <div class="summary-section" id="dpa-section" style="display: none;">
+                            <div class="summary-header" onclick="toggleSection('dpa-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="dpa-led"></div>
+                                    <h4>DPA - Applications Critiques</h4>
+                                </div>
+                                <div class="arrow-indicator" id="dpa-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="summary-content" id="dpa-content">
+                                <div class="metric-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpa-total">0</div>
+                                        <div class="metric-label">Total DPA Critiques</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpa-monitored">0</div>
+                                        <div class="metric-label">DPA Monitored</div>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="dpa-chart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section DPB -->
+                        <div class="summary-section" id="dpb-section" style="display: none;">
+                            <div class="summary-header" onclick="toggleSection('dpb-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="dpb-led"></div>
+                                    <h4>DPB - Applications Critiques</h4>
+                                </div>
+                                <div class="arrow-indicator" id="dpb-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="summary-content" id="dpb-content">
+                                <div class="metric-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpb-total">0</div>
+                                        <div class="metric-label">Total DPB Critiques</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpb-monitored">0</div>
+                                        <div class="metric-label">DPB Monitored</div>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="dpb-chart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section DPC -->
+                        <div class="summary-section" id="dpc-section" style="display: none;">
+                            <div class="summary-header" onclick="toggleSection('dpc-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="dpc-led"></div>
+                                    <h4>DPC - Applications Critiques</h4>
+                                </div>
+                                <div class="arrow-indicator" id="dpc-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="summary-content" id="dpc-content">
+                                <div class="metric-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpc-total">0</div>
+                                        <div class="metric-label">Total DPC Critiques</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpc-monitored">0</div>
+                                        <div class="metric-label">DPC Monitored</div>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="dpc-chart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section DPP -->
+                        <div class="summary-section" id="dpp-section" style="display: none;">
+                            <div class="summary-header" onclick="toggleSection('dpp-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="dpp-led"></div>
+                                    <h4>DPP - Applications Critiques</h4>
+                                </div>
+                                <div class="arrow-indicator" id="dpp-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="summary-content" id="dpp-content">
+                                <div class="metric-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpp-total">0</div>
+                                        <div class="metric-label">Total DPP Critiques</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dpp-monitored">0</div>
+                                        <div class="metric-label">DPP Monitored</div>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="dpp-chart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section DPS -->
+                        <div class="summary-section" id="dps-section" style="display: none;">
+                            <div class="summary-header" onclick="toggleSection('dps-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="dps-led"></div>
+                                    <h4>DPS - Applications Critiques</h4>
+                                </div>
+                                <div class="arrow-indicator" id="dps-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="summary-content" id="dps-content">
+                                <div class="metric-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dps-total">0</div>
+                                        <div class="metric-label">Total DPS Critiques</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="dps-monitored">0</div>
+                                        <div class="metric-label">DPS Monitored</div>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="dps-chart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page DataBase -->
+            <div id="database-page" class="page">
+                <div class="page-header">
+                    <h2>DataBase</h2>
+                    <p class="page-description">Interface d'interrogation de la base de données</p>
+                </div>
+                <div class="page-content">
+                    <div class="empty-state">
+                        <h3>Module DataBase</h3>
+                        <p>Interface pour exécuter des requêtes sur les données chargées et visualiser les résultats.</p>
+                        
+                        <!-- Section Requêtes prédéfinies -->
+                        <div class="summary-section" id="predefined-queries-section">
+                            <div class="summary-header" onclick="toggleDatabaseSection('predefined-queries-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="predefined-queries-led"></div>
+                                    <h4>Requêtes prédéfinies</h4>
+                                </div>
+                                <div class="arrow-indicator" id="predefined-queries-arrow">
+                                    ▼
+                                </div>
+                            </div>
+                            <div class="summary-content" id="predefined-queries-content">
+                                <div class="query-buttons">
+                                    <button class="btn" onclick="executeQuery('info_tables')">Informations sur les tables</button>
+                                    <button class="btn" onclick="executeQuery('total_lignes')">Total des lignes</button>
+                                    <button class="btn" onclick="executeQuery('premieres_lignes')">Premières lignes</button>
+                                    <button class="btn" onclick="executeQuery('criticites')">Répartition des criticités</button>
+                                    <button class="btn" onclick="executeQuery('prefixes_dp')">Préfixes DP*</button>
+                                    <button class="btn" onclick="executeQuery('vue_ensemble')">Vue d'ensemble</button>
+                                    <button class="btn btn-warning" onclick="executeQuery('ajouter_ligne_aleatoire')">Ajouter ligne aléatoire</button>
+                                    <button class="btn btn-danger" onclick="effacerDonnees()">Effacer les données de la base</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Requête personnalisée -->
+                        <div class="summary-section" id="custom-query-section">
+                            <div class="summary-header" onclick="toggleDatabaseSection('custom-query-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="custom-query-led"></div>
+                                    <h4>Requête personnalisée</h4>
+                                </div>
+                                <div class="arrow-indicator" id="custom-query-arrow">
+                                    ▼
+                                </div>
+                            </div>
+                            <div class="summary-content" id="custom-query-content">
+                                <div class="query-input-section">
+                                    <label for="custom-query-input">Entrez votre requête :</label>
+                                    <textarea id="custom-query-input" class="query-textarea" placeholder="Exemple : Filtrer par [Business criticality] = 'Critical'">SELECT COUNT(*) AS monitored_bsm
+FROM dioo_donnees;</textarea>
+                                    <button class="btn btn-primary" onclick="executeCustomQuery()">Exécuter</button>
+                                    
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Résultats -->
+                        <div class="summary-section" id="results-section">
+                            <div class="summary-header" onclick="toggleDatabaseSection('results-content')">
+                                <div class="section-title">
+                                    <div class="led-indicator" id="results-led"></div>
+                                    <h4>Résultats</h4>
+                                </div>
+                                <div class="arrow-indicator" id="results-arrow">
+                                    ▼
+                                </div>
+                            </div>
+                            <div class="summary-content" id="results-content">
+                                <!-- Sous-section pour les détails de la requête -->
+                                <div class="summary-section" id="query-details-section" style="margin-bottom: 20px;">
+                                    <div class="summary-header" onclick="toggleDatabaseSection('query-details-content')" style="background: rgba(163,177,199,0.05); padding: 8px 15px;">
+                                        <div class="section-title">
+                                            <div class="led-indicator" id="query-details-led"></div>
+                                            <h5 style="margin: 0; font-size: 14px;">Détails de la requête</h5>
+                                        </div>
+                                        <div class="arrow-indicator" id="query-details-arrow">
+                                            ▼
+                                        </div>
+                                    </div>
+                                    <div class="summary-content" id="query-details-content" style="display: none;">
+                                        <div id="query-info" class="query-info">
+                                            <div class="query-details">
+                                                <p><strong>Requête SQL :</strong> <span id="query-sent">Aucune requête exécutée</span></p>
+                                                <p><strong>Timestamp :</strong> <span id="query-timestamp">-</span></p>
+                                                <p><strong>Type :</strong> <span id="query-type">-</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contrôles de navigation pour les résultats -->
+                                <div class="dump-controls" id="results-controls" style="display: none;">
+                                    <div class="navigation-controls">
+                                        <button class="nav-btn" id="results-first-page" onclick="allerPremierePageResultats()" title="Première page">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </button>
+                                        <button class="nav-btn" id="results-prev-page" onclick="pagePrecedenteResultats()" title="Page précédente">
+                                            <i class="fas fa-angle-left"></i>
+                                        </button>
+                                        <div class="page-info">
+                                            <span>Page </span>
+                                            <input type="number" id="results-current-page" value="1" min="1" onchange="allerALaPageResultats(this.value)">
+                                            <span> sur <span id="results-total-pages">1</span></span>
+                                        </div>
+                                        <button class="nav-btn" id="results-next-page" onclick="pageSuivanteResultats()" title="Page suivante">
+                                            <i class="fas fa-angle-right"></i>
+                                        </button>
+                                        <button class="nav-btn" id="results-last-page" onclick="allerDernierePageResultats()" title="Dernière page">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </button>
+                                    </div>
+                                    <div class="dump-info">
+                                        <span>Affichage : <span id="results-lignes-affichees">0</span> lignes</span>
+                                        <span>Total : <span id="results-total-lignes">0</span> lignes</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Résultats de la requête -->
+                                <div id="query-results">
+                                    <p class="no-results">Aucun résultat à afficher. Exécutez une requête pour voir les résultats.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -101,7 +559,7 @@
             <div class="footer-content">
                 <p>&copy; 2025 DIOO - Application de Gestion</p>
                 <div class="footer-info">
-                    <span class="version">v1.0.0</span>
+                    <span class="version">v0.000-stable-extract-viewer-database</span>
                     <span class="status">
                         <i class="fas fa-circle status-online"></i>
                         En ligne
