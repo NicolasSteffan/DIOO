@@ -456,6 +456,38 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsData: !!window.resultsData
     });
 
+    // ========================================
+    // FONCTIONS UTILITAIRES REFACTORISÉES
+    // ========================================
+
+    /**
+     * Fonction utilitaire pour extraire la structure des données
+     * Remplace la logique répétitive dans plusieurs fonctions
+     */
+    window.extractDataStructure = function(donnees) {
+        if (!donnees || Object.keys(donnees).length === 0) {
+            return { lignes: [], headers: [] };
+        }
+        
+        // Structure imbriquée
+        if (donnees.donnees && donnees.donnees.donnees) {
+            return {
+                lignes: donnees.donnees.donnees,
+                headers: donnees.donnees.headers || []
+            };
+        }
+        
+        // Structure directe
+        if (Array.isArray(donnees.donnees)) {
+            return {
+                lignes: donnees.donnees,
+                headers: donnees.headers || []
+            };
+        }
+        
+        return { lignes: [], headers: [] };
+    };
+
     // Vérifier automatiquement le nombre de lignes dans la base
     setTimeout(() => {
         const nombreLignes = compterLignes();
@@ -768,20 +800,20 @@ function finaliserProcessus() {
  * Effacer les données de la base
  */
 function effacerDonnees() {
-    console.log('🗑️ DÉBUT - Fonction effacerDonnees() appelée');
+    console.log('🗑️ DÉBUT - Fonction effacerDonnees() appelée [REFACTORISÉE]');
     
-    // Vérifier l'état avant effacement
-    const donneesAvant = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-    const summaryAvant = JSON.parse(localStorage.getItem('dioo_summary') || '[]');
-    const nombreLignesAvant = compterLignes();
+    // Vérifier l'état avec StorageManager
+    const stats = StorageManager.getStats();
+    console.log('🔍 AVANT EFFACEMENT:', stats);
     
-    console.log('🔍 AVANT EFFACEMENT:');
-    console.log(`📊 Nombre de lignes: ${nombreLignesAvant}`);
-    console.log(`📊 Taille dioo_donnees: ${JSON.stringify(donneesAvant).length} caractères`);
-    console.log(`📊 Taille dioo_summary: ${summaryAvant.length} éléments`);
+    if (!stats.donnees.exists && !stats.summary.exists) {
+        DiooUtils.showNotification('Aucune donnée à effacer', 'info');
+        console.log('ℹ️ Aucune donnée à effacer');
+        return;
+    }
     
     // Confirmer l'action
-    if (!confirm('Êtes-vous sûr de vouloir effacer toutes les données de la base ?\n\nCette action est irréversible.')) {
+    if (!confirm('⚠️ Êtes-vous sûr de vouloir effacer toutes les données de la base ?\n\nCette action est irréversible.')) {
         console.log('❌ Effacement annulé par l\'utilisateur');
         return;
     }
@@ -789,60 +821,51 @@ function effacerDonnees() {
     console.log('🗑️ Effacement des données confirmé par l\'utilisateur');
     
     try {
-        // Effacer toutes les données localStorage liées à DIOO
-        console.log('🗑️ Suppression de dioo_donnees...');
-        localStorage.removeItem('dioo_donnees');
+        // Effacement avec StorageManager
+        const report = StorageManager.clearAll();
+        console.log('📊 Rapport d\'effacement:', report);
         
-        console.log('🗑️ Suppression de dioo_summary...');
-        localStorage.removeItem('dioo_summary');
-        
-        console.log('🗑️ Suppression de dioo_rand_counter...');
-        localStorage.removeItem('dioo_rand_counter');
-        
-        // Effacer les dumps en mémoire
-        console.log('🗑️ Effacement des dumps en mémoire...');
-        if (window.insertionDump) {
-            window.insertionDump = [];
-            mettreAJourDumpInsertion();
-        }
-        if (window.importDump) {
-            window.importDump = [];
-            mettreAJourImportDump();
-        }
-        
-        // Vérifier que les données sont bien supprimées
-        const donneesApres = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-        const summaryApres = JSON.parse(localStorage.getItem('dioo_summary') || '[]');
-        const nombreLignesApres = compterLignes();
-        
-        console.log('🔍 APRÈS EFFACEMENT:');
-        console.log(`📊 Nombre de lignes: ${nombreLignesApres}`);
-        console.log(`📊 Taille dioo_donnees: ${JSON.stringify(donneesApres).length} caractères`);
-        console.log(`📊 Taille dioo_summary: ${summaryApres.length} éléments`);
-        
-        // Réinitialiser tous les états de l'interface
-        console.log('🔄 Réinitialisation des états de l\'interface...');
-        reinitialiserEtats();
-        
-        // Vider le dump si affiché
-        if (window.dumpData) {
-            console.log('🗑️ Réinitialisation du dump...');
-            window.dumpData.donnees = [];
-            window.dumpData.headers = [];
-            window.dumpData.pageActuelle = 1;
-            
-            // Mettre à jour l'affichage du dump
-            const overviewContent = document.getElementById('overview-content');
-            if (overviewContent) {
-                overviewContent.innerHTML = '<p class="dump-empty">Aucune donnée à afficher</p>';
+        if (report.success) {
+            // Effacer les dumps en mémoire
+            console.log('🗑️ Effacement des dumps en mémoire...');
+            if (window.insertionDump) {
+                window.insertionDump = [];
+                mettreAJourDumpInsertion();
             }
+            if (window.importDump) {
+                window.importDump = [];
+                mettreAJourImportDump();
+            }
+            
+            // Réinitialiser tous les états de l'interface
+            console.log('🔄 Réinitialisation des états de l\'interface...');
+            reinitialiserEtats();
+            
+            // Vider le dump si affiché
+            if (window.dumpData) {
+                console.log('🗑️ Réinitialisation du dump...');
+                window.dumpData.donnees = [];
+                window.dumpData.headers = [];
+                window.dumpData.pageActuelle = 1;
+                
+                // Mettre à jour l'affichage du dump
+                const overviewContent = document.getElementById('overview-content');
+                if (overviewContent) {
+                    overviewContent.innerHTML = '<p class="dump-empty">Aucune donnée à afficher</p>';
+                }
+            }
+            
+            // Vérification finale avec StorageManager
+            const statsApres = StorageManager.getStats();
+            console.log('🔍 APRÈS EFFACEMENT:', statsApres);
+            
+            // Notification de succès
+            DiooUtils.showNotification('Données effacées avec succès', 'success');
+            console.log('✅ SUCCÈS - Toutes les données ont été effacées');
+            
+        } else {
+            throw new Error('Échec de l\'effacement des données');
         }
-        
-        // Notification de succès
-        DiooUtils.showNotification('Données effacées avec succès', 'success');
-        
-        console.log('✅ SUCCÈS - Toutes les données ont été effacées');
-        console.log(`📊 Vérification finale: ${compterLignes()} lignes restantes`);
         
     } catch (error) {
         console.error('❌ ERREUR lors de l\'effacement:', error);
@@ -917,12 +940,9 @@ function parseXLSX(arrayBuffer) {
         
         const worksheet = workbook.Sheets[targetSheetName];
         
-        // Extraire une date du nom de l'onglet si possible
-        let dateExtrait = null;
-        const dateRegex = /(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})|(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})|(\d{1,2}\s+\w+\s+\d{4})/;
-        const matchDate = targetSheetName.match(dateRegex);
-        if (matchDate) {
-            dateExtrait = matchDate[0];
+        // Extraire une date du nom de l'onglet avec RegexPatterns
+        const dateExtrait = RegexPatterns.extractExcelDate(targetSheetName);
+        if (dateExtrait) {
             console.log(`📅 Date extraite du nom de l'onglet: ${dateExtrait}`);
         }
         
@@ -1841,46 +1861,31 @@ function allerALaPage(page) {
  * Calculer la consolidation des données
  */
 function calculerConsolidation() {
-    console.log('🧮 Début du calcul de consolidation');
+    console.log('🧮 Début du calcul de consolidation [REFACTORISÉ]');
     
-    // Vérifier que les données sont disponibles
-    const donnees = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-    console.log('🔍 Données brutes du localStorage:', donnees);
+    // Récupération des données avec StorageManager
+    const donnees = StorageManager.getDonnees();
+    const { lignes, headers } = extractDataStructure(donnees);
     
-    // Vérifier différentes structures de données possibles
-    let lignesDisponibles = false;
-    let structureDetectee = 'aucune';
+    console.log('🔍 Données récupérées via StorageManager:', {
+        lignesCount: lignes.length,
+        headersCount: headers.length
+    });
     
-    if (donnees.donnees && donnees.donnees.donnees && Array.isArray(donnees.donnees.donnees)) {
-        lignesDisponibles = donnees.donnees.donnees.length > 0;
-        structureDetectee = 'imbriquée (donnees.donnees.donnees)';
-        console.log(`📊 Structure imbriquée détectée: ${donnees.donnees.donnees.length} lignes`);
-    } else if (donnees.donnees && Array.isArray(donnees.donnees)) {
-        lignesDisponibles = donnees.donnees.length > 0;
-        structureDetectee = 'directe (donnees.donnees)';
-        console.log(`📊 Structure directe détectée: ${donnees.donnees.length} lignes`);
-    } else if (Array.isArray(donnees)) {
-        lignesDisponibles = donnees.length > 0;
-        structureDetectee = 'tableau direct';
-        console.log(`📊 Tableau direct détecté: ${donnees.length} lignes`);
-    }
-    
-    console.log(`🔍 Structure détectée: ${structureDetectee}, lignes disponibles: ${lignesDisponibles}`);
-    
-    if (!lignesDisponibles) {
-        console.log('❌ Aucune donnée disponible. Structure complète:', JSON.stringify(donnees, null, 2));
+    if (!lignes || lignes.length === 0) {
+        console.log('❌ Aucune donnée disponible pour le calcul de consolidation');
         DiooUtils.showNotification('Aucune donnée disponible. Veuillez d\'abord charger un fichier.', 'error');
         return;
     }
     
-    console.log('✅ Données trouvées, structure:', structureDetectee);
+    console.log(`✅ Données prêtes pour calcul: ${lignes.length} lignes, ${headers.length} colonnes`);
     
     try {
         // Marquer le début du calcul
         definirEtatIndicateur('calcul-status', 'active');
         
-        // Effectuer les calculs
-        const resultats = effectuerCalculsConsolidation(donnees);
+        // Effectuer les calculs avec les données extraites
+        const resultats = effectuerCalculsConsolidation({ lignes, headers });
         
         // Sauvegarder dans Dioo_Summary
         sauvegarderDansHistorique(resultats);
@@ -2799,106 +2804,85 @@ function executeQuery(queryType) {
  * Exécuter une requête personnalisée
  */
 function executeCustomQuery() {
-    console.log('🔍 DataBase - Début exécution requête personnalisée');
+    console.log('🔍 DataBase - Début exécution requête personnalisée [REFACTORISÉE]');
     
     const queryInput = document.getElementById('custom-query-input');
-    console.log('🔍 DataBase - Élément textarea trouvé:', !!queryInput);
-    
     if (!queryInput) {
         console.error('❌ DataBase - Élément custom-query-input non trouvé dans le DOM');
         afficherErreur('Erreur: Élément de saisie non trouvé.');
         return;
     }
     
-    // Vérifier la visibilité et les propriétés de l'élément
-    const computedStyle = window.getComputedStyle(queryInput);
-    console.log('🔍 DataBase - Propriétés de l\'élément:', {
-        display: computedStyle.display,
-        visibility: computedStyle.visibility,
-        offsetParent: !!queryInput.offsetParent,
-        clientHeight: queryInput.clientHeight,
-        scrollHeight: queryInput.scrollHeight
-    });
-    
     const query = queryInput.value.trim();
-    console.log(`🔍 DataBase - Valeur brute du textarea: "${queryInput.value}"`);
-    console.log(`🔍 DataBase - Requête après trim: "${query}"`);
-    console.log(`🔍 DataBase - Longueur de la requête: ${query.length} caractères`);
+    console.log(`🔍 DataBase - Requête: "${query}" (${query.length} caractères)`);
     
     if (!query) {
-        console.log('⚠️ DataBase - Requête vide après trim');
+        console.log('⚠️ DataBase - Requête vide');
         afficherErreur('Veuillez entrer une requête.');
         return;
     }
     
-    console.log(`🔍 DataBase - Exécution de la requête personnalisée: ${query}`);
-    console.log(`📤 REQUÊTE ORIGINALE: "${query}"`);
-    console.log(`📏 Longueur de la requête: ${query.length} caractères`);
-    console.log(`🔤 Type de la requête: ${typeof query}`);
+    // Validation de la requête avec SQLParser
+    const validation = SQLParser.validateQuery(query);
+    if (!validation.valid) {
+        console.error('❌ DataBase - Requête invalide:', validation.issues);
+        afficherErreur(`Requête invalide: ${validation.issues.join(', ')}`);
+        return;
+    }
     
-    // Récupérer les données DIRECTEMENT de la base de données (localStorage)
-    console.log('🔥 CUSTOM_QUERY - Lecture DIRECTE dans la BASE DE DONNÉES (localStorage)');
-    console.log('🔥 CUSTOM_QUERY - AUCUN fichier JSON lu, uniquement localStorage');
-    const donnees = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-    console.log('🔍 DataBase - Données récupérées:', donnees);
+    console.log(`✅ DataBase - Requête validée (type: ${validation.type})`);
     
-    let lignes, headers;
+    // Récupération des données avec StorageManager
+    console.log('🔥 CUSTOM_QUERY - Lecture via StorageManager');
+    const donnees = StorageManager.getDonnees();
+    const { lignes, headers } = extractDataStructure(donnees);
     
-    if (donnees.donnees && donnees.donnees.donnees) {
-        lignes = donnees.donnees.donnees;
-        headers = donnees.donnees.headers || [];
-        console.log(`✅ DataBase - Structure imbriquée: ${lignes.length} lignes`);
-    } else if (Array.isArray(donnees.donnees)) {
-        lignes = donnees.donnees;
-        headers = donnees.headers || [];
-        console.log(`✅ DataBase - Structure directe: ${lignes.length} lignes`);
-    } else {
-        console.error('❌ DataBase - Aucune structure de données reconnue');
+    if (!lignes || lignes.length === 0) {
+        console.error('❌ DataBase - Aucune donnée disponible');
         afficherErreur('Aucune donnée disponible. Veuillez d\'abord charger un fichier.');
         return;
     }
     
+    console.log(`✅ DataBase - Données extraites: ${lignes.length} lignes, ${headers.length} colonnes`);
+    
     try {
-        // Ajouter un timestamp pour éviter la mise en cache
         const timestamp = new Date().toISOString();
         console.log(`⏰ DataBase - Exécution à ${timestamp}`);
         
-        // Utiliser directement la requête saisie par l'utilisateur
-        console.log(`📤 REQUÊTE UTILISATEUR ORIGINALE: "${query}"`);
+        // Analyse de la requête avec SQLParser
+        const analysis = SQLParser.analyzeQuery(query);
+        console.log('📊 DataBase - Analyse de requête:', analysis);
         
-        // Afficher les détails de la requête (utiliser la requête originale)
+        // Création de la requête SQL.js équivalente
+        const sqlJSQuery = SQLParser.createSQLJSQuery(query, headers);
+        console.log(`📤 DataBase - Requête SQL.js générée: "${sqlJSQuery}"`);
+        
+        // Exécution avec SQLParser
+        console.log(`🚨 CUSTOM_QUERY - Exécution via SQLParser`);
+        const resultats = SQLParser.executeQuery(lignes, headers, query);
+        console.log(`✅ CUSTOM_QUERY - Résultats: ${resultats.length} éléments`);
+        
+        // Préparation des données brutes pour affichage
         const rawDataCustomQuery = {
             requete_originale: query,
+            requete_sqljs: sqlJSQuery,
+            analysis: analysis,
             lignes_brutes: lignes.slice(0, 10),
             headers: headers,
             nombre_lignes_total: lignes.length,
+            resultats_traites: resultats,
+            nombre_resultats: resultats.length,
             timestamp: timestamp
         };
+        
+        // Affichage des détails et résultats
         afficherDetailsRequete(query, 'Requête personnalisée', rawDataCustomQuery);
         
-        // Simulation d'exécution de requête personnalisée
-        // Pour l'instant, on fait un filtrage simple
-        console.log(`🚨 CUSTOM_QUERY - Avant executerFiltreSimple`);
-        console.log(`🚨 CUSTOM_QUERY - Headers:`, headers);
-        console.log(`🚨 CUSTOM_QUERY - Première ligne brute:`, lignes[0]);
-        console.log(`🚨 CUSTOM_QUERY - Type de la première ligne:`, typeof lignes[0], Array.isArray(lignes[0]));
-        console.log(`🚨 CUSTOM_QUERY - Query:`, query);
-        
-        const resultats = executerFiltreSimple(lignes, headers, query);
-        console.log(`🚨 CUSTOM_QUERY - Résultats calculés: ${resultats.length} éléments`);
-        console.log(`🚨 CUSTOM_QUERY - Premier résultat:`, resultats[0]);
-        console.log(`🚨 CUSTOM_QUERY - Tous les résultats:`, resultats);
-        
-        // Mettre à jour les données brutes avec les résultats traités
-        rawDataCustomQuery.resultats_traites = resultats;
-        rawDataCustomQuery.nombre_resultats = resultats.length;
-        
         const titreAvecTimestamp = `Requête personnalisée (${new Date().toLocaleTimeString()})`;
-        
         afficherResultats(resultats, titreAvecTimestamp);
         
     } catch (error) {
-        console.error('❌ DataBase - Erreur lors de l\'exécution de la requête personnalisée:', error);
+        console.error('❌ DataBase - Erreur lors de l\'exécution:', error);
         console.error('❌ DataBase - Stack trace:', error.stack);
         afficherErreur(`Erreur: ${error.message}`);
     }
