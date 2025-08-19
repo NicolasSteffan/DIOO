@@ -1470,8 +1470,8 @@ function formaterValeurSQL(valeur) {
         return 'NULL';
     }
     if (typeof valeur === 'string') {
-        // Échapper les guillemets et entourer de guillemets
-        return `'${valeur.replace(/'/g, "''")}'`;
+        // Utiliser RegexPatterns pour échapper les guillemets
+        return `'${RegexPatterns.escapeSQLQuotes(valeur)}'`;
     }
     if (typeof valeur === 'number') {
         return valeur.toString();
@@ -1480,19 +1480,19 @@ function formaterValeurSQL(valeur) {
         return valeur ? 'TRUE' : 'FALSE';
     }
     if (typeof valeur === 'object') {
-        // Pour les objets/arrays, les convertir en JSON
-        return `'${JSON.stringify(valeur).replace(/'/g, "''")}'`;
+        // Pour les objets/arrays, les convertir en JSON et échapper
+        return `'${RegexPatterns.escapeSQLQuotes(JSON.stringify(valeur))}'`;
     }
-    return `'${String(valeur).replace(/'/g, "''")}'`;
+    return `'${RegexPatterns.escapeSQLQuotes(String(valeur))}'`;
 }
 
 /**
  * Construire une requête SQL complète avec les vraies valeurs
  */
 function construireRequeteSQL(template, valeurs) {
-    // Remplacer les placeholders ? par les vraies valeurs
+    // Utiliser RegexPatterns pour remplacer les placeholders
     let index = 0;
-    return template.replace(/\?/g, () => {
+    return template.replace(RegexPatterns.SQL_PLACEHOLDER, () => {
         if (index < valeurs.length) {
             return formaterValeurSQL(valeurs[index++]);
         }
@@ -2404,59 +2404,26 @@ function toggleDatabaseSection(contentId) {
  * Exécuter une requête prédéfinie
  */
 function executeQuery(queryType) {
-    console.log(`🔍 DataBase - Exécution de la requête: ${queryType}`);
-    console.log(`🔍 DEBUG - Type de requête reçu: "${queryType}" (${typeof queryType})`);
+    console.log(`🔍 DataBase - Exécution de la requête prédéfinie: ${queryType} [REFACTORISÉE]`);
     
-    if (queryType === 'ajouter_ligne_aleatoire') {
-        console.log('🎲 TRACE - Requête d\'ajout de ligne aléatoire détectée');
-    }
+    // Récupération des données avec StorageManager
+    const donnees = StorageManager.getDonnees();
+    let { lignes, headers } = extractDataStructure(donnees);
     
-    // Récupérer les données DIRECTEMENT de la base de données (localStorage)
-    console.log('🔥 CONFIRMATION - Lecture DIRECTE dans la BASE DE DONNÉES (localStorage)');
-    console.log('🔥 CONFIRMATION - AUCUN fichier JSON lu, uniquement localStorage');
-    const donnees = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-    console.log('🔍 DataBase - Données brutes du localStorage:', donnees);
-    console.log('🔍 DataBase - Clés disponibles:', Object.keys(donnees));
-    console.log('🔍 DEBUG - Type des données:', typeof donnees);
-    console.log('🔍 DEBUG - Taille JSON:', JSON.stringify(donnees).length, 'caractères');
-    
-    let lignes, headers;
-    
-    if (donnees.donnees && donnees.donnees.donnees) {
-        lignes = donnees.donnees.donnees;
-        headers = donnees.donnees.headers || [];
-        console.log(`✅ DataBase - Structure imbriquée détectée: ${lignes.length} lignes`);
-        console.log('🔍 DataBase - Headers:', headers);
-        console.log('🔍 DEBUG - Première ligne imbriquée:', lignes[0]);
-        console.log('🔍 DEBUG - Type première ligne:', typeof lignes[0]);
-    } else if (Array.isArray(donnees.donnees)) {
-        lignes = donnees.donnees;
-        headers = donnees.headers || [];
-        console.log(`✅ DataBase - Structure directe détectée: ${lignes.length} lignes`);
-        console.log('🔍 DataBase - Headers:', headers);
-        console.log('🔍 DEBUG - Première ligne directe:', lignes[0]);
-        console.log('🔍 DEBUG - Type première ligne:', typeof lignes[0]);
-    } else {
-        console.error('❌ DataBase - Aucune structure de données reconnue');
-        console.error('❌ DataBase - Structure complète:', JSON.stringify(donnees, null, 2));
-        
-        // Si c'est une requête d'ajout de ligne aléatoire et qu'il n'y a pas de données,
-        // créer une structure de base
+    // Gestion spéciale pour l'ajout de ligne aléatoire sans données
+    if (!lignes || lignes.length === 0) {
         if (queryType === 'ajouter_ligne_aleatoire') {
-            console.log('🎲 Création d\'une structure de données de base pour l\'ajout de ligne...');
-            
-            // Créer des headers par défaut
-                            headers = ['Dx', 'App Appli', 'App Code', 'Operator/Department', 'Business criticality', 'Functional monitoring (BSM)', 'In HCC', 'HCC eligibility'];
+            console.log('🎲 Création structure de base pour ajout ligne aléatoire');
+            headers = ['Dx', 'App Appli', 'App Code', 'Operator/Department', 'Business criticality', 'Functional monitoring (BSM)', 'In HCC', 'HCC eligibility'];
             lignes = [];
-            
-            console.log('✅ Structure de base créée:', headers);
-            
-            // Continuer avec le traitement
         } else {
+            console.error('❌ DataBase - Aucune donnée disponible');
             afficherErreur('Aucune donnée disponible. Veuillez d\'abord charger un fichier.');
             return;
         }
     }
+    
+    console.log(`✅ DataBase - Données prêtes: ${lignes.length} lignes, ${headers.length} colonnes`);
     
     let resultats = [];
     let titre = '';
@@ -2466,19 +2433,15 @@ function executeQuery(queryType) {
         
         switch (queryType) {
             case 'info_tables':
-                console.log('📊 DataBase - Informations sur les tables');
+                console.log('📊 DataBase - Informations sur les tables [REFACTORISÉ]');
                 titre = 'Informations sur les tables de la base';
                 
-                // Afficher les détails de la requête SQL équivalente
+                // Utiliser StorageManager pour obtenir les statistiques
+                const stats = StorageManager.getStats();
                 const sqlInfoTables = 'SELECT name, sql FROM sqlite_master WHERE type="table";';
                 
-                // Analyser les données disponibles
-                const donneesLocalStorage = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-                const summaryLocalStorage = JSON.parse(localStorage.getItem('dioo_summary') || '[]');
-                
                 const rawDataInfoTables = {
-                    donnees_localStorage: donneesLocalStorage,
-                    summary_localStorage: summaryLocalStorage,
+                    stats: stats,
                     nombre_lignes: lignes.length,
                     headers: headers
                 };
@@ -2487,17 +2450,17 @@ function executeQuery(queryType) {
                 resultats = [
                     {
                         'Nom de la table': 'dioo_donnees (table principale)',
-                        'Nombre de lignes': lignes.length,
-                        'Nombre de colonnes': headers.length,
+                        'Nombre de lignes': stats.donnees.dataLength,
+                        'Nombre de colonnes': stats.donnees.headersLength,
                         'Stockage': 'localStorage',
-                        'Taille (octets)': JSON.stringify(donneesLocalStorage).length
+                        'Taille (octets)': stats.donnees.sizeBytes
                     },
                     {
                         'Nom de la table': 'dioo_summary (consolidation)',
-                        'Nombre de lignes': summaryLocalStorage.length,
-                        'Nombre de colonnes': summaryLocalStorage.length > 0 ? Object.keys(summaryLocalStorage[0]).length : 0,
+                        'Nombre de lignes': stats.summary.length,
+                        'Nombre de colonnes': stats.summary.length > 0 ? Object.keys(StorageManager.getSummary()[0] || {}).length : 0,
                         'Stockage': 'localStorage',
-                        'Taille (octets)': JSON.stringify(summaryLocalStorage).length
+                        'Taille (octets)': stats.summary.sizeBytes
                     }
                 ];
                 
@@ -2505,69 +2468,38 @@ function executeQuery(queryType) {
                 break;
                 
             case 'total_lignes':
-                console.log('📊 DataBase - Calcul du total des lignes');
+                console.log('📊 DataBase - Calcul du total des lignes [REFACTORISÉ]');
                 titre = 'Total des lignes';
                 
-                // Afficher les détails de la requête SQL équivalente
-                const sqlTotalLignes = 'SELECT COUNT(*) AS total_lignes FROM dioo_donnees;';
+                // Utiliser SQLParser pour la requête COUNT
+                const sqlTotalLignes = 'SELECT COUNT(*) FROM dioo_donnees';
+                resultats = SQLParser.executeQuery(lignes, headers, sqlTotalLignes);
+                
                 const rawDataTotalLignes = {
+                    requete_sqljs: sqlTotalLignes,
                     nombre_lignes_total: lignes.length,
-                    resultats_traites: [{ 'Nombre de lignes': lignes.length }],
+                    resultats_traites: resultats,
                     lignes_brutes: lignes.slice(0, 5),
                     headers: headers
                 };
                 afficherDetailsRequete(sqlTotalLignes, 'Total des lignes', rawDataTotalLignes);
                 
-                resultats = [{ 'Nombre de lignes': lignes.length }];
-                console.log(`✅ DataBase - Total calculé: ${lignes.length} lignes`);
+                console.log(`✅ DataBase - Total calculé via SQLParser: ${resultats[0]['Nombre de lignes']} lignes`);
                 break;
                 
             case 'premieres_lignes':
-                console.log('📊 DataBase - Affichage des premières lignes');
-                console.log(`🔍 DEBUG - Nombre total de lignes disponibles: ${lignes.length}`);
-                console.log(`🔍 DEBUG - Headers disponibles:`, headers);
-                console.log(`🔍 DEBUG - Première ligne brute:`, lignes[0]);
-                console.log(`🔍 DEBUG - Type de la première ligne:`, typeof lignes[0]);
-                
+                console.log('📊 DataBase - Affichage des premières lignes [REFACTORISÉ]');
                 titre = 'Premières lignes de la table';
                 
-                // Afficher les détails de la requête SQL équivalente
-                const sqlPremieres = 'SELECT * FROM dioo_donnees LIMIT 10;';
+                // Utiliser SQLParser pour la requête SELECT avec LIMIT
+                const sqlPremieres = 'SELECT * FROM dioo_donnees LIMIT 10';
+                resultats = SQLParser.executeQuery(lignes, headers, sqlPremieres);
                 
-                if (lignes.length === 0) {
-                    console.log('❌ DEBUG - Aucune ligne disponible');
-                    resultats = [];
-                } else {
-                    console.log(`🔍 DEBUG - Traitement de ${Math.min(10, lignes.length)} lignes`);
-                    // Retourner les 10 premières lignes avec toutes les colonnes
-                    console.log(`🚨 PREMIERES_LIGNES - Début du mapping des données`);
-                    console.log(`🚨 PREMIERES_LIGNES - Headers:`, headers);
-                    console.log(`🚨 PREMIERES_LIGNES - Première ligne brute:`, lignes[0]);
-                    console.log(`🚨 PREMIERES_LIGNES - Type de la première ligne:`, typeof lignes[0], Array.isArray(lignes[0]));
-                    
-                    resultats = lignes.slice(0, 10).map((ligne, index) => {
-                        console.log(`🚨 PREMIERES_LIGNES - Ligne ${index}:`, ligne);
-                        console.log(`🚨 PREMIERES_LIGNES - Type de ligne:`, typeof ligne, Array.isArray(ligne));
-                        const resultat = {};
-                        headers.forEach((header, headerIndex) => {
-                            // CORRECTION: Les données sont stockées comme des objets, pas des tableaux
-                            // Utiliser ligne[header] au lieu de ligne[headerIndex]
-                            const valeur = ligne[header] || '';
-                            resultat[header] = valeur;
-                            console.log(`🚨 PREMIERES_LIGNES - ${header}: "${valeur}" (était headerIndex ${headerIndex})`);
-                        });
-                        console.log(`🚨 PREMIERES_LIGNES - Résultat ligne ${index}:`, resultat);
-                        return resultat;
-                    });
-                    
-                    console.log(`🚨 PREMIERES_LIGNES - Résultats finaux:`, resultats);
-                }
-                
-                console.log(`✅ DataBase - ${resultats.length} premières lignes récupérées`);
-                console.log(`🔍 DEBUG - Résultats finaux:`, resultats);
+                console.log(`✅ DataBase - ${resultats.length} premières lignes récupérées via SQLParser`);
                 
                 // Afficher les détails avec le résultat brut
                 const rawData = {
+                    requete_sqljs: sqlPremieres,
                     lignes_brutes: lignes.slice(0, 10),
                     headers: headers,
                     resultats_traites: resultats,
@@ -2890,8 +2822,11 @@ function executeCustomQuery() {
 
 /**
  * Exécuter un filtre simple sur les données
+ * @deprecated Cette fonction est obsolète. Utiliser SQLParser.executeQuery() à la place.
+ * @see SQLParser.executeQuery()
  */
 function executerFiltreSimple(lignes, headers, query) {
+    console.warn('⚠️ DEPRECATED: executerFiltreSimple() est obsolète. Utiliser SQLParser.executeQuery() à la place.');
     console.log(`🔍 DataBase - Parsing de la requête: "${query}"`);
     console.log(`🔄 REQUÊTE REÇUE DANS executerFiltreSimple: "${query}"`);
     console.log(`📊 Nombre de lignes disponibles: ${lignes.length}`);
@@ -3057,8 +2992,11 @@ function executerFiltreSimple(lignes, headers, query) {
 
 /**
  * Filtrer les lignes avec une clause WHERE simple
+ * @deprecated Cette fonction est obsolète. Utiliser SQLParser.executeQuery() à la place.
+ * @see SQLParser.executeQuery()
  */
 function filtrerLignesAvecWhere(lignes, headers, whereClause) {
+    console.warn('⚠️ DEPRECATED: filtrerLignesAvecWhere() est obsolète. Utiliser SQLParser.executeQuery() à la place.');
     console.log(`🔍 DataBase - Filtrage avec WHERE: "${whereClause}"`);
     
     // Parser simple pour des conditions comme:
@@ -3321,8 +3259,11 @@ function afficherDetailsRequete(sqlQuery, type = 'Requête prédéfinie', rawRes
 
 /**
  * Créer une requête SQL.js équivalente
+ * @deprecated Cette fonction est obsolète. Utiliser SQLParser.createSQLJSQuery() à la place.
+ * @see SQLParser.createSQLJSQuery()
  */
 function creerRequeteSQLJS(query, headers) {
+    console.warn('⚠️ DEPRECATED: creerRequeteSQLJS() est obsolète. Utiliser SQLParser.createSQLJSQuery() à la place.');
     console.log(`🔧 Création de la requête SQL.js pour: "${query}"`);
     
     let sqlQuery = '';
@@ -3465,15 +3406,11 @@ function diagnosticRapide() {
  * Fonction simple pour obtenir juste le nombre de lignes
  */
 function compterLignes() {
-    const donnees = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
+    // Utiliser StorageManager et extractDataStructure
+    const donnees = StorageManager.getDonnees();
+    const { lignes } = extractDataStructure(donnees);
     
-    if (donnees.donnees && donnees.donnees.donnees) {
-        return donnees.donnees.donnees.length;
-    } else if (Array.isArray(donnees.donnees)) {
-        return donnees.donnees.length;
-    } else {
-        return 0;
-    }
+    return lignes ? lignes.length : 0;
 }
 
 /**
@@ -3511,14 +3448,10 @@ function genererLigneAleatoire(headers) {
  * Obtenir le prochain compteur pour les identifiants Rand_XXX
  */
 function obtenirProchainCompteurRand() {
-    // Récupérer le compteur actuel du localStorage
-    let compteur = parseInt(localStorage.getItem('dioo_rand_counter') || '0');
-    compteur++;
+    // Utiliser StorageManager pour incrémenter le compteur
+    const compteur = StorageManager.incrementRandCounter();
     
-    // Sauvegarder le nouveau compteur
-    localStorage.setItem('dioo_rand_counter', compteur.toString());
-    
-    console.log(`🔢 Prochain compteur Rand: ${compteur}`);
+    console.log(`🔢 Prochain compteur Rand via StorageManager: ${compteur}`);
     return compteur;
 }
 
@@ -3597,13 +3530,14 @@ function genererValeurAleatoire(nomColonne) {
  * Sauvegarder les données modifiées dans localStorage
  */
 function sauvegarderDonneesModifiees(lignes, headers) {
-    console.log('💾 Sauvegarde des données modifiées...');
+    console.log('💾 Sauvegarde des données modifiées [REFACTORISÉE]...');
     console.log(`💾 Lignes à sauvegarder: ${lignes.length}`);
     console.log(`💾 Headers à sauvegarder: ${headers.length}`);
     
     try {
-        let donnees = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-        console.log('💾 Données existantes:', Object.keys(donnees));
+        // Récupérer les données existantes avec StorageManager
+        let donnees = StorageManager.getDonnees();
+        console.log('💾 Données existantes récupérées via StorageManager');
         
         // Si aucune structure n'existe, créer une nouvelle structure
         if (!donnees.donnees && !donnees.fichier) {
@@ -3622,11 +3556,13 @@ function sauvegarderDonneesModifiees(lignes, headers) {
                 metadata: {
                     nombreLignes: lignes.length,
                     colonnes: headers,
-                    version: 'v0.000-stable-extract-viewer-database'
+                    version: 'v0.000A-Refacto-Step1'
                 }
             };
         } else {
-            // Mettre à jour les données existantes
+            // Mettre à jour les données existantes avec extractDataStructure
+            const { lignes: lignesExistantes } = extractDataStructure(donnees);
+            
             if (donnees.donnees && donnees.donnees.donnees) {
                 console.log('💾 Mise à jour structure imbriquée...');
                 donnees.donnees.donnees = lignes;
@@ -3644,29 +3580,26 @@ function sauvegarderDonneesModifiees(lignes, headers) {
             }
             
             // Mettre à jour les métadonnées
-            if (donnees.metadata) {
-                donnees.metadata.nombreLignes = lignes.length;
-                donnees.metadata.colonnes = headers;
-            } else {
-                donnees.metadata = {
-                    nombreLignes: lignes.length,
-                    colonnes: headers,
-                    version: 'v0.000-stable-extract-viewer-database'
-                };
-            }
+            donnees.metadata = {
+                nombreLignes: lignes.length,
+                colonnes: headers,
+                version: 'v0.000A-Refacto-Step1',
+                lastModified: new Date().toISOString()
+            };
         }
         
-        // Sauvegarder
-        const donneesString = JSON.stringify(donnees);
-        localStorage.setItem('dioo_donnees', donneesString);
+        // Sauvegarder avec StorageManager
+        const success = StorageManager.setDonnees(donnees);
         
-        console.log(`✅ Données sauvegardées: ${lignes.length} lignes`);
-        console.log(`✅ Taille sauvegardée: ${donneesString.length} caractères`);
-        
-        // Vérifier la sauvegarde
-        const verification = JSON.parse(localStorage.getItem('dioo_donnees') || '{}');
-        const lignesVerif = verification.donnees?.donnees?.length || verification.donnees?.length || 0;
-        console.log(`✅ Vérification: ${lignesVerif} lignes sauvegardées`);
+        if (success) {
+            console.log(`✅ Données sauvegardées via StorageManager: ${lignes.length} lignes`);
+            
+            // Vérification avec StorageManager
+            const stats = StorageManager.getStats();
+            console.log(`✅ Vérification: ${stats.donnees.dataLength} lignes sauvegardées`);
+        } else {
+            throw new Error('Échec de la sauvegarde via StorageManager');
+        }
         
     } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde:', error);
@@ -3983,7 +3916,7 @@ window.dioo = {
     toggleDatabaseSection: toggleDatabaseSection,
     executeQuery: executeQuery,
     executeCustomQuery: executeCustomQuery,
-    creerRequeteSQLJS: creerRequeteSQLJS,
+    // creerRequeteSQLJS: creerRequeteSQLJS, // DEPRECATED - Utiliser SQLParser.createSQLJSQuery()
     testCustomQuery: () => {
         console.log('🧪 Test de la requête personnalisée');
         const queryInput = document.getElementById('custom-query-input');
