@@ -664,25 +664,41 @@ async function etapeImportDonnees() {
         
         reader.onload = function(e) {
             try {
+                console.log('🔍 DEBUG - Début traitement fichier');
+                console.log('🔍 DEBUG - Nom fichier:', window.fichierCourant.name);
+                console.log('🔍 DEBUG - Taille données:', e.target.result?.byteLength || e.target.result?.length);
+                
                 // Traitement du fichier
                 let donnees;
                 const extension = window.fichierCourant.name.split('.').pop().toLowerCase();
+                console.log('🔍 DEBUG - Extension détectée:', extension);
                 
                 switch (extension) {
                     case 'json':
+                        console.log('🔍 DEBUG - Parsing JSON...');
                         donnees = JSON.parse(e.target.result);
                         break;
                     case 'csv':
+                        console.log('🔍 DEBUG - Parsing CSV...');
                         donnees = parseCSV(e.target.result);
                         break;
                     case 'xlsx':
+                        console.log('🔍 DEBUG - Parsing XLSX...');
                         donnees = parseXLSX(e.target.result);
+                        console.log('🔍 DEBUG - Résultat parseXLSX:', donnees);
                         break;
                     default:
+                        console.log('🔍 DEBUG - Format non reconnu, traitement par défaut');
                         donnees = { contenu: e.target.result };
                 }
 
                 console.log('✅ Import réussi:', donnees);
+                console.log('🔍 DEBUG - Structure données:', {
+                    hasDonnees: !!donnees?.donnees,
+                    isArray: Array.isArray(donnees?.donnees),
+                    length: donnees?.donnees?.length || 0,
+                    hasHeaders: !!donnees?.headers
+                });
                 
                 // Sauvegarder les données traitées
                 window.donneesImportees = donnees;
@@ -953,8 +969,13 @@ function parseCSV(csvText) {
  */
 function parseXLSX(arrayBuffer) {
     try {
+        console.log('🔍 DEBUG parseXLSX - Début parsing Excel');
+        console.log('🔍 DEBUG parseXLSX - Type arrayBuffer:', typeof arrayBuffer);
+        console.log('🔍 DEBUG parseXLSX - Taille arrayBuffer:', arrayBuffer?.byteLength);
+        
         // Lire le fichier Excel avec SheetJS
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        console.log('🔍 DEBUG parseXLSX - Workbook créé:', !!workbook);
         
         console.log(`📊 Feuilles Excel disponibles: ${workbook.SheetNames.join(', ')}`);
         
@@ -1029,7 +1050,7 @@ function parseXLSX(arrayBuffer) {
             },
             'HCC eligibility': {
                 nouveauNom: 'HCC eligibility',
-                variations: ['HCC eligibility', 'HCC Eligibility', 'HCC_eligibility', 'Eligible HCC', 'HCC Eligible']
+                variations: ['HCC eligibility', 'HCC Eligibility', 'HCC_eligibility', 'Eligible HCC', 'HCC Eligible', 'HCC eligibility AV (Added Value)', 'HCC eligibility AV']
             }
         };
         
@@ -1107,7 +1128,7 @@ function parseXLSX(arrayBuffer) {
         
         console.log(`📊 Données filtrées: ${donnees.length} lignes avec ${headersFiltrés.length} colonnes`);
         
-        return {
+        const result = {
             headers: headersFinaux,
             donnees,
             totalLignes: donnees.length,
@@ -1116,6 +1137,11 @@ function parseXLSX(arrayBuffer) {
             ongletUtilise: targetSheetIndex + 1,
             dateExtrait: dateExtrait
         };
+        
+        console.log('🔍 DEBUG parseXLSX - Résultat final:', result);
+        console.log('🔍 DEBUG parseXLSX - Nombre de données retournées:', result.donnees?.length);
+        
+        return result;
         
     } catch (error) {
         console.error('❌ Erreur lors du parsing Excel:', error);
@@ -2114,7 +2140,7 @@ function trouverIndicesColonnes(headers) {
         'businessCriticality': ['Business criticality', 'Business Criticality', 'Criticality'],
         'functionalMonitoring': ['Functional monitoring (BSM)', 'Functional monitoring', 'Functional Monitoring'],
         'inHCC': ['In HCC', 'HCC'],
-        'hccEligibility': ['HCC eligibility', 'HCC Eligibility']
+        'hccEligibility': ['HCC eligibility', 'HCC Eligibility', 'HCC eligibility AV (Added Value)', 'HCC eligibility AV']
     };
     
     const indices = {};
@@ -2296,8 +2322,20 @@ function creerGraphiqueSection(section, data) {
                                         const backgroundColor = dataset.backgroundColor[i];
                                         const borderColor = dataset.borderColor[i];
                                         
+                                        // Logique spéciale pour le camembert DP
+                                        let text;
+                                        if (i === 0) {
+                                            // Critical Business Services : pas de pourcentage
+                                            text = `${label}: ${dataset.data[i]}`;
+                                        } else {
+                                            // Still to be onboarded : pourcentage par rapport à Critical Business Services
+                                            const criticalBusinessServices = dataset.data[0];
+                                            const percentage = criticalBusinessServices > 0 ? Math.round((dataset.data[i] / criticalBusinessServices) * 100) : 0;
+                                            text = `${label}: ${dataset.data[i]} (${percentage}%)`;
+                                        }
+                                        
                                         return {
-                                            text: `${label}: ${dataset.data[i]}`,
+                                            text: text,
                                             fillStyle: backgroundColor,
                                             strokeStyle: borderColor,
                                             lineWidth: 2,
@@ -2318,11 +2356,12 @@ function creerGraphiqueSection(section, data) {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const total = totalCritiques + stillToOnboard;
-                                const percentage = Math.round((context.parsed / total) * 100);
                                 if (context.dataIndex === 0) {
-                                    return `Critical Business Services: ${totalCritiques} (${percentage}%)`;
+                                    // Critical Business Services : pas de pourcentage
+                                    return `Critical Business Services: ${totalCritiques}`;
                                 } else {
+                                    // Still to be onboarded : pourcentage par rapport à Critical Business Services
+                                    const percentage = totalCritiques > 0 ? Math.round((stillToOnboard / totalCritiques) * 100) : 0;
                                     return `Still to onboard: ${stillToOnboard} (${percentage}%)`;
                                 }
                             }
@@ -2340,12 +2379,12 @@ function creerGraphiqueSection(section, data) {
                 datasets: [{
                     data: [data.monitored, data.total - data.monitored],
                     backgroundColor: [
-                        'rgba(126, 231, 135, 0.8)',
-                        'rgba(255, 90, 122, 0.8)'
+                        'rgba(63, 182, 255, 0.8)',
+                        'rgba(255, 193, 7, 0.8)'
                     ],
                     borderColor: [
-                        'rgba(126, 231, 135, 1)',
-                        'rgba(255, 90, 122, 1)'
+                        'rgba(63, 182, 255, 1)',
+                        'rgba(255, 193, 7, 1)'
                     ],
                     borderWidth: 2
                 }]
@@ -2366,8 +2405,12 @@ function creerGraphiqueSection(section, data) {
                                         const backgroundColor = dataset.backgroundColor[i];
                                         const borderColor = dataset.borderColor[i];
                                         
+                                        // Calculer le pourcentage
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((dataset.data[i] / total) * 100);
+                                        
                                         return {
-                                            text: `${label}: ${dataset.data[i]}`,
+                                            text: `${label}: ${dataset.data[i]} (${percentage}%)`,
                                             fillStyle: backgroundColor,
                                             strokeStyle: borderColor,
                                             lineWidth: 2,
@@ -2408,34 +2451,34 @@ function creerGraphiquesBSMHCC(resultats) {
     // Ligne 1: BSM
     creerPetitCamembert('monitored-bsm-chart', 
         ['Monitored', 'Not Monitored'], 
-        [monitoredBSM, totalCritiques - monitoredBSM],
-        ['rgba(126, 231, 135, 0.8)', 'rgba(255, 90, 122, 0.8)']);
+        [monitoredBSM, notRequiredBSM],
+        ['rgba(63, 182, 255, 0.8)', 'rgba(255, 193, 7, 0.8)']);
     
     creerPetitCamembert('not-required-bsm-chart', 
         ['Not Required', 'Required'], 
         [notRequiredBSM, totalCritiques - notRequiredBSM],
-        ['rgba(255, 193, 7, 0.8)', 'rgba(63, 182, 255, 0.8)']);
+        ['rgba(63, 182, 255, 0.8)', 'rgba(255, 193, 7, 0.8)']);
     
     creerPetitCamembert('critical-eligible-bsm-chart', 
         ['Eligible', 'Others'], 
         [Math.max(0, criticalEligibleBSM), totalCritiques - Math.max(0, criticalEligibleBSM)],
-        ['rgba(156, 39, 176, 0.8)', 'rgba(158, 158, 158, 0.8)']);
+        ['rgba(63, 182, 255, 0.8)', 'rgba(255, 193, 7, 0.8)']);
     
     // Ligne 2: HCC
     creerPetitCamembert('onboarded-hcc-chart', 
         ['Onboarded', 'Not Onboarded'], 
-        [monitoredHCC, totalCritiques - monitoredHCC],
-        ['rgba(76, 175, 80, 0.8)', 'rgba(244, 67, 54, 0.8)']);
+        [monitoredHCC, notRequiredHCC],
+        ['rgba(63, 182, 255, 0.8)', 'rgba(255, 193, 7, 0.8)']);
     
     creerPetitCamembert('not-required-hcc-chart', 
         ['Not Required', 'Required'], 
         [notRequiredHCC, totalCritiques - notRequiredHCC],
-        ['rgba(255, 152, 0, 0.8)', 'rgba(33, 150, 243, 0.8)']);
+        ['rgba(63, 182, 255, 0.8)', 'rgba(255, 193, 7, 0.8)']);
     
     creerPetitCamembert('critical-eligible-hcc-chart', 
         ['Eligible', 'Others'], 
         [Math.max(0, criticalEligibleHCC), totalCritiques - Math.max(0, criticalEligibleHCC)],
-        ['rgba(103, 58, 183, 0.8)', 'rgba(158, 158, 158, 0.8)']);
+        ['rgba(63, 182, 255, 0.8)', 'rgba(255, 193, 7, 0.8)']);
 }
 
 /**
@@ -2494,9 +2537,9 @@ function creerPetitCamembert(canvasId, labels, data, colors) {
                             return [];
                         },
                         font: {
-                            size: 11  // Même taille que le camembert principal
+                            size: 9  // Taille réduite pour les petits camemberts
                         },
-                        padding: 8
+                        padding: 4
                     }
                 },
                 tooltip: {
@@ -3967,8 +4010,8 @@ async function effectuerCalculsConsolidationSQL() {
             SELECT COUNT(*) as total 
             FROM dioo_donnees 
             WHERE UPPER("Dx") = 'DP' 
-            AND UPPER("Business criticality") = 'CRITICAL'
-        `;
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("Business criticality") = 'CRITICAL'        `;
         
         const totalCritiques = await executerRequeteSQL('Total Applications Critiques', queryTotalCritiques);
         
@@ -3978,6 +4021,7 @@ async function effectuerCalculsConsolidationSQL() {
             FROM dioo_donnees 
             WHERE UPPER("Dx") = 'DP' 
             AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
             AND UPPER("Functional monitoring (BSM)") = 'YES'
         `;
         
@@ -3989,6 +4033,7 @@ async function effectuerCalculsConsolidationSQL() {
             FROM dioo_donnees 
             WHERE UPPER("Dx") = 'DP' 
             AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
             AND UPPER("In HCC") = 'NO'
         `;
         
@@ -4000,6 +4045,7 @@ async function effectuerCalculsConsolidationSQL() {
             FROM dioo_donnees 
             WHERE UPPER("Dx") = 'DP' 
             AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
             AND UPPER("Functional monitoring (BSM)") = 'NO'
             AND UPPER("HCC eligibility") = 'NO'
         `;
@@ -4011,6 +4057,7 @@ async function effectuerCalculsConsolidationSQL() {
             SELECT COUNT(*) as count 
             FROM dioo_donnees 
             WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like 'DP%'
             AND UPPER("Business criticality") = 'CRITICAL'
             AND UPPER("In HCC") = 'YES'
         `;
@@ -4022,6 +4069,7 @@ async function effectuerCalculsConsolidationSQL() {
             SELECT COUNT(*) as count 
             FROM dioo_donnees 
             WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like 'DP%'
             AND UPPER("Business criticality") = 'CRITICAL'
             AND UPPER("In HCC") = 'NO'
             AND UPPER("HCC eligibility") = 'NO'
@@ -4031,9 +4079,10 @@ async function effectuerCalculsConsolidationSQL() {
         
         // Calculer les sections DP avec SQL
         const sectionsDP = await calculerSectionsDPSQL();
-        
+
         // Calculer le total de toutes les sections DP pour le pourcentage
         const totalSectionsDP = Object.values(sectionsDP).reduce((sum, section) => sum + section.total, 0);
+
         
         // Calculer les pourcentages
         const pctSectionsDP = totalCritiques > 0 ? Math.round((stillToMonitor / totalCritiques) * 100) : 0;
