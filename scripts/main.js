@@ -1924,7 +1924,15 @@ async function calculerConsolidationAsync() {
         // Pour l'instant, utiliser l'ancienne méthode en attendant
         const donnees = await window.DatabaseManager.getDonnees();
         const { lignes, headers } = extractDataStructure(donnees);
-        const resultats = effectuerCalculsConsolidation({ lignes, headers });
+        
+        // Adapter la structure pour effectuerCalculsConsolidation()
+        const donneesFormatees = {
+            donnees: lignes,
+            headers: headers,
+            dateExtrait: new Date().toISOString().split('T')[0]
+        };
+        
+        const resultats = effectuerCalculsConsolidation(donneesFormatees);
         
         // Sauvegarder dans Dioo_Summary
         sauvegarderDansHistorique(resultats);
