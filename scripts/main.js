@@ -2462,6 +2462,20 @@ async function executeQueryAsync(queryType) {
         return;
     }
     
+    // Récupération des données pour compatibilité avec certains cas
+    let lignes = [], headers = [];
+    try {
+        const donnees = await window.DatabaseManager.getDonnees();
+        const extracted = extractDataStructure(donnees);
+        lignes = extracted.lignes;
+        headers = extracted.headers;
+        console.log(`📊 Données récupérées: ${lignes.length} lignes, ${headers.length} colonnes`);
+    } catch (error) {
+        console.log('⚠️ Pas de données existantes, création structure vide');
+        lignes = [];
+        headers = ['Dx', 'App Appli', 'App Code', 'Operator/Department', 'Business criticality', 'Functional monitoring (BSM)', 'In HCC', 'HCC eligibility'];
+    }
+    
     // Gestion spéciale pour l'ajout de ligne aléatoire sans données
     if (!lignes || lignes.length === 0) {
         if (queryType === 'ajouter_ligne_aleatoire') {
