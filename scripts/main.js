@@ -3851,6 +3851,15 @@ async function effectuerCalculsConsolidationSQL() {
         // Calculer les sections DP avec SQL
         const sectionsDP = await calculerSectionsDPSQL();
         
+        // Créer la structure attendue pour la section DP principale
+        const dpPrincipal = {
+            criticalBusinessServices: totalCritiques,
+            stillToOnboard: stillToMonitor
+        };
+        
+        // Ajouter la section DP principale aux sections
+        sectionsDP.dp = dpPrincipal;
+        
         const resultats = {
             date: new Date().toISOString().split('T')[0],
             totalCritiques,
@@ -3862,7 +3871,7 @@ async function effectuerCalculsConsolidationSQL() {
             notRequiredHCC,
             pctMonitoredHCC,
             pctNotRequiredHCC,
-            sections: sectionsDP
+            sectionsDP: sectionsDP
         };
         
         console.log('✅ Calculs de consolidation SQL terminés:', resultats);
@@ -3902,19 +3911,35 @@ async function calculerSectionsDPSQL() {
     const dpTypes = ['DP1', 'DP2', 'DP3', 'DP4', 'DP5'];
     
     for (const dpType of dpTypes) {
-        const query = `
+        // Compter le total pour ce type DP
+        const queryTotal = `
             SELECT COUNT(*) as count 
             FROM dioo_donnees 
             WHERE UPPER("Dx") = '${dpType}' 
             AND UPPER("Business criticality") = 'CRITICAL'
         `;
         
+        // Compter les monitored pour ce type DP
+        const queryMonitored = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = '${dpType}' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+        `;
+        
         try {
-            const count = await executerRequeteSQL(`Section ${dpType}`, query);
-            sections[dpType] = { total: count, monitored: 0 };
+            const total = await executerRequeteSQL(`Section ${dpType} - Total`, queryTotal);
+            const monitored = await executerRequeteSQL(`Section ${dpType} - Monitored`, queryMonitored);
+            
+            // Mapper vers les noms de sections attendus (dpa, dpb, etc.)
+            const sectionKey = dpType.toLowerCase().replace('dp', 'dp').replace('1', 'a').replace('2', 'b').replace('3', 'c').replace('4', 'p').replace('5', 's');
+            sections[sectionKey] = { total, monitored };
+            
         } catch (error) {
             console.error(`Erreur calcul section ${dpType}:`, error);
-            sections[dpType] = { total: 0, monitored: 0 };
+            const sectionKey = dpType.toLowerCase().replace('dp', 'dp').replace('1', 'a').replace('2', 'b').replace('3', 'c').replace('4', 'p').replace('5', 's');
+            sections[sectionKey] = { total: 0, monitored: 0 };
         }
     }
     
