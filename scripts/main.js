@@ -3843,13 +3843,17 @@ async function effectuerCalculsConsolidationSQL() {
         
         const notRequiredHCC = await executerRequeteSQL('HCC - Not Required', queryNotRequiredHCC);
         
+        // Calculer les sections DP avec SQL
+        const sectionsDP = await calculerSectionsDPSQL();
+        
+        // Calculer le total de toutes les sections DP pour le pourcentage
+        const totalSectionsDP = Object.values(sectionsDP).reduce((sum, section) => sum + section.total, 0);
+        
         // Calculer les pourcentages
+        const pctSectionsDP = totalCritiques > 0 ? Math.round((totalSectionsDP / totalCritiques) * 100) : 0;
         const pctNotRequiredBSM = totalCritiques > 0 ? Math.round((notRequiredBSM / totalCritiques) * 100) : 0;
         const pctMonitoredHCC = totalCritiques > 0 ? Math.round((monitoredHCC / totalCritiques) * 100) : 0;
         const pctNotRequiredHCC = totalCritiques > 0 ? Math.round((notRequiredHCC / totalCritiques) * 100) : 0;
-        
-        // Calculer les sections DP avec SQL
-        const sectionsDP = await calculerSectionsDPSQL();
         
         // Créer la structure attendue pour la section DP principale
         const dpPrincipal = {
@@ -3871,6 +3875,8 @@ async function effectuerCalculsConsolidationSQL() {
             notRequiredHCC,
             pctMonitoredHCC,
             pctNotRequiredHCC,
+            pctSectionsDP,
+            totalSectionsDP,
             sectionsDP: sectionsDP
         };
         
@@ -3933,12 +3939,28 @@ async function calculerSectionsDPSQL() {
             const monitored = await executerRequeteSQL(`Section ${dpType} - Monitored`, queryMonitored);
             
             // Mapper vers les noms de sections attendus (dpa, dpb, etc.)
-            const sectionKey = dpType.toLowerCase().replace('dp', 'dp').replace('1', 'a').replace('2', 'b').replace('3', 'c').replace('4', 'p').replace('5', 's');
+            let sectionKey;
+            switch(dpType) {
+                case 'DP1': sectionKey = 'dpa'; break;
+                case 'DP2': sectionKey = 'dpb'; break;
+                case 'DP3': sectionKey = 'dpc'; break;
+                case 'DP4': sectionKey = 'dpp'; break;
+                case 'DP5': sectionKey = 'dps'; break;
+                default: sectionKey = dpType.toLowerCase();
+            }
             sections[sectionKey] = { total, monitored };
             
         } catch (error) {
             console.error(`Erreur calcul section ${dpType}:`, error);
-            const sectionKey = dpType.toLowerCase().replace('dp', 'dp').replace('1', 'a').replace('2', 'b').replace('3', 'c').replace('4', 'p').replace('5', 's');
+            let sectionKey;
+            switch(dpType) {
+                case 'DP1': sectionKey = 'dpa'; break;
+                case 'DP2': sectionKey = 'dpb'; break;
+                case 'DP3': sectionKey = 'dpc'; break;
+                case 'DP4': sectionKey = 'dpp'; break;
+                case 'DP5': sectionKey = 'dps'; break;
+                default: sectionKey = dpType.toLowerCase();
+            }
             sections[sectionKey] = { total: 0, monitored: 0 };
         }
     }
