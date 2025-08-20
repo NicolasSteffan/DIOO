@@ -1920,19 +1920,11 @@ async function calculerConsolidationAsync() {
         console.log('🚀 Calculs de consolidation avec SQL.js natif');
         
         // 🎯 RÉVOLUTION: Calculs directs avec SQL natif !
-        // TODO: Implémenter effectuerCalculsConsolidationSQL() 
-        // Pour l'instant, utiliser l'ancienne méthode en attendant
-        const donnees = await window.DatabaseManager.getDonnees();
-        const { lignes, headers } = extractDataStructure(donnees);
+        // Afficher la section des requêtes SQL
+        afficherSectionRequetesSQL();
         
-        // Adapter la structure pour effectuerCalculsConsolidation()
-        const donneesFormatees = {
-            donnees: lignes,
-            headers: headers,
-            dateExtrait: new Date().toISOString().split('T')[0]
-        };
-        
-        const resultats = effectuerCalculsConsolidation(donneesFormatees);
+        // Effectuer les calculs avec des vraies requêtes SQL
+        const resultats = await effectuerCalculsConsolidationSQL();
         
         // Sauvegarder dans Dioo_Summary
         sauvegarderDansHistorique(resultats);
@@ -3704,3 +3696,227 @@ window.dioo = {
     effacerContenuBrut: effacerContenuBrut,
     copierContenuBrut: copierContenuBrut
 };
+
+/*===============================================
+  FONCTIONS AFFICHAGE REQUÊTES SQL
+===============================================*/
+
+/**
+ * Afficher la section des requêtes SQL
+ */
+function afficherSectionRequetesSQL() {
+    const section = document.getElementById('sql-queries-section');
+    if (section) {
+        section.style.display = 'block';
+        // Vider la liste des requêtes précédentes
+        viderListeRequetesSQL();
+    }
+}
+
+/**
+ * Vider la liste des requêtes SQL
+ */
+function viderListeRequetesSQL() {
+    const liste = document.getElementById('sql-query-list');
+    if (liste) {
+        liste.innerHTML = '<p class="no-queries">Calcul en cours...</p>';
+    }
+}
+
+/**
+ * Ajouter une requête SQL à l'affichage
+ */
+function ajouterRequeteSQL(titre, requete, resultat = null, erreur = null) {
+    const liste = document.getElementById('sql-query-list');
+    if (!liste) return;
+    
+    // Supprimer le message "aucune requête"
+    const noQueries = liste.querySelector('.no-queries');
+    if (noQueries) {
+        noQueries.remove();
+    }
+    
+    const timestamp = new Date().toLocaleTimeString();
+    
+    const queryItem = document.createElement('div');
+    queryItem.className = 'sql-query-item';
+    
+    let resultHtml = '';
+    if (erreur) {
+        resultHtml = `<div class="sql-query-error">❌ Erreur: ${erreur}</div>`;
+    } else if (resultat !== null) {
+        if (typeof resultat === 'number') {
+            resultHtml = `<div class="sql-query-result">✅ Résultat: ${resultat}</div>`;
+        } else if (Array.isArray(resultat)) {
+            resultHtml = `<div class="sql-query-result">✅ ${resultat.length} ligne(s) retournée(s)</div>`;
+        } else {
+            resultHtml = `<div class="sql-query-result">✅ Exécutée avec succès</div>`;
+        }
+    }
+    
+    queryItem.innerHTML = `
+        <div class="sql-query-header">
+            <div class="sql-query-title">${titre}</div>
+            <div class="sql-query-time">${timestamp}</div>
+        </div>
+        <div class="sql-query-code">${requete}</div>
+        ${resultHtml}
+    `;
+    
+    liste.appendChild(queryItem);
+    
+    // Scroll vers le bas pour voir la nouvelle requête
+    liste.scrollTop = liste.scrollHeight;
+}
+
+/**
+ * Effectuer les calculs de consolidation avec SQL natif
+ */
+async function effectuerCalculsConsolidationSQL() {
+    console.log('🎯 Calculs de consolidation avec requêtes SQL natives');
+    
+    try {
+        // 1. Compter le total d'applications critiques
+        const queryTotalCritiques = `
+            SELECT COUNT(*) as total 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+        `;
+        
+        const totalCritiques = await executerRequeteSQL('Total Applications Critiques', queryTotalCritiques);
+        
+        // 2. BSM - Monitored in BSM
+        const queryMonitoredBSM = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+        `;
+        
+        const monitoredBSM = await executerRequeteSQL('BSM - Monitored', queryMonitoredBSM);
+        
+        // 3. BSM - Still To Be Monitored
+        const queryStillToMonitor = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const stillToMonitor = await executerRequeteSQL('BSM - Still To Monitor', queryStillToMonitor);
+        
+        // 4. HCC - Confirmed Not Required in BSM
+        const queryNotRequiredBSM = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const notRequiredBSM = await executerRequeteSQL('HCC - Not Required BSM', queryNotRequiredBSM);
+        
+        // 5. HCC - Monitored in HCC
+        const queryMonitoredHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("In HCC") = 'YES'
+        `;
+        
+        const monitoredHCC = await executerRequeteSQL('HCC - Monitored', queryMonitoredHCC);
+        
+        // 6. HCC - Confirmed not required in HCC
+        const queryNotRequiredHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const notRequiredHCC = await executerRequeteSQL('HCC - Not Required', queryNotRequiredHCC);
+        
+        // Calculer les pourcentages
+        const pctNotRequiredBSM = totalCritiques > 0 ? Math.round((notRequiredBSM / totalCritiques) * 100) : 0;
+        const pctMonitoredHCC = totalCritiques > 0 ? Math.round((monitoredHCC / totalCritiques) * 100) : 0;
+        const pctNotRequiredHCC = totalCritiques > 0 ? Math.round((notRequiredHCC / totalCritiques) * 100) : 0;
+        
+        // Calculer les sections DP avec SQL
+        const sectionsDP = await calculerSectionsDPSQL();
+        
+        const resultats = {
+            date: new Date().toISOString().split('T')[0],
+            totalCritiques,
+            monitoredBSM,
+            stillToMonitor,
+            notRequiredBSM,
+            pctNotRequiredBSM,
+            monitoredHCC,
+            notRequiredHCC,
+            pctMonitoredHCC,
+            pctNotRequiredHCC,
+            sections: sectionsDP
+        };
+        
+        console.log('✅ Calculs de consolidation SQL terminés:', resultats);
+        return resultats;
+        
+    } catch (error) {
+        console.error('❌ Erreur dans les calculs SQL:', error);
+        ajouterRequeteSQL('ERREUR', 'Calculs de consolidation', null, error.message);
+        throw error;
+    }
+}
+
+/**
+ * Exécuter une requête SQL et afficher le résultat
+ */
+async function executerRequeteSQL(titre, requete) {
+    try {
+        const results = await window.DatabaseManager.executeQuery(requete);
+        const valeur = results[0] ? (results[0].total || results[0].count || 0) : 0;
+        
+        ajouterRequeteSQL(titre, requete, valeur);
+        return valeur;
+        
+    } catch (error) {
+        ajouterRequeteSQL(titre, requete, null, error.message);
+        throw error;
+    }
+}
+
+/**
+ * Calculer les sections DP avec SQL
+ */
+async function calculerSectionsDPSQL() {
+    const sections = {};
+    
+    // Pour chaque section DP (DP1, DP2, DP3, DP4, DP5)
+    const dpTypes = ['DP1', 'DP2', 'DP3', 'DP4', 'DP5'];
+    
+    for (const dpType of dpTypes) {
+        const query = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = '${dpType}' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+        `;
+        
+        try {
+            const count = await executerRequeteSQL(`Section ${dpType}`, query);
+            sections[dpType] = { total: count, monitored: 0 };
+        } catch (error) {
+            console.error(`Erreur calcul section ${dpType}:`, error);
+            sections[dpType] = { total: 0, monitored: 0 };
+        }
+    }
+    
+    return sections;
+}
