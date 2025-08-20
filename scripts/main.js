@@ -2239,6 +2239,9 @@ function creerGraphiquesDP(resultats) {
         const sectionData = resultats.sectionsDP?.[section] || { total: 0, monitored: 0 };
         creerGraphiqueSection(section, sectionData);
     });
+    
+    // Créer les nouveaux graphiques BSM et HCC
+    creerGraphiquesBSMHCC(resultats);
 }
 
 /**
@@ -2281,7 +2284,14 @@ function creerGraphiqueSection(section, data) {
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: false  // Pas de titre ni légende
+                        display: true,  // Afficher les légendes
+                        position: 'bottom',
+                        labels: {
+                            color: '#2c3e50',
+                            font: {
+                                size: 11
+                            }
+                        }
                     },
                     tooltip: {
                         callbacks: {
@@ -2322,14 +2332,120 @@ function creerGraphiqueSection(section, data) {
                 responsive: true,
                 plugins: {
                     legend: {
+                        display: true,
+                        position: 'bottom',
                         labels: {
-                            color: '#a3b1c7'
+                            color: '#2c3e50',
+                            font: {
+                                size: 11
+                            }
                         }
                     }
                 }
             }
         });
     }
+}
+
+/**
+ * Créer les graphiques BSM et HCC
+ */
+function creerGraphiquesBSMHCC(resultats) {
+    const totalCritiques = resultats.totalCritiques || 0;
+    const monitoredBSM = resultats.monitoredBSM || 0;
+    const notRequiredBSM = resultats.notRequiredBSM || 0;
+    const monitoredHCC = resultats.monitoredHCC || 0;
+    const notRequiredHCC = resultats.notRequiredHCC || 0;
+    
+    // Calcul des valeurs pour "Critical eligible onboarded"
+    const criticalEligibleBSM = totalCritiques - monitoredBSM - notRequiredBSM;
+    const criticalEligibleHCC = totalCritiques - monitoredHCC - notRequiredHCC;
+    
+    // Ligne 1: BSM
+    creerPetitCamembert('monitored-bsm-chart', 
+        ['Monitored', 'Not Monitored'], 
+        [monitoredBSM, totalCritiques - monitoredBSM],
+        ['rgba(126, 231, 135, 0.8)', 'rgba(255, 90, 122, 0.8)']);
+    
+    creerPetitCamembert('not-required-bsm-chart', 
+        ['Not Required', 'Required'], 
+        [notRequiredBSM, totalCritiques - notRequiredBSM],
+        ['rgba(255, 193, 7, 0.8)', 'rgba(63, 182, 255, 0.8)']);
+    
+    creerPetitCamembert('critical-eligible-bsm-chart', 
+        ['Eligible', 'Others'], 
+        [Math.max(0, criticalEligibleBSM), totalCritiques - Math.max(0, criticalEligibleBSM)],
+        ['rgba(156, 39, 176, 0.8)', 'rgba(158, 158, 158, 0.8)']);
+    
+    // Ligne 2: HCC
+    creerPetitCamembert('onboarded-hcc-chart', 
+        ['Onboarded', 'Not Onboarded'], 
+        [monitoredHCC, totalCritiques - monitoredHCC],
+        ['rgba(76, 175, 80, 0.8)', 'rgba(244, 67, 54, 0.8)']);
+    
+    creerPetitCamembert('not-required-hcc-chart', 
+        ['Not Required', 'Required'], 
+        [notRequiredHCC, totalCritiques - notRequiredHCC],
+        ['rgba(255, 152, 0, 0.8)', 'rgba(33, 150, 243, 0.8)']);
+    
+    creerPetitCamembert('critical-eligible-hcc-chart', 
+        ['Eligible', 'Others'], 
+        [Math.max(0, criticalEligibleHCC), totalCritiques - Math.max(0, criticalEligibleHCC)],
+        ['rgba(103, 58, 183, 0.8)', 'rgba(158, 158, 158, 0.8)']);
+}
+
+/**
+ * Créer un petit camembert
+ */
+function creerPetitCamembert(canvasId, labels, data, colors) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    
+    const chartCtx = ctx.getContext('2d');
+    
+    // Détruire le graphique existant s'il y en a un
+    if (window[`${canvasId}Chart`]) {
+        window[`${canvasId}Chart`].destroy();
+    }
+    
+    window[`${canvasId}Chart`] = new Chart(chartCtx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderColor: colors.map(color => color.replace('0.8', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: '#2c3e50',
+                        font: {
+                            size: 10
+                        },
+                        padding: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((context.parsed / total) * 100);
+                            return `${context.label}: ${context.parsed} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 // Anciennes fonctions BSM/HCC supprimées - remplacées par les sections DP*

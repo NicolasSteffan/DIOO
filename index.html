@@ -88,6 +88,55 @@
             font-style: italic;
             padding: 20px;
         }
+        
+        /* Styles pour les cartes monitoring */
+        .metric-label-monitoring {
+            text-align: center;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .metric-value-monitoring {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .chart-container {
+            text-align: center;
+        }
+        
+        .chart-row {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            gap: 15px;
+        }
+        
+        .chart-item {
+            flex: 1;
+            text-align: center;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-item h5 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: #2c5aa0;
+            font-weight: bold;
+        }
+        
+        .chart-item canvas {
+            max-width: 120px;
+            max-height: 120px;
+        }
     </style>
     <!-- Bibliothèque SheetJS pour lire les fichiers Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -367,15 +416,47 @@
                             <div class="summary-content" id="dp-content">
                                 <div class="dp-layout">
                                     <div class="metric-card">
-                                        <div class="metric-label">Critical Business Services</div>
-                                        <div class="metric-value" id="critical-business-services">0</div>
+                                        <div class="metric-label-monitoring">Critical Business Services</div>
+                                        <div class="metric-value-monitoring" id="critical-business-services">0</div>
                                     </div>
                                     <div class="metric-card">
-                                        <div class="metric-value" id="still-to-onboard">0</div>
-                                        <div class="metric-label">Still to be onboarded</div>
+                                        <div class="metric-label-monitoring">Still to be onboarded</div>
+                                        <div class="metric-value-monitoring" id="still-to-onboard">0</div>
                                     </div>
                                     <div class="chart-card">
                                         <canvas id="dp-chart" width="200" height="75"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Ligne 1: BSM -->
+                                <div class="chart-row">
+                                    <div class="chart-item">
+                                        <h5>Monitored in BSM</h5>
+                                        <canvas id="monitored-bsm-chart" width="120" height="120"></canvas>
+                                    </div>
+                                    <div class="chart-item">
+                                        <h5>Confirmed Not required in BSM</h5>
+                                        <canvas id="not-required-bsm-chart" width="120" height="120"></canvas>
+                                    </div>
+                                    <div class="chart-item">
+                                        <h5>Critical eligible onboarded</h5>
+                                        <canvas id="critical-eligible-bsm-chart" width="120" height="120"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Ligne 2: HCC -->
+                                <div class="chart-row">
+                                    <div class="chart-item">
+                                        <h5>Onboarded in HCC</h5>
+                                        <canvas id="onboarded-hcc-chart" width="120" height="120"></canvas>
+                                    </div>
+                                    <div class="chart-item">
+                                        <h5>Confirmed Not required in HCC</h5>
+                                        <canvas id="not-required-hcc-chart" width="120" height="120"></canvas>
+                                    </div>
+                                    <div class="chart-item">
+                                        <h5>Critical eligible onboarded</h5>
+                                        <canvas id="critical-eligible-hcc-chart" width="120" height="120"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -395,12 +476,12 @@
                             <div class="summary-content" id="dpa-content">
                                 <div class="metric-grid">
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpa-total">0</div>
-                                        <div class="metric-label">Total DPA Critiques</div>
+                                        <div class="metric-label-monitoring">Total DPA Critiques</div>
+                                        <div class="metric-value-monitoring" id="dpa-total">0</div>
                                     </div>
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpa-monitored">0</div>
-                                        <div class="metric-label">DPA Monitored</div>
+                                        <div class="metric-label-monitoring">DPA Monitored</div>
+                                        <div class="metric-value-monitoring" id="dpa-monitored">0</div>
                                     </div>
                                 </div>
                                 <div class="chart-container">
@@ -423,12 +504,12 @@
                             <div class="summary-content" id="dpb-content">
                                 <div class="metric-grid">
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpb-total">0</div>
-                                        <div class="metric-label">Total DPB Critiques</div>
+                                        <div class="metric-label-monitoring">Total DPB Critiques</div>
+                                        <div class="metric-value-monitoring" id="dpb-total">0</div>
                                     </div>
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpb-monitored">0</div>
-                                        <div class="metric-label">DPB Monitored</div>
+                                        <div class="metric-label-monitoring">DPB Monitored</div>
+                                        <div class="metric-value-monitoring" id="dpb-monitored">0</div>
                                     </div>
                                 </div>
                                 <div class="chart-container">
@@ -451,12 +532,12 @@
                             <div class="summary-content" id="dpc-content">
                                 <div class="metric-grid">
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpc-total">0</div>
-                                        <div class="metric-label">Total DPC Critiques</div>
+                                        <div class="metric-label-monitoring">Total DPC Critiques</div>
+                                        <div class="metric-value-monitoring" id="dpc-total">0</div>
                                     </div>
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpc-monitored">0</div>
-                                        <div class="metric-label">DPC Monitored</div>
+                                        <div class="metric-label-monitoring">DPC Monitored</div>
+                                        <div class="metric-value-monitoring" id="dpc-monitored">0</div>
                                     </div>
                                 </div>
                                 <div class="chart-container">
@@ -479,12 +560,12 @@
                             <div class="summary-content" id="dpp-content">
                                 <div class="metric-grid">
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpp-total">0</div>
-                                        <div class="metric-label">Total DPP Critiques</div>
+                                        <div class="metric-label-monitoring">Total DPP Critiques</div>
+                                        <div class="metric-value-monitoring" id="dpp-total">0</div>
                                     </div>
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dpp-monitored">0</div>
-                                        <div class="metric-label">DPP Monitored</div>
+                                        <div class="metric-label-monitoring">DPP Monitored</div>
+                                        <div class="metric-value-monitoring" id="dpp-monitored">0</div>
                                     </div>
                                 </div>
                                 <div class="chart-container">
@@ -507,12 +588,12 @@
                             <div class="summary-content" id="dps-content">
                                 <div class="metric-grid">
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dps-total">0</div>
-                                        <div class="metric-label">Total DPS Critiques</div>
+                                        <div class="metric-label-monitoring">Total DPS Critiques</div>
+                                        <div class="metric-value-monitoring" id="dps-total">0</div>
                                     </div>
                                     <div class="metric-card">
-                                        <div class="metric-value" id="dps-monitored">0</div>
-                                        <div class="metric-label">DPS Monitored</div>
+                                        <div class="metric-label-monitoring">DPS Monitored</div>
+                                        <div class="metric-value-monitoring" id="dps-monitored">0</div>
                                     </div>
                                 </div>
                                 <div class="chart-container">
