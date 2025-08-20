@@ -2256,13 +2256,16 @@ function creerGraphiqueSection(section, data) {
     }
     
     if (section === 'dp') {
-        // Graphique spécial pour DP : camembert sans titre
+        // Graphique spécial pour DP : camembert représentant les proportions réelles
+        const totalCritiques = data.criticalBusinessServices;
+        const stillToOnboard = data.stillToOnboard;
+        
         window[`${section}Chart`] = new Chart(chartCtx, {
             type: 'doughnut',
             data: {
                 labels: ['Critical Business Services', 'Still to be onboarded'],
                 datasets: [{
-                    data: [100, data.percentage], // 100% pour Critical Business Services, pourcentage pour Still to onboard
+                    data: [totalCritiques, stillToOnboard], // Valeurs absolues pour proportions correctes
                     backgroundColor: [
                         'rgba(63, 182, 255, 0.8)',    // Bleu pour Critical Business Services
                         'rgba(255, 193, 7, 0.8)'      // Jaune/Orange pour Still to onboard
@@ -2283,10 +2286,12 @@ function creerGraphiqueSection(section, data) {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
+                                const total = totalCritiques + stillToOnboard;
+                                const percentage = Math.round((context.parsed / total) * 100);
                                 if (context.dataIndex === 0) {
-                                    return `Critical Business Services: ${data.criticalBusinessServices}`;
+                                    return `Critical Business Services: ${totalCritiques} (${percentage}%)`;
                                 } else {
-                                    return `Still to onboard: ${data.stillToOnboard} (${data.percentage}%)`;
+                                    return `Still to onboard: ${stillToOnboard} (${percentage}%)`;
                                 }
                             }
                         }
@@ -3850,7 +3855,7 @@ async function effectuerCalculsConsolidationSQL() {
         const totalSectionsDP = Object.values(sectionsDP).reduce((sum, section) => sum + section.total, 0);
         
         // Calculer les pourcentages
-        const pctSectionsDP = totalCritiques > 0 ? Math.round((totalSectionsDP / totalCritiques) * 100) : 0;
+        const pctSectionsDP = totalCritiques > 0 ? Math.round((stillToMonitor / totalCritiques) * 100) : 0;
         const pctNotRequiredBSM = totalCritiques > 0 ? Math.round((notRequiredBSM / totalCritiques) * 100) : 0;
         const pctMonitoredHCC = totalCritiques > 0 ? Math.round((monitoredHCC / totalCritiques) * 100) : 0;
         const pctNotRequiredHCC = totalCritiques > 0 ? Math.round((notRequiredHCC / totalCritiques) * 100) : 0;
