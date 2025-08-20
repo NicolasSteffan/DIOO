@@ -2287,10 +2287,32 @@ function creerGraphiqueSection(section, data) {
                         display: true,  // Afficher les légendes
                         position: 'bottom',
                         labels: {
-                            color: '#2c3e50',
+                            // Police de chaque légende de la couleur de son segment
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const dataset = data.datasets[0];
+                                        const backgroundColor = dataset.backgroundColor[i];
+                                        const borderColor = dataset.borderColor[i];
+                                        
+                                        return {
+                                            text: `${label}: ${dataset.data[i]}`,
+                                            fillStyle: backgroundColor,
+                                            strokeStyle: borderColor,
+                                            lineWidth: 2,
+                                            hidden: false,
+                                            index: i,
+                                            fontColor: borderColor  // Couleur du texte = couleur du segment
+                                        };
+                                    });
+                                }
+                                return [];
+                            },
                             font: {
                                 size: 11
-                            }
+                            },
+                            padding: 8
                         }
                     },
                     tooltip: {
@@ -2335,10 +2357,32 @@ function creerGraphiqueSection(section, data) {
                         display: true,
                         position: 'bottom',
                         labels: {
-                            color: '#2c3e50',
+                            // Police de chaque légende de la couleur de son segment
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const dataset = data.datasets[0];
+                                        const backgroundColor = dataset.backgroundColor[i];
+                                        const borderColor = dataset.borderColor[i];
+                                        
+                                        return {
+                                            text: `${label}: ${dataset.data[i]}`,
+                                            fillStyle: backgroundColor,
+                                            strokeStyle: borderColor,
+                                            lineWidth: 2,
+                                            hidden: false,
+                                            index: i,
+                                            fontColor: borderColor  // Couleur du texte = couleur du segment
+                                        };
+                                    });
+                                }
+                                return [];
+                            },
                             font: {
                                 size: 11
-                            }
+                            },
+                            padding: 8
                         }
                     }
                 }
@@ -2395,7 +2439,7 @@ function creerGraphiquesBSMHCC(resultats) {
 }
 
 /**
- * Créer un petit camembert
+ * Créer un petit camembert avec style identique au camembert principal
  */
 function creerPetitCamembert(canvasId, labels, data, colors) {
     const ctx = document.getElementById(canvasId);
@@ -2416,7 +2460,7 @@ function creerPetitCamembert(canvasId, labels, data, colors) {
                 data: data,
                 backgroundColor: colors,
                 borderColor: colors.map(color => color.replace('0.8', '1')),
-                borderWidth: 1
+                borderWidth: 2  // Même épaisseur que le camembert principal
             }]
         },
         options: {
@@ -2427,11 +2471,32 @@ function creerPetitCamembert(canvasId, labels, data, colors) {
                     display: true,
                     position: 'bottom',
                     labels: {
-                        color: '#2c3e50',
-                        font: {
-                            size: 10
+                        // Police de chaque légende de la couleur de son segment
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const dataset = data.datasets[0];
+                                    const backgroundColor = dataset.backgroundColor[i];
+                                    const borderColor = dataset.borderColor[i];
+                                    
+                                    return {
+                                        text: `${label}: ${dataset.data[i]}`,
+                                        fillStyle: backgroundColor,
+                                        strokeStyle: borderColor,
+                                        lineWidth: 2,
+                                        hidden: false,
+                                        index: i,
+                                        fontColor: borderColor  // Couleur du texte = couleur du segment
+                                    };
+                                });
+                            }
+                            return [];
                         },
-                        padding: 10
+                        font: {
+                            size: 11  // Même taille que le camembert principal
+                        },
+                        padding: 8
                     }
                 },
                 tooltip: {
