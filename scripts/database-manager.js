@@ -154,6 +154,22 @@ class DatabaseManager {
             console.error('❌ Erreur SQL:', error);
             console.error('❌ Requête:', sql);
             console.error('❌ Paramètres:', params);
+            
+            // Ajouter l'erreur au dump si la fonction existe
+            if (typeof ajouterRequeteSQL === 'function') {
+                ajouterRequeteSQL(
+                    '❌ DATABASE - Erreur SQL',
+                    `-- ERREUR: ${error.message}`,
+                    `Requête: ${sql.substring(0, 100)}${sql.length > 100 ? '...' : ''}`,
+                    error.message
+                );
+            }
+            
+            // Ajouter au dump d'erreur si la fonction existe
+            if (typeof ajouterErreurAuDump === 'function') {
+                ajouterErreurAuDump('Base de données', `Erreur SQL: ${error.message}`);
+            }
+            
             throw new Error(`Erreur SQL: ${error.message}`);
         }
     }
@@ -165,20 +181,57 @@ class DatabaseManager {
         console.log(`💾 DatabaseManager - Insertion de ${lignes.length} lignes`);
         
         try {
+            // Créer la table winpharma_ventes si elle n'existe pas
+            const createTableSQL = `
+                CREATE TABLE IF NOT EXISTS winpharma_ventes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date_vente TEXT,
+                    heure_vente TEXT,
+                    dossier TEXT,
+                    type_operation TEXT,
+                    operateur TEXT,
+                    client TEXT,
+                    montant REAL,
+                    difference_encom REAL,
+                    fichier_source TEXT,
+                    date_import TEXT,
+                    validated INTEGER DEFAULT 0
+                )
+            `;
+            await this.executeQuery(createTableSQL);
+            
             // Vider la table existante
-            await this.executeQuery('DELETE FROM dioo_donnees');
+            await this.executeQuery('DELETE FROM winpharma_ventes');
             
-            // Préparer la requête d'insertion
-            const placeholders = headers.map(() => '?').join(', ');
-            const columnNames = headers.map(h => `"${h}"`).join(', ');
-            const insertSQL = `INSERT INTO dioo_donnees (${columnNames}) VALUES (${placeholders})`;
+            // Préparer la requête d'insertion pour WinPharma
+            const insertSQL = `INSERT INTO winpharma_ventes (
+                date_vente, heure_vente, dossier, type_operation, 
+                operateur, client, montant, difference_encom,
+                fichier_source, date_import, validated
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
             
-            console.log(`🔧 Requête d'insertion: ${insertSQL}`);
+            console.log(`🔧 Requête d'insertion WinPharma: ${insertSQL}`);
             
-            // Insérer chaque ligne
+            // Insérer chaque ligne avec mapping WinPharma
             let inserted = 0;
+            const currentDate = new Date().toISOString();
+            
             for (const ligne of lignes) {
-                const values = headers.map(header => ligne[header] || '');
+                // Mapper les données WinPharma vers la structure de la table
+                const values = [
+                    ligne['Date'] || '',                    // date_vente
+                    ligne['Heure'] || '',                   // heure_vente
+                    ligne['Dossier'] || '',                 // dossier
+                    ligne['Type'] || '',                    // type_operation
+                    ligne['Operateur'] || '',               // operateur
+                    ligne['Client'] || '',                  // client
+                    parseFloat(ligne['Montant']) || 0,      // montant
+                    parseFloat(ligne['Dif./EnCom., EUR']) || 0, // difference_encom
+                    'import_winpharma',                     // fichier_source
+                    currentDate,                            // date_import
+                    1                                       // validated
+                ];
+                
                 await this.executeQuery(insertSQL, values);
                 inserted++;
                 
@@ -192,6 +245,22 @@ class DatabaseManager {
             
         } catch (error) {
             console.error('❌ Erreur lors de l\'insertion:', error);
+            
+            // Ajouter l'erreur au dump si la fonction existe
+            if (typeof ajouterRequeteSQL === 'function') {
+                ajouterRequeteSQL(
+                    '❌ DATABASE - Erreur insertion données',
+                    `-- ERREUR lors de l'insertion en base: ${error.message}`,
+                    `Tentative d'insertion: ${lignes.length} lignes, Headers: ${headers.join(', ')}`,
+                    error.message
+                );
+            }
+            
+            // Ajouter au dump d'erreur si la fonction existe
+            if (typeof ajouterErreurAuDump === 'function') {
+                ajouterErreurAuDump('Insertion base de données', `Erreur insertion: ${error.message}`);
+            }
+            
             throw error;
         }
     }
@@ -203,8 +272,8 @@ class DatabaseManager {
         console.log('📖 DatabaseManager - Récupération des données');
         
         try {
-            const lignes = await this.executeQuery('SELECT * FROM dioo_donnees ORDER BY id');
-            const headers = await this.getHeaders();
+            const lignes = await this.executeQuery('SELECT * FROM winpharma_ventes ORDER BY id');
+            const headers = await this.getWinPharmaHeaders();
             
             console.log(`✅ ${lignes.length} lignes récupérées`);
             
@@ -244,6 +313,40 @@ class DatabaseManager {
         } catch (error) {
             console.error('❌ Erreur lors de la récupération des headers:', error);
             return [];
+        }
+    }
+
+    /**
+     * Récupérer les headers de la table WinPharma
+     */
+    async getWinPharmaHeaders() {
+        try {
+            const result = this.db.exec("PRAGMA table_info(winpharma_ventes)");
+            if (result.length === 0) {
+                return ['Date', 'Heure', 'Dossier', 'Type', 'Operateur', 'Client', 'Montant', 'Dif./EnCom., EUR'];
+            }
+            
+            const headers = result[0].values
+                .filter(row => !['id', 'fichier_source', 'date_import', 'validated'].includes(row[1])) // Exclure les colonnes techniques
+                .map(row => {
+                    // Mapper les noms de colonnes DB vers les noms d'affichage
+                    const columnMap = {
+                        'date_vente': 'Date',
+                        'heure_vente': 'Heure',
+                        'dossier': 'Dossier',
+                        'type_operation': 'Type',
+                        'operateur': 'Operateur',
+                        'client': 'Client',
+                        'montant': 'Montant',
+                        'difference_encom': 'Dif./EnCom., EUR'
+                    };
+                    return columnMap[row[1]] || row[1];
+                });
+            
+            return headers;
+        } catch (error) {
+            console.error('❌ Erreur lors de la récupération des headers WinPharma:', error);
+            return ['Date', 'Heure', 'Dossier', 'Type', 'Operateur', 'Client', 'Montant', 'Dif./EnCom., EUR'];
         }
     }
 

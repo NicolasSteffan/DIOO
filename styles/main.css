@@ -1,10 +1,10 @@
 /**
- * DIOO - Application de Gestion
- * Style inspiré du projet FDJ - Thème futuriste sombre
+ * YesData Frequentation - Application de Gestion
+* Style inspiré du projet YesData - Thème futuriste sombre
  * Architecture: Modular CSS for OOP structure
  */
 
-/* Variables CSS principales - Style FDJ */
+/* Variables CSS principales - Style YesData */
 :root {
   --bg: #0b1020;
   --fg: #e6f0ff;
@@ -36,7 +36,7 @@ body {
   line-height: 1.6;
 }
 
-/* Background effects - Style FDJ */
+/* Background effects - Style YesData */
 .background {
   position: fixed;
   inset: 0;
@@ -56,7 +56,7 @@ body {
   position: relative;
 }
 
-/* === TOPBAR COMPONENT - Style FDJ === */
+/* === TOPBAR COMPONENT - Style YesData === */
 .app-header {
   position: sticky;
   top: 0;
@@ -86,7 +86,7 @@ body {
   pointer-events: none;
 }
 
-/* Logo/Brand - Style FDJ */
+/* Logo/Brand - Style YesData */
 .logo {
   display: flex;
   align-items: center;
@@ -103,7 +103,7 @@ body {
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
 }
 
-/* === MENU COMPONENT - Style FDJ === */
+/* === MENU COMPONENT - Style YesData === */
 .main-navigation {
   display: block;
 }
@@ -214,7 +214,7 @@ body {
   margin: 0 auto;
 }
 
-/* === CARDS COMPONENT - Style FDJ === */
+/* === CARDS COMPONENT - Style YesData === */
 .page-content {
   background: rgba(255,255,255,0.04);
   padding: 24px;
@@ -294,7 +294,70 @@ body {
   font-size: 15px;
 }
 
-/* === BOUTONS - Style FDJ === */
+/* === INFO BOX === */
+.info-box {
+    background: rgba(0, 150, 255, 0.1);
+    border: 1px solid rgba(0, 150, 255, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 0.9em;
+}
+
+.info-box h4 {
+    margin: 0 0 10px 0;
+    color: #0096ff;
+    font-size: 1em;
+}
+
+.info-box ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.info-box li {
+    margin: 5px 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.info-box strong {
+    color: #00ff88;
+}
+
+/* === MESSAGES D'ERREUR DUMP === */
+.dump-error-message {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+}
+
+.error-header {
+    color: #ff4444;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+.error-details {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9em;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.sql-query-error {
+    background: rgba(255, 0, 0, 0.1);
+    border-left: 3px solid #ff4444;
+    padding: 8px 12px;
+    margin: 5px 0;
+    color: #ff6666;
+    font-weight: bold;
+}
+
+/* === BOUTONS - Style YesData === */
 button {
   background: var(--accent);
   color: #032030;
@@ -531,19 +594,14 @@ button:active {
   justify-content: center;
 }
 
-.clickable-item .state-indicator i {
-  font-size: 8px;
-  color: var(--muted);
-}
-
 /* État chargé avec LED verte mais fond bleu */
 .clickable-item.loaded {
   background: rgba(63,182,255,0.15);
   border-color: var(--accent);
 }
 
-.clickable-item.loaded .state-indicator i {
-  color: var(--success);
+.clickable-item.loaded .state-indicator {
+  background: var(--success);
 }
 
 /* État complété temporaire (LED verte + fond vert) */
@@ -552,8 +610,8 @@ button:active {
   border-color: var(--success);
 }
 
-.clickable-item.completed .state-indicator i {
-  color: var(--success);
+.clickable-item.completed .state-indicator {
+  background: var(--success);
 }
 
 /* Ligne d'action pour boutons séparés */
@@ -612,22 +670,29 @@ button:active {
   justify-content: center;
 }
 
-.state-indicator i {
-  font-size: 8px;
-  color: var(--muted);
+.state-indicator {
+  background: var(--muted);
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
 }
 
-.state-indicator.inactive i {
-  color: var(--muted);
+.state-indicator.inactive {
+  background: var(--muted);
 }
 
-.state-indicator.active i {
-  color: var(--warning);
+.state-indicator.active {
+  background: var(--warning);
   animation: pulse 1.5s infinite;
 }
 
-.state-indicator.completed i {
-  color: var(--success);
+.state-indicator.completed {
+  background: var(--success);
+  animation: none;
+}
+
+.state-indicator.error {
+  background: var(--danger);
   animation: none;
 }
 
@@ -1487,4 +1552,65 @@ button:active {
   .results-table td {
     padding: 0.5rem;
   }
+}
+
+/* === STYLES SPÉCIAUX POUR ERREURS DANS LE DUMP === */
+.sql-query-item.error-item {
+    background: #fff5f5;
+    border: 2px solid #fed7d7;
+    border-radius: 8px;
+    margin: 10px 0;
+    padding: 15px;
+}
+
+.sql-query-header.error-header {
+    background: #feb2b2;
+    color: #742a2a;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.error-technical-details {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+}
+
+.error-technical-details .error-header {
+    background: #edf2f7;
+    color: #2d3748;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.error-technical-details .error-details {
+    color: #4a5568;
+    line-height: 1.4;
+}
+
+.error-technical-details .error-details > div {
+    margin: 4px 0;
+    padding: 2px 0;
+    border-bottom: 1px dotted #cbd5e0;
+}
+
+.error-technical-details .error-details > div:last-child {
+    border-bottom: none;
+}
+
+.error-message {
+    background: #fed7d7;
+    color: #742a2a;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin: 5px 0;
 }

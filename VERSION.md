@@ -1,14 +1,23 @@
-# DIOO - Version History
+# YesData Frequentation - Version History
 
-## V0.000 - Stable - Extract - Viewer Database
-**Date**: 19 août 2025  
+## V2.2.0 - Traitement par paquets pour gros fichiers
+**Date**: 22 août 2025  
 **Status**: ✅ Stable  
-**Tag**: v0.000-stable-extract-viewer-database
+**Tag**: v2.2.0-batch-processing-large-files
 
 ### 🎯 **Fonctionnalités principales**
 
 #### **📁 Module Chargement**
-- ✅ **Chargement de fichiers Excel DIOO** avec support multi-onglets
+- ✅ **Chargement de fichiers CSV WinPharma** avec support complet des ventes de pharmacie
+- ✅ **Support CSV WinPharma** : Format point-virgule (;) avec structure adaptée ventes_pharmacie
+- ✅ **Base de données WinPharma** : Table winpharma_ventes avec colonnes spécialisées
+- ✅ **Validation JSON adaptée** : Structure métadonnées pour ventes de pharmacie
+- ✅ **Traitement par paquets** : Gros fichiers CSV traités par blocs de 1000 lignes
+- ✅ **Détection automatique** : Fichiers >2MB ou >5000 lignes = mode paquets
+- ✅ **Progression temps réel** : Indicateur de progression par paquet traité
+- ✅ **Sauvegarde optimisée** : Métadonnées + échantillon pour gros fichiers
+- ✅ **Contournement quota** : Plus d'erreur localStorage (limite 5-10MB)
+- ✅ **Performance améliorée** : Traitement asynchrone sans blocage interface
 - ✅ **Import et validation** des données avec états visuels (LED)
 - ✅ **Overview fichier** avec pagination (10 lignes par page)
 - ✅ **Dump des requêtes** d'insertion et d'import/validation
@@ -33,7 +42,7 @@
 #### **💾 Persistance des données**
 - ✅ **localStorage** pour stockage client-side
 - ✅ **Structure de données** optimisée avec headers et objets
-- ✅ **Compteurs** pour lignes aléatoires (`dioo_rand_counter`)
+- ✅ **Compteurs** pour lignes aléatoires (`yesdata_rand_counter`)
 
 #### **🎨 Interface utilisateur**
 - ✅ **Design responsive** avec CSS moderne
@@ -55,7 +64,7 @@
 - **Requêtes SQL** : Support complet avec documentation
 
 ### 🚀 **Déploiement**
-- ✅ **Serveur local** : `http-server` sur port 3020
+- ✅ **Serveur local** : `http-server` sur ports 3020 (principal) et 3021 (alternatif)
 - ✅ **Script de lancement** : `go.bat` automatique
 - ✅ **Compatibilité** : Navigateurs modernes avec support ES6+
 
@@ -68,4 +77,4 @@
 
 ---
 
-**🎉 Cette version constitue une base stable et complète pour l'extraction, la visualisation et l'interrogation des données DIOO.**
+**🎉 Cette version constitue une base stable et complète pour l'extraction, la visualisation et l'interrogation des données YesData Frequentation.**

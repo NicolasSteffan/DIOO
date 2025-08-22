@@ -1,9 +1,9 @@
 /**
- * Application DIOO - Script principal
+ * Application YesData Frequentation - Script principal
  * Gestion de la navigation et interactions utilisateur
  */
 
-class DiooApp {
+class YesDataApp {
     constructor() {
         this.currentPage = 'chargement';
         this.pages = ['chargement', 'monitoring', 'database'];
@@ -18,7 +18,7 @@ class DiooApp {
         this.updatePageTitle();
         this.showWelcomeMessage();
         this.initCanvasMenu();
-        console.log('✅ Application DIOO initialisée avec succès - Style FDJ');
+        console.log('✅ Application YesData Frequentation initialisée avec succès - Style YesData');
     }
 
     /**
@@ -158,8 +158,8 @@ class DiooApp {
             'monitoring': 'Monitoring'
         };
         
-        const currentPageName = pageNames[this.currentPage] || 'DIOO';
-        document.title = `${currentPageName} - DIOO`;
+        const currentPageName = pageNames[this.currentPage] || 'YesData Frequentation';
+        document.title = `${currentPageName} - YesData Frequentation`;
     }
 
     /**
@@ -215,7 +215,7 @@ class DiooApp {
      */
     showWelcomeMessage() {
         console.log(`
-🚀 Application DIOO v1.0.0 - Style FDJ Futuriste
+🚀 Application YesData Frequentation v1.0.0 - Style YesData Futuriste
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎨 Thème: Design futuriste sombre avec effets visuels
 📋 Modules disponibles: ${this.pages.join(', ')}
@@ -252,7 +252,7 @@ class DiooApp {
     }
 
     /**
-     * Initialiser le menu canvas cylindrique - Style FDJ
+     * Initialiser le menu canvas cylindrique - Style YesData
      */
     initCanvasMenu() {
         this.drawCylMenu();
@@ -260,7 +260,7 @@ class DiooApp {
     }
 
     /**
-     * Dessiner le menu cylindrique - Inspiré du projet FDJ
+     * Dessiner le menu cylindrique - Inspiré du projet YesData
      */
     drawCylMenu() {
         const menuCanvas = document.getElementById('menuCanvas');
@@ -344,7 +344,7 @@ class DiooApp {
 /**
  * Utilitaires globaux
  */
-const DiooUtils = {
+const YesDataUtils = {
     /**
      * Formater une date au format français
      * @param {Date} date - Date à formater
@@ -361,19 +361,40 @@ const DiooUtils = {
     },
 
     /**
-     * Afficher une notification
+     * Afficher une notification - CAPTURE AUTOMATIQUE DES ERREURS DANS LE DUMP
      * @param {string} message - Message à afficher
      * @param {string} type - Type de notification (info, success, warning, error)
      */
     showNotification(message, type = 'info') {
         console.log(`📢 ${type.toUpperCase()}: ${message}`);
         
+        // CAPTURE AUTOMATIQUE: Si c'est une erreur, l'ajouter au dump avec détails techniques
+        if (type === 'error') {
+            const timestamp = new Date().toISOString();
+            const stackTrace = new Error().stack;
+            
+            // Ajouter directement au dump avec tous les détails techniques
+            ajouterRequeteSQL(
+                '🚨 NOTIFICATION ERREUR FUGACE',
+                `Erreur capturée automatiquement depuis notification`,
+                `Timestamp: ${timestamp}, Type: ${type}, Stack: ${stackTrace ? stackTrace.substring(0, 300) : 'N/A'}`,
+                message
+            );
+            
+            // Log détaillé pour debug
+            console.error('🔍 ERREUR CAPTURÉE DANS DUMP:', {
+                message: message,
+                type: type,
+                timestamp: timestamp,
+                stack: stackTrace
+            });
+        }
+        
         // Créer l'élément de notification
         const notification = document.createElement('div');
         notification.className = `toast toast-${type}`;
         notification.innerHTML = `
             <div class="toast-content">
-                <i class="fas fa-${this.getIconForType(type)}"></i>
                 <span>${message}</span>
             </div>
         `;
@@ -387,7 +408,7 @@ const DiooUtils = {
             notification.style.opacity = '1';
         }, 100);
         
-        // Suppression automatique après 3 secondes
+        // Suppression automatique après 3 secondes (mais reste dans le dump)
         setTimeout(() => {
             notification.style.transform = 'translateX(100%)';
             notification.style.opacity = '0';
@@ -428,10 +449,13 @@ const DiooUtils = {
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Créer une instance globale de l'application
-    window.diooApp = new DiooApp();
+    window.yesDataApp = new YesDataApp();
     
     // Exposer les utilitaires globalement
-    window.DiooUtils = DiooUtils;
+    window.YesDataUtils = YesDataUtils;
+    
+    // Fonctions de diagnostic accessibles depuis la console
+    window.diagnostiquerErreurs = diagnostiquerErreurs;
     
     // Initialiser les variables globales de données
     window.dumpData = {
@@ -526,10 +550,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const nombreLignes = compterLignes();
         if (nombreLignes > 0) {
             console.log(`📊 BASE DE DONNÉES: ${nombreLignes} lignes chargées`);
-            console.log(`🔍 Pour plus de détails, tapez: dioo.diagnostic()`);
+            console.log(`🔍 Pour plus de détails, tapez: yesdata.diagnostic()`);
         } else {
             console.log(`📊 BASE DE DONNÉES: Aucune donnée chargée`);
-            console.log(`🔍 Chargez un fichier DIOO via la page Chargement`);
+            console.log(`🔍 Chargez un fichier de ventes WinPharma via la page Chargement`);
         }
     }, 1000);
 
@@ -539,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialiser la classe CSS mobile si nécessaire
-    if (DiooUtils.isMobile()) {
+    if (YesDataUtils.isMobile()) {
         document.body.classList.add('mobile-view');
     }
 });
@@ -548,11 +572,11 @@ document.addEventListener('DOMContentLoaded', () => {
  * Gestion des erreurs globales
  */
 window.addEventListener('error', (e) => {
-    console.error('❌ Erreur dans l\'application DIOO:', e.error);
+    console.error('❌ Erreur dans l\'application YesData Frequentation:', e.error);
 });
 
 /**
- * Fonctions de gestion des fichiers DIOO
+ * Fonctions de gestion des fichiers de ventes WinPharma
  */
 
 /**
@@ -565,20 +589,20 @@ function gererClicCharger() {
     if (chargerBtn && chargerBtn.classList.contains('loaded')) {
         console.log('🔄 Remise à zéro du bouton Charger');
         reinitialiserEtats();
-        DiooUtils.showNotification('État remis à zéro', 'info');
+        YesDataUtils.showNotification('État remis à zéro', 'info');
         return;
     }
     
     // Sinon, lancer le processus de chargement
-    chargerFichierDIOO();
+    chargerFichierWinPharma();
 }
 
 /**
- * Fonction principale pour charger un fichier DIOO
+ * Fonction principale pour charger un fichier de ventes WinPharma
  * Enchaine toutes les étapes : sélection, import, validation
  */
-function chargerFichierDIOO() {
-    console.log('🚀 Début du processus de chargement DIOO');
+function chargerFichierWinPharma() {
+    console.log('🚀 Début du processus de chargement fichier WinPharma');
     
     // Réinitialiser les états
     reinitialiserEtats();
@@ -587,7 +611,7 @@ function chargerFichierDIOO() {
     const selecteur = document.getElementById('selecteur-fichier');
     if (selecteur) {
         selecteur.click();
-        console.log('📁 Ouverture du sélecteur de fichier DIOO');
+        console.log('📁 Ouverture du sélecteur de fichier WinPharma');
     }
 }
 
@@ -646,7 +670,11 @@ async function demarrerProcessusEnchaine() {
         
     } catch (error) {
         console.error('❌ Erreur dans le processus:', error);
-        DiooUtils.showNotification(`Erreur: ${error.message}`, 'error');
+        YesDataUtils.showNotification(`Erreur: ${error.message}`, 'error');
+        
+        // Ajouter l'erreur au dump pour qu'elle reste visible
+        ajouterErreurAuDump('Erreur de traitement', error.message);
+        
         reinitialiserEtats();
     }
 }
@@ -660,9 +688,18 @@ async function etapeImportDonnees() {
         mettreAJourProgression(25, 'Import des données', 'Lecture du fichier en cours...');
         definirEtatIndicateur('import-status', 'active');
         
+        // TRACE IMPORT: Début du processus
+        const timestampImportDebut = new Date().toISOString();
+        ajouterRequeteSQL(
+            '🚀 IMPORT - Début du processus',
+            `-- DÉBUT IMPORT WinPharma à ${timestampImportDebut}`,
+            `Fichier: ${window.fichierCourant.name}`,
+            null
+        );
+        
         const reader = new FileReader();
         
-        reader.onload = function(e) {
+        reader.onload = async function(e) {
             try {
                 console.log('🔍 DEBUG - Début traitement fichier');
                 console.log('🔍 DEBUG - Nom fichier:', window.fichierCourant.name);
@@ -673,23 +710,105 @@ async function etapeImportDonnees() {
                 const extension = window.fichierCourant.name.split('.').pop().toLowerCase();
                 console.log('🔍 DEBUG - Extension détectée:', extension);
                 
-                switch (extension) {
-                    case 'json':
-                        console.log('🔍 DEBUG - Parsing JSON...');
-                        donnees = JSON.parse(e.target.result);
-                        break;
-                    case 'csv':
-                        console.log('🔍 DEBUG - Parsing CSV...');
-                        donnees = parseCSV(e.target.result);
-                        break;
-                    case 'xlsx':
-                        console.log('🔍 DEBUG - Parsing XLSX...');
-                        donnees = parseXLSX(e.target.result);
-                        console.log('🔍 DEBUG - Résultat parseXLSX:', donnees);
-                        break;
-                    default:
-                        console.log('🔍 DEBUG - Format non reconnu, traitement par défaut');
-                        donnees = { contenu: e.target.result };
+                try {
+                    switch (extension) {
+                        case 'json':
+                            console.log('🔍 DEBUG - Parsing JSON...');
+                            try {
+                                donnees = JSON.parse(e.target.result);
+                            } catch (jsonError) {
+                                ajouterRequeteSQL(
+                                    '❌ IMPORT - Erreur parsing JSON',
+                                    `-- Erreur lors du parsing JSON: ${jsonError.message}`,
+                                    `Fichier: ${window.fichierCourant.name}, Position erreur: ${jsonError.message.includes('position') ? jsonError.message : 'N/A'}`,
+                                    jsonError.message
+                                );
+                                throw jsonError;
+                            }
+                            break;
+                        case 'csv':
+                            console.log('🔍 DEBUG - Parsing CSV...');
+                            try {
+                                // Détecter la taille du fichier pour choisir la méthode de traitement
+                                const fileSizeBytes = e.target.result?.length || 0;
+                                const fileSizeMB = (fileSizeBytes / (1024 * 1024)).toFixed(2);
+                                const lineCount = (e.target.result.match(/\n/g) || []).length;
+                                
+                                console.log(`📊 Analyse fichier CSV: ${fileSizeMB}MB, ~${lineCount} lignes`);
+                                
+                                // Si le fichier est volumineux (>2MB ou >5000 lignes), utiliser le traitement par paquets
+                                if (fileSizeBytes > 2097152 || lineCount > 5000) { // 2MB ou 5000 lignes
+                                    console.log('📦 Fichier volumineux détecté - Traitement par paquets activé');
+                                    
+                                    ajouterRequeteSQL(
+                                        '📦 IMPORT - Traitement par paquets activé',
+                                        `-- Fichier volumineux: ${fileSizeMB}MB, ~${lineCount} lignes`,
+                                        `Traitement par paquets de 1000 lignes pour éviter les erreurs de quota`,
+                                        null
+                                    );
+                                    
+                                    // Mettre à jour l'interface pour indiquer le traitement par paquets
+                                    mettreAJourProgression(15, 'Traitement par paquets', `Fichier volumineux (${fileSizeMB}MB) - Traitement optimisé`);
+                                    
+                                    donnees = await parseCSVByBatches(e.target.result, 1000, (progress) => {
+                                        // Callback de progression
+                                        const progressPercent = 15 + (progress.progress * 0.3); // 15% à 45%
+                                        mettreAJourProgression(
+                                            progressPercent, 
+                                            `Paquet ${progress.batchIndex}/${progress.totalBatches}`, 
+                                            `${progress.totalProcessed}/${progress.totalLines} lignes traitées (${progress.progress}%)`
+                                        );
+                                        
+                                        console.log(`📦 Paquet ${progress.batchIndex}/${progress.totalBatches}: ${progress.batchSize} lignes, Total: ${progress.totalProcessed}/${progress.totalLines} (${progress.progress}%)`);
+                                        
+                                        return Promise.resolve();
+                                    });
+                                    
+                                    console.log(`✅ Traitement par paquets terminé: ${donnees.totalLignes} lignes en ${donnees.totalBatches} paquets`);
+                                    
+                                } else {
+                                    console.log('📄 Fichier de taille normale - Traitement standard');
+                                    donnees = parseCSV(e.target.result);
+                                }
+                                
+                            } catch (csvError) {
+                                ajouterRequeteSQL(
+                                    '❌ IMPORT - Erreur parsing CSV',
+                                    `-- Erreur lors du parsing CSV: ${csvError.message}`,
+                                    `Fichier: ${window.fichierCourant.name}, Taille: ${e.target.result?.length || 0} caractères`,
+                                    csvError.message
+                                );
+                                throw csvError;
+                            }
+                            break;
+                        case 'xlsx':
+                            console.log('🔍 DEBUG - Parsing XLSX...');
+                            try {
+                                donnees = parseXLSX(e.target.result);
+                                console.log('🔍 DEBUG - Résultat parseXLSX:', donnees);
+                            } catch (xlsxError) {
+                                ajouterRequeteSQL(
+                                    '❌ IMPORT - Erreur parsing Excel',
+                                    `-- Erreur lors du parsing Excel: ${xlsxError.message}`,
+                                    `Fichier: ${window.fichierCourant.name}, Taille: ${e.target.result?.byteLength || 0} bytes`,
+                                    xlsxError.message
+                                );
+                                throw xlsxError;
+                            }
+                            break;
+                        default:
+                            const formatError = `Format de fichier non supporté: ${extension}`;
+                            ajouterRequeteSQL(
+                                '❌ IMPORT - Format non supporté',
+                                `-- Format de fichier non reconnu: .${extension}`,
+                                `Fichier: ${window.fichierCourant.name}, Formats supportés: CSV, XLSX, JSON`,
+                                formatError
+                            );
+                            throw new Error(formatError);
+                    }
+                } catch (parseError) {
+                    // Erreur déjà tracée dans les catch spécifiques
+                    throw parseError;
                 }
 
                 console.log('✅ Import réussi:', donnees);
@@ -700,24 +819,87 @@ async function etapeImportDonnees() {
                     hasHeaders: !!donnees?.headers
                 });
                 
-                // Sauvegarder les données traitées
-                window.donneesImportees = donnees;
+                // Validation des données importées
+                try {
+                    if (!donnees) {
+                        throw new Error('Aucune donnée retournée par le parser');
+                    }
+                    
+                    if (!donnees.donnees || !Array.isArray(donnees.donnees)) {
+                        throw new Error('Structure de données invalide: propriété "donnees" manquante ou non-array');
+                    }
+                    
+                    if (donnees.donnees.length === 0) {
+                        throw new Error('Fichier vide: aucune ligne de données trouvée');
+                    }
+                    
+                    if (!donnees.headers || !Array.isArray(donnees.headers) || donnees.headers.length === 0) {
+                        throw new Error('En-têtes manquants ou invalides');
+                    }
+                    
+                } catch (validationError) {
+                    ajouterRequeteSQL(
+                        '❌ IMPORT - Validation données échouée',
+                        `-- Erreur de validation post-parsing: ${validationError.message}`,
+                        `Fichier: ${window.fichierCourant.name}, Structure reçue: ${JSON.stringify(Object.keys(donnees || {})).substring(0, 100)}`,
+                        validationError.message
+                    );
+                    throw validationError;
+                }
                 
-                // Ajouter au dump d'import
-                const requeteTemplate = `INSERT INTO dioo_temp_import (fichier, donnees, timestamp) VALUES (?, ?, ?)`;
-                const valeursImport = [
-                    window.fichierCourant.name,
-                    `[${Array.isArray(donnees.donnees) ? donnees.donnees.length : 0} lignes de données]`,
-                    new Date().toISOString()
-                ];
-                const requeteComplete = construireRequeteSQL(requeteTemplate, valeursImport);
+                // TRACE IMPORT: Parsing réussi
+                const nbLignesImport = Array.isArray(donnees?.donnees) ? donnees.donnees.length : 0;
+                const formatImport = donnees?.format || extension.toUpperCase();
+                ajouterRequeteSQL(
+                    '📊 IMPORT - Parsing réussi',
+                    `-- Fichier parsé avec succès: ${formatImport}`,
+                    `${nbLignesImport} lignes importées`,
+                    null
+                );
                 
-                ajouterAuImportDump(requeteComplete, donnees, 'Import', {
-                    fichier: window.fichierCourant.name,
-                    taille: window.fichierCourant.file.size,
-                    type: extension,
-                    nombreLignes: Array.isArray(donnees.donnees) ? donnees.donnees.length : 'N/A'
-                });
+                if (donnees?.headers) {
+                    ajouterRequeteSQL(
+                        '🏷️ IMPORT - Colonnes détectées',
+                        `-- Colonnes: [${donnees.headers.join(', ')}]`,
+                        null,
+                        null
+                    );
+                }
+                
+                // Sauvegarder les données traitées avec vérification
+                try {
+                    if (!window) {
+                        throw new Error('Objet window non disponible');
+                    }
+                    
+                    window.donneesImportees = donnees;
+                    
+                    // Vérification de la sauvegarde
+                    if (!window.donneesImportees || window.donneesImportees !== donnees) {
+                        throw new Error('Échec de la sauvegarde des données dans window.donneesImportees');
+                    }
+                    
+                } catch (saveError) {
+                    ajouterRequeteSQL(
+                        '❌ IMPORT - Erreur sauvegarde données',
+                        `-- Erreur lors de la sauvegarde en mémoire: ${saveError.message}`,
+                        `Tentative de sauvegarde de ${nbLignesImport} lignes`,
+                        saveError.message
+                    );
+                    throw saveError;
+                }
+                
+                // Import terminé - pas d'ajout au dump (réservé aux erreurs uniquement)
+                
+                // TRACE IMPORT: Finalisation
+                const timestampImportFin = new Date().toISOString();
+                const dureeImport = new Date(timestampImportFin) - new Date(timestampImportDebut);
+                ajouterRequeteSQL(
+                    '🎯 IMPORT - Processus terminé',
+                    `-- FIN IMPORT à ${timestampImportFin} (durée: ${dureeImport}ms)`,
+                    `${nbLignesImport} lignes importées avec succès`,
+                    null
+                );
                 
                 // Marquer l'import comme terminé
                 mettreAJourProgression(50, 'Import terminé', 'Données importées avec succès');
@@ -726,12 +908,60 @@ async function etapeImportDonnees() {
                 setTimeout(() => resolve(donnees), 500);
                 
             } catch (error) {
-                reject(new Error(`Erreur lors de l'import: ${error.message}`));
+                const errorMsg = `Erreur lors de l'import: ${error.message}`;
+                
+                // TRACE IMPORT: Erreur détaillée
+                const timestampErreurImport = new Date().toISOString();
+                ajouterRequeteSQL(
+                    '❌ IMPORT - Erreur critique',
+                    `-- EXCEPTION IMPORT à ${timestampErreurImport}`,
+                    `Type: ${error.constructor.name}, Message: ${error.message}`,
+                    error.message
+                );
+                
+                ajouterRequeteSQL(
+                    '🔍 IMPORT - Diagnostic erreur',
+                    `-- Stack trace: ${error.stack ? error.stack.substring(0, 200) : 'N/A'}`,
+                    `Fichier: ${window.fichierCourant ? window.fichierCourant.name : 'N/A'}`,
+                    null
+                );
+                
+                // Mise à jour interface
+                definirEtatIndicateur('import-status', 'error');
+                mettreAJourProgression(25, 'Erreur d\'import', error.message);
+                
+                YesDataUtils.showNotification(errorMsg, 'error');
+                ajouterErreurAuDump('Import de données', errorMsg);
+                reject(new Error(errorMsg));
             }
         };
 
-        reader.onerror = function() {
-            reject(new Error('Erreur de lecture du fichier'));
+        reader.onerror = function(event) {
+            const errorMsg = 'Erreur de lecture du fichier';
+            
+            // TRACE IMPORT: Erreur de lecture
+            const timestampErreurLecture = new Date().toISOString();
+            ajouterRequeteSQL(
+                '❌ IMPORT - Erreur lecture fichier',
+                `-- ERREUR FileReader à ${timestampErreurLecture}`,
+                `Fichier: ${window.fichierCourant ? window.fichierCourant.name : 'N/A'}, Taille: ${window.fichierCourant ? window.fichierCourant.size : 'N/A'}`,
+                errorMsg
+            );
+            
+            ajouterRequeteSQL(
+                '🔍 IMPORT - Détails erreur lecture',
+                `-- Event: ${event ? JSON.stringify(event).substring(0, 100) : 'N/A'}`,
+                `Type fichier: ${window.fichierCourant ? window.fichierCourant.type : 'N/A'}`,
+                null
+            );
+            
+            // Mise à jour interface
+            definirEtatIndicateur('import-status', 'error');
+            mettreAJourProgression(10, 'Erreur de lecture', errorMsg);
+            
+            YesDataUtils.showNotification(errorMsg, 'error');
+            ajouterErreurAuDump('Lecture de fichier', errorMsg);
+            reject(new Error(errorMsg));
         };
 
         // Lire le fichier selon son type
@@ -756,55 +986,743 @@ async function etapeValidation() {
         mettreAJourProgression(75, 'Validation des données', 'Sauvegarde en cours...');
         definirEtatIndicateur('validation-status', 'active');
         
-        // Préparer les données pour localStorage
-        const donneesAuStockage = {
-            fichier: {
+        // EFFACER LE DUMP ET COMMENCER UN NOUVEAU TRAÇAGE
+        effacerDumpSQL();
+        
+        // TRACE 1: Début de validation avec contexte complet
+        const timestampDebut = new Date().toISOString();
+        ajouterRequeteSQL(
+            '🔍 VALIDATION - Début du processus',
+            `-- DÉBUT VALIDATION WinPharma à ${timestampDebut}`,
+            `Processus: ${window.fichierCourant ? window.fichierCourant.name : 'Fichier non défini'}`,
+            null
+        );
+        
+        // TRACE 1.1: Vérification des prérequis
+        const prerequisOK = !!(window.fichierCourant && window.donneesImportees);
+        ajouterRequeteSQL(
+            '✅ VALIDATION - Vérification prérequis',
+            `-- Prérequis: fichierCourant=${!!window.fichierCourant}, donneesImportees=${!!window.donneesImportees}`,
+            prerequisOK ? 'Tous les prérequis sont OK' : 'ERREUR: Prérequis manquants',
+            prerequisOK ? null : 'Prérequis manquants pour la validation'
+        );
+        
+        if (!prerequisOK) {
+            const erreurPrerequis = 'Prérequis manquants: ' + 
+                (!window.fichierCourant ? 'fichierCourant manquant ' : '') +
+                (!window.donneesImportees ? 'donneesImportees manquant' : '');
+            ajouterRequeteSQL(
+                '❌ VALIDATION - Échec prérequis',
+                `-- ERREUR: ${erreurPrerequis}`,
+                null,
+                erreurPrerequis
+            );
+        }
+        
+        // TRACE 2: Analyse détaillée du fichier
+        let infoFichier;
+        try {
+            infoFichier = {
                 nom: window.fichierCourant.name,
                 taille: window.fichierCourant.size,
                 type: window.fichierCourant.type,
-                dateImport: new Date().toISOString()
+                extension: window.fichierCourant.name.split('.').pop().toLowerCase(),
+                lastModified: window.fichierCourant.file ? new Date(window.fichierCourant.file.lastModified).toISOString() : 'N/A'
+            };
+            
+            ajouterRequeteSQL(
+                '📁 VALIDATION - Analyse du fichier',
+                `-- Fichier: ${infoFichier.nom}`,
+                `Taille: ${infoFichier.taille} bytes, Type: ${infoFichier.type}, Extension: ${infoFichier.extension}`,
+                null
+            );
+            
+            ajouterRequeteSQL(
+                '📅 VALIDATION - Métadonnées fichier',
+                `-- Dernière modification: ${infoFichier.lastModified}`,
+                `Fichier analysé avec succès`,
+                null
+            );
+            
+        } catch (error) {
+            ajouterRequeteSQL(
+                '❌ VALIDATION - Erreur analyse fichier',
+                `-- ERREUR lors de l'analyse du fichier: ${error.message}`,
+                null,
+                error.message
+            );
+            infoFichier = { nom: 'ERREUR', taille: 0, type: 'ERREUR', extension: 'ERREUR' };
+        }
+        
+        // TRACE 3: Analyse détaillée des données importées
+        let nbLignes, nbColonnes, formatDetecte, donneesValides = true;
+        let erreursAnalyse = [];
+        
+        try {
+            // Vérification de l'existence des données
+            if (!window.donneesImportees) {
+                erreursAnalyse.push('window.donneesImportees est null/undefined');
+                donneesValides = false;
+            }
+            
+            // Analyse du format
+            formatDetecte = window.donneesImportees?.format || 'Format non spécifié';
+            ajouterRequeteSQL(
+                '🔍 VALIDATION - Détection format',
+                `-- Format détecté: ${formatDetecte}`,
+                window.donneesImportees?.separator ? `Séparateur: ${window.donneesImportees.separator}` : 'Séparateur non spécifié',
+                null
+            );
+            
+            // Analyse des lignes
+            if (window.donneesImportees?.donnees) {
+                if (Array.isArray(window.donneesImportees.donnees)) {
+                    nbLignes = window.donneesImportees.donnees.length;
+                    ajouterRequeteSQL(
+                        '📊 VALIDATION - Analyse lignes',
+                        `-- Nombre de lignes: ${nbLignes}`,
+                        nbLignes > 0 ? `${nbLignes} lignes de données trouvées` : 'ATTENTION: Aucune ligne de données',
+                        nbLignes === 0 ? 'Fichier vide ou mal parsé' : null
+                    );
+                } else {
+                    erreursAnalyse.push('donnees n\'est pas un tableau');
+                    nbLignes = 0;
+                    donneesValides = false;
+                }
+            } else {
+                erreursAnalyse.push('Propriété donnees manquante');
+                nbLignes = 0;
+                donneesValides = false;
+            }
+            
+            // Analyse des colonnes
+            if (window.donneesImportees?.headers) {
+                if (Array.isArray(window.donneesImportees.headers)) {
+                    nbColonnes = window.donneesImportees.headers.length;
+                    ajouterRequeteSQL(
+                        '🏷️ VALIDATION - Analyse colonnes',
+                        `-- Nombre de colonnes: ${nbColonnes}`,
+                        nbColonnes > 0 ? `${nbColonnes} colonnes détectées` : 'ATTENTION: Aucune colonne',
+                        nbColonnes === 0 ? 'Headers vides' : null
+                    );
+                    
+                    // Détail des colonnes
+                    const colonnesStr = window.donneesImportees.headers.join(', ');
+                    ajouterRequeteSQL(
+                        '📋 VALIDATION - Structure des colonnes',
+                        `-- Colonnes: [${colonnesStr}]`,
+                        `Structure analysée avec succès`,
+                        null
+                    );
+                } else {
+                    erreursAnalyse.push('headers n\'est pas un tableau');
+                    nbColonnes = 0;
+                    donneesValides = false;
+                }
+            } else {
+                erreursAnalyse.push('Propriété headers manquante');
+                nbColonnes = 0;
+                donneesValides = false;
+            }
+            
+            // Résumé de l'analyse
+            ajouterRequeteSQL(
+                donneesValides ? '✅ VALIDATION - Analyse données OK' : '❌ VALIDATION - Analyse données ÉCHEC',
+                `-- Résumé: Format=${formatDetecte}, Lignes=${nbLignes}, Colonnes=${nbColonnes}`,
+                donneesValides ? 'Données valides pour traitement' : `Erreurs: ${erreursAnalyse.join(', ')}`,
+                donneesValides ? null : erreursAnalyse.join('; ')
+            );
+            
+        } catch (error) {
+            ajouterRequeteSQL(
+                '❌ VALIDATION - Erreur analyse données',
+                `-- EXCEPTION lors de l'analyse: ${error.message}`,
+                `Stack: ${error.stack?.substring(0, 100)}...`,
+                error.message
+            );
+            donneesValides = false;
+            nbLignes = 0;
+            nbColonnes = 0;
+            formatDetecte = 'ERREUR';
+        }
+        
+        // TRACE 4: Adaptation format WinPharma
+        let donneesAdaptees = window.donneesImportees;
+        
+        if (formatDetecte === 'CSV WinPharma') {
+            ajouterRequeteSQL(
+                '🔄 VALIDATION - Adaptation format WinPharma',
+                `-- Adaptation des données au format WinPharma`,
+                `Format source détecté: ${formatDetecte}`,
+                null
+            );
+            
+            // Adapter la structure pour WinPharma
+            donneesAdaptees = {
+                ...window.donneesImportees,
+                format: 'CSV WinPharma',
+                structure: 'ventes_pharmacie',
+                colonnesWinPharma: window.donneesImportees?.headers || [],
+                typesDonnees: {
+                    'Date': 'date',
+                    'Heure': 'time', 
+                    'Dossier': 'string',
+                    'Type': 'string',
+                    'Operateur': 'number',
+                    'Client': 'string',
+                    'Montant': 'decimal',
+                    'Dif./EnCom., EUR': 'decimal'
+                }
+            };
+            
+            ajouterRequeteSQL(
+                '✅ VALIDATION - Format WinPharma adapté',
+                `-- Structure adaptée pour les ventes de pharmacie`,
+                `Colonnes WinPharma: ${donneesAdaptees.colonnesWinPharma.join(', ')}`,
+                null
+            );
+        }
+        
+        // Préparer les données pour localStorage avec structure WinPharma
+        let donneesAuStockage = {
+            fichier: {
+                nom: infoFichier.nom,
+                taille: infoFichier.taille,
+                type: infoFichier.type,
+                dateImport: timestampDebut,
+                formatSource: 'WinPharma'
             },
-            donnees: window.donneesImportees,
+            donnees: donneesAdaptees,
             metadata: {
-                nombreLignes: Array.isArray(window.donneesImportees?.donnees) ? window.donneesImportees.donnees.length : 0,
-                colonnes: window.donneesImportees?.headers || [],
-                version: 'v0.000-stable-extract-viewer-database'
+                nombreLignes: nbLignes,
+                nombreColonnes: nbColonnes,
+                format: formatDetecte,
+                structure: 'ventes_pharmacie',
+                colonnes: donneesAdaptees?.headers || [],
+                colonnesWinPharma: donneesAdaptees?.colonnesWinPharma || [],
+                typesDonnees: donneesAdaptees?.typesDonnees || {},
+                version: 'v1.0.0-winpharma-frequentation'
             }
         };
         
         try {
-            // Sauvegarder en localStorage
-            localStorage.setItem('dioo_donnees', JSON.stringify(donneesAuStockage));
+            // TRACE 5: Préparation sauvegarde localStorage
+            ajouterRequeteSQL(
+                '💾 VALIDATION - Préparation localStorage',
+                `-- Préparation des données pour localStorage (clé: winpharma_ventes)`,
+                `Données à sauvegarder: ${Object.keys(donneesAuStockage).join(', ')}`,
+                null
+            );
+            
+            // Vérification de la disponibilité de localStorage
+            let localStorageDisponible = false;
+            try {
+                localStorage.setItem('test_validation', 'test');
+                localStorage.removeItem('test_validation');
+                localStorageDisponible = true;
+                ajouterRequeteSQL(
+                    '✅ VALIDATION - Test localStorage',
+                    `-- localStorage disponible et fonctionnel`,
+                    null,
+                    null
+                );
+            } catch (testError) {
+                ajouterRequeteSQL(
+                    '❌ VALIDATION - Test localStorage ÉCHEC',
+                    `-- localStorage non disponible: ${testError.message}`,
+                    null,
+                    testError.message
+                );
+                throw new Error(`localStorage non disponible: ${testError.message}`);
+            }
+            
+            // Sérialisation JSON avec vérification de taille
+            let donneesJson, tailleJson;
+            try {
+                ajouterRequeteSQL(
+                    '🔄 VALIDATION - Sérialisation JSON',
+                    `-- Début sérialisation des données`,
+                    `Lignes à sérialiser: ${nbLignes}, Colonnes: ${nbColonnes}`,
+                    null
+                );
+                
+                // Gestion spéciale pour les fichiers traités par paquets
+                if (donneesAdaptees.processedInBatches) {
+                    ajouterRequeteSQL(
+                        '📦 VALIDATION - Mode paquets détecté',
+                        `-- Fichier traité par paquets: ${donneesAdaptees.totalBatches} paquets de ${donneesAdaptees.batchSize} lignes`,
+                        `Mode optimisé pour gros fichiers - Sauvegarde allégée`,
+                        null
+                    );
+                    
+                    // Pour les gros fichiers, on sauvegarde seulement les métadonnées et un échantillon
+                    const echantillonTaille = Math.min(100, donneesAdaptees.donnees.length);
+                    const donneesEchantillon = donneesAdaptees.donnees.slice(0, echantillonTaille);
+                    
+                    donneesAuStockage = {
+                        fichier: {
+                            nom: infoFichier.nom,
+                            taille: infoFichier.taille,
+                            type: infoFichier.type,
+                            dateImport: timestampDebut,
+                            formatSource: 'WinPharma',
+                            processedInBatches: true,
+                            totalBatches: donneesAdaptees.totalBatches,
+                            batchSize: donneesAdaptees.batchSize
+                        },
+                        donnees: donneesEchantillon, // Seulement un échantillon
+                        metadata: {
+                            nombreLignes: nbLignes,
+                            nombreColonnes: nbColonnes,
+                            format: formatDetecte,
+                            structure: 'ventes_pharmacie',
+                            colonnes: donneesAdaptees?.headers || [],
+                            colonnesWinPharma: donneesAdaptees?.colonnesWinPharma || [],
+                            typesDonnees: donneesAdaptees?.typesDonnees || {},
+                            version: 'v1.0.0-winpharma-frequentation',
+                            processedInBatches: true,
+                            echantillonTaille: echantillonTaille,
+                            totalLignesOriginales: donneesAdaptees.totalLignes
+                        }
+                    };
+                    
+                    ajouterRequeteSQL(
+                        '💾 VALIDATION - Sauvegarde optimisée',
+                        `-- Sauvegarde allégée: métadonnées + échantillon de ${echantillonTaille} lignes`,
+                        `Total original: ${donneesAdaptees.totalLignes} lignes, Sauvegardé: ${echantillonTaille} lignes`,
+                        null
+                    );
+                    
+                } else {
+                    // Traitement normal pour les petits fichiers
+                    const tailleEstimee = JSON.stringify(donneesAuStockage).length;
+                    const tailleMo = (tailleEstimee / (1024 * 1024)).toFixed(2);
+                    
+                    ajouterRequeteSQL(
+                        '📊 VALIDATION - Taille estimée',
+                        `-- Taille JSON estimée: ${tailleEstimee} bytes (${tailleMo} MB)`,
+                        tailleEstimee > 10485760 ? 'ATTENTION: Fichier volumineux (>10MB)' : 'Taille acceptable',
+                        null
+                    );
+                    
+                    // Limite de sécurité localStorage (généralement 5-10MB)
+                    if (tailleEstimee > 10485760) { // 10MB
+                        ajouterRequeteSQL(
+                            '⚠️ VALIDATION - Fichier volumineux détecté',
+                            `-- ALERTE: Taille ${tailleMo}MB > 10MB (limite localStorage)`,
+                            `Risque élevé d'échec de sauvegarde - Quota localStorage dépassé`,
+                            `Fichier trop volumineux (${tailleMo}MB) - Limite localStorage dépassée`
+                        );
+                        
+                        ajouterRequeteSQL(
+                            '💡 VALIDATION - Actions recommandées IMMÉDIATEMENT',
+                            `-- SOLUTIONS POUR CONTINUER:`,
+                            `1. STOP: Utilisez un fichier plus petit (<5MB)
+2. DIVISER: Coupez votre fichier CSV en plusieurs parties
+3. FILTRER: Gardez seulement les lignes récentes (ex: dernier mois)
+4. COLONNES: Supprimez les colonnes non essentielles du CSV
+5. TEST: Créez un fichier de 100-1000 lignes pour tester`,
+                            `Solutions concrètes pour résoudre le problème de taille`
+                        );
+                        
+                        ajouterErreurAuDump('Fichier trop volumineux', `Le fichier WinPharma (${tailleMo}MB) va échouer car il dépasse la limite localStorage (5-10MB max). Utilisez un fichier plus petit ou divisez-le.`);
+                    }
+                }
+                
+                donneesJson = JSON.stringify(donneesAuStockage);
+                tailleJson = new Blob([donneesJson]).size;
+                
+                ajouterRequeteSQL(
+                    '✅ VALIDATION - Sérialisation OK',
+                    `-- JSON généré: ${tailleJson} bytes (${(tailleJson / (1024 * 1024)).toFixed(2)} MB)`,
+                    `Sérialisation réussie`,
+                    null
+                );
+                
+            } catch (jsonError) {
+                const errorMsg = `Erreur sérialisation JSON: ${jsonError.message}`;
+                ajouterRequeteSQL(
+                    '❌ VALIDATION - Erreur sérialisation JSON',
+                    `-- ERREUR JSON.stringify: ${jsonError.message}`,
+                    `Type: ${jsonError.constructor.name}, Stack: ${jsonError.stack ? jsonError.stack.substring(0, 100) : 'N/A'}`,
+                    jsonError.message
+                );
+                ajouterErreurAuDump('Sérialisation JSON', errorMsg);
+                YesDataUtils.showNotification(errorMsg, 'error');
+                throw new Error(errorMsg);
+            }
+            
+            // Sauvegarde effective
+            try {
+                ajouterRequeteSQL(
+                    '💾 VALIDATION - Sauvegarde en cours',
+                    `-- localStorage.setItem('winpharma_ventes', ...) - ${tailleJson} bytes`,
+                    null,
+                    null
+                );
+                
+                localStorage.setItem('winpharma_ventes', donneesJson);
+                
+                // Vérification de la sauvegarde
+                const verification = localStorage.getItem('winpharma_ventes');
+                if (verification && verification.length === donneesJson.length) {
+                    ajouterRequeteSQL(
+                        '✅ VALIDATION - Sauvegarde vérifiée',
+                        `-- Données sauvegardées et vérifiées (${tailleJson} bytes)`,
+                        `Fichier: ${infoFichier.nom}, Lignes: ${nbLignes}, Vérification: OK`,
+                        null
+                    );
+                } else {
+                    throw new Error('Vérification de sauvegarde échouée');
+                }
+                
+            } catch (saveError) {
+                const errorMsg = `Erreur sauvegarde localStorage: ${saveError.message}`;
+                ajouterRequeteSQL(
+                    '❌ VALIDATION - Erreur sauvegarde localStorage',
+                    `-- ERREUR localStorage.setItem: ${saveError.message}`,
+                    `Type: ${saveError.constructor.name}, Taille tentée: ${tailleJson} bytes`,
+                    saveError.message
+                );
+                
+                // Diagnostic spécifique selon le type d'erreur
+                if (saveError.message.includes('quota') || saveError.message.includes('storage') || saveError.name === 'QuotaExceededError') {
+                    const tailleMB = (tailleJson / (1024 * 1024)).toFixed(2);
+                    
+                    ajouterRequeteSQL(
+                        '💾 VALIDATION - Diagnostic quota localStorage',
+                        `-- QUOTA LOCALSTORAGE DÉPASSÉ - Fichier trop volumineux`,
+                        `Taille fichier: ${tailleMB}MB, Limite navigateur: 5-10MB max`,
+                        `Fichier trop volumineux (${tailleMB}MB) pour localStorage`
+                    );
+                    
+                    ajouterRequeteSQL(
+                        '💡 VALIDATION - Solutions recommandées',
+                        `-- SOLUTIONS POUR FICHIERS VOLUMINEUX:`,
+                        `1. Diviser le fichier en plusieurs parties plus petites (<5MB)
+2. Utiliser un fichier avec moins de lignes pour les tests
+3. Filtrer les données avant import (garder seulement les colonnes nécessaires)
+4. Compresser les données avant stockage`,
+                        `Solutions disponibles pour gérer les gros fichiers`
+                    );
+                    
+                    ajouterErreurAuDump('Fichier trop volumineux', `Le fichier WinPharma (${tailleMB}MB) dépasse la limite de stockage du navigateur (5-10MB max). Utilisez un fichier plus petit ou divisez-le en plusieurs parties.`);
+                } else {
+                    ajouterErreurAuDump('Sauvegarde localStorage', errorMsg);
+                }
+                
+                YesDataUtils.showNotification(errorMsg, 'error');
+                throw saveError;
+            }
             
             console.log('✅ Données sauvegardées en localStorage');
             
-            // Ajouter au dump de validation
-            const requeteValidationTemplate = `UPDATE dioo_donnees SET validated = ?, metadata = ? WHERE fichier = ?`;
+            // TRACE 7: Génération requête SQL adaptée WinPharma
+            try {
+                ajouterRequeteSQL(
+                    '🔧 VALIDATION - Début génération SQL WinPharma',
+                    `-- Génération des requêtes pour structure WinPharma`,
+                    null,
+                    null
+                );
+                
+                // Créer la table WinPharma si nécessaire
+                const createTableWinPharma = `
+                    CREATE TABLE IF NOT EXISTS winpharma_ventes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        date_vente DATE,
+                        heure_vente TIME,
+                        dossier VARCHAR(50),
+                        type_operation VARCHAR(100),
+                        operateur INTEGER,
+                        client VARCHAR(255),
+                        montant DECIMAL(10,2),
+                        difference_encom DECIMAL(10,2),
+                        fichier_source VARCHAR(255),
+                        date_import DATETIME,
+                        validated BOOLEAN DEFAULT FALSE
+                    )
+                `;
+                
+                ajouterRequeteSQL(
+                    '🏗️ VALIDATION - Création table WinPharma',
+                    createTableWinPharma,
+                    `Table adaptée aux ventes de pharmacie`,
+                    null
+                );
+                
+                // Requête de validation adaptée
+                const requeteValidationTemplate = `UPDATE winpharma_ventes SET validated = ?, metadata = ? WHERE fichier_source = ?`;
+                const metadataJson = JSON.stringify(donneesAuStockage.metadata);
             const valeursValidation = [
                 true,
-                donneesAuStockage.metadata,
+                    metadataJson,
                 donneesAuStockage.fichier.nom
             ];
-            const requeteValidationComplete = construireRequeteSQL(requeteValidationTemplate, valeursValidation);
+                
+                ajouterRequeteSQL(
+                    '📋 VALIDATION - Template SQL',
+                    requeteValidationTemplate,
+                    `Template préparé avec 3 paramètres`,
+                    null
+                );
+                
+                ajouterRequeteSQL(
+                    '📊 VALIDATION - Valeurs SQL',
+                    `-- Valeur 1 (validated): ${valeursValidation[0]}`,
+                    `Valeur 2 (metadata): ${metadataJson.substring(0,100)}${metadataJson.length > 100 ? '...' : ''}`,
+                    null
+                );
+                
+                ajouterRequeteSQL(
+                    '📁 VALIDATION - Fichier cible',
+                    `-- Valeur 3 (fichier): "${valeursValidation[2]}"`,
+                    `Fichier à valider dans la base`,
+                    null
+                );
+                
+                // Construction de la requête complète
+                let requeteValidationComplete;
+                try {
+                    requeteValidationComplete = construireRequeteSQL(requeteValidationTemplate, valeursValidation);
+                    ajouterRequeteSQL(
+                        '✅ VALIDATION - Construction SQL OK',
+                        `-- Requête construite avec succès`,
+                        `Longueur: ${requeteValidationComplete.length} caractères`,
+                        null
+                    );
+                } catch (constructError) {
+                    ajouterRequeteSQL(
+                        '❌ VALIDATION - Erreur construction SQL',
+                        `-- ERREUR construireRequeteSQL: ${constructError.message}`,
+                        null,
+                        constructError.message
+                    );
+                    throw constructError;
+                }
+                
+                // TRACE 8: Requête SQL complète
+                ajouterRequeteSQL(
+                    '📝 VALIDATION - Requête SQL finale',
+                    requeteValidationComplete.substring(0, 500) + (requeteValidationComplete.length > 500 ? '...' : ''),
+                    `Validation du fichier ${infoFichier.nom}`,
+                    null
+                );
+                
+            } catch (sqlError) {
+                const errorMsg = `Erreur génération SQL: ${sqlError.message}`;
+                ajouterRequeteSQL(
+                    '❌ VALIDATION - Erreur génération SQL',
+                    `-- EXCEPTION génération SQL: ${sqlError.message}`,
+                    `Type: ${sqlError.constructor.name}, Stack: ${sqlError.stack ? sqlError.stack.substring(0, 100) : 'N/A'}`,
+                    sqlError.message
+                );
+                ajouterErreurAuDump('Génération SQL', errorMsg);
+                YesDataUtils.showNotification(errorMsg, 'error');
+                throw sqlError;
+            }
             
-            ajouterAuImportDump(requeteValidationComplete, donneesAuStockage, 'Validation', {
-                fichier: donneesAuStockage.fichier.nom,
-                nombreLignes: donneesAuStockage.metadata.nombreLignes,
-                colonnes: donneesAuStockage.metadata.colonnes.length,
-                dateValidation: donneesAuStockage.fichier.dateImport
-            });
+                            // TRACE 8.5: Génération requêtes d'insertion WinPharma
+                if (donneesAdaptees?.donnees && Array.isArray(donneesAdaptees.donnees)) {
+                    ajouterRequeteSQL(
+                        '📊 VALIDATION - Génération insertions WinPharma',
+                        `-- Génération de ${donneesAdaptees.donnees.length} requêtes INSERT`,
+                        null,
+                        null
+                    );
+                    
+                    // Générer quelques exemples d'insertion
+                    const exemplesInsertion = donneesAdaptees.donnees.slice(0, 3);
+                    exemplesInsertion.forEach((ligne, index) => {
+                        const insertTemplate = `
+                            INSERT INTO winpharma_ventes 
+                            (date_vente, heure_vente, dossier, type_operation, operateur, client, montant, difference_encom, fichier_source, date_import) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        `;
+                        
+                        const valeurs = [
+                            ligne.Date || null,
+                            ligne.Heure || null,
+                            ligne.Dossier || null,
+                            ligne.Type || null,
+                            ligne.Operateur || null,
+                            ligne.Client || null,
+                            ligne.Montant || null,
+                            ligne['Dif./EnCom., EUR'] || null,
+                            donneesAuStockage.fichier.nom,
+                            timestampDebut
+                        ];
+                        
+                        ajouterRequeteSQL(
+                            `💾 VALIDATION - Exemple insertion ${index + 1}`,
+                            insertTemplate.trim(),
+                            `Valeurs: [${valeurs.map(v => v ? `"${v}"` : 'NULL').join(', ')}]`,
+                            null
+                        );
+                    });
+                    
+                    if (donneesAdaptees.donnees.length > 3) {
+                        ajouterRequeteSQL(
+                            '📊 VALIDATION - Insertions restantes',
+                            `-- ... et ${donneesAdaptees.donnees.length - 3} autres requêtes INSERT similaires`,
+                            `Total: ${donneesAdaptees.donnees.length} lignes à insérer`,
+                            null
+                        );
+                    }
+                }
+                
+                                // Validation terminée - pas d'ajout au dump (réservé aux erreurs uniquement)
             
-            // Marquer la validation comme terminée
+            // TRACE 10: Finalisation
             setTimeout(() => {
+                const timestampFin = new Date().toISOString();
+                const duree = new Date(timestampFin) - new Date(timestampDebut);
+                
+                ajouterRequeteSQL(
+                    '🎯 VALIDATION - Finalisation',
+                    `-- Début finalisation du processus`,
+                    null,
+                    null
+                );
+                
+                // Mise à jour de l'interface
+                try {
                 definirEtatIndicateur('validation-status', 'completed');
+                    ajouterRequeteSQL(
+                        '✅ VALIDATION - LED mise à jour',
+                        `-- LED validation passée en 'completed'`,
+                        null,
+                        null
+                    );
+                } catch (ledError) {
+                    ajouterRequeteSQL(
+                        '❌ VALIDATION - Erreur LED',
+                        `-- ERREUR mise à jour LED: ${ledError.message}`,
+                        null,
+                        ledError.message
+                    );
+                }
+                
+                // Mise à jour de la progression
+                try {
                 mettreAJourProgression(100, 'Validation terminée', 'Données sauvegardées avec succès');
+                    ajouterRequeteSQL(
+                        '✅ VALIDATION - Progression mise à jour',
+                        `-- Progression mise à 100%`,
+                        null,
+                        null
+                    );
+                } catch (progressError) {
+                    ajouterRequeteSQL(
+                        '❌ VALIDATION - Erreur progression',
+                        `-- ERREUR mise à jour progression: ${progressError.message}`,
+                        null,
+                        progressError.message
+                    );
+                }
+                
+                // Résumé final WinPharma
+                ajouterRequeteSQL(
+                    '🎯 VALIDATION - Processus WinPharma terminé avec succès',
+                    `-- FIN VALIDATION WINPHARMA à ${timestampFin} (durée: ${duree}ms)`,
+                    `Fichier: ${infoFichier.nom}, Lignes: ${nbLignes}, Taille: ${tailleJson} bytes, Structure: ventes_pharmacie`,
+                    null
+                );
+                
+                // Statistiques WinPharma
+                if (donneesAdaptees?.donnees) {
+                    const stats = {
+                        totalVentes: donneesAdaptees.donnees.length,
+                        montantTotal: donneesAdaptees.donnees.reduce((sum, ligne) => {
+                            const montant = parseFloat(ligne.Montant) || 0;
+                            return sum + montant;
+                        }, 0),
+                        operateursUniques: [...new Set(donneesAdaptees.donnees.map(l => l.Operateur).filter(Boolean))].length,
+                        typesOperations: [...new Set(donneesAdaptees.donnees.map(l => l.Type).filter(Boolean))].length
+                    };
+                    
+                    ajouterRequeteSQL(
+                        '📊 VALIDATION - Statistiques WinPharma',
+                        `-- Statistiques des ventes de pharmacie`,
+                        `Ventes: ${stats.totalVentes}, Montant total: ${stats.montantTotal.toFixed(2)}€, Opérateurs: ${stats.operateursUniques}, Types: ${stats.typesOperations}`,
+                        null
+                    );
+                }
+                
                 resolve();
             }, 500);
             
         } catch (error) {
-            console.error('❌ Erreur localStorage:', error);
-            DiooUtils.showNotification('Erreur de sauvegarde localStorage', 'warning');
-            resolve(); // On continue même si localStorage échoue
+            // TRACE 11: Gestion d'erreur détaillée
+            const timestampErreur = new Date().toISOString();
+            const dureeAvantErreur = new Date(timestampErreur) - new Date(timestampDebut);
+            
+            ajouterRequeteSQL(
+                '❌ VALIDATION - ERREUR CRITIQUE',
+                `-- EXCEPTION à ${timestampErreur} (après ${dureeAvantErreur}ms)`,
+                `Type: ${error.constructor.name}, Message: ${error.message}`,
+                null
+            );
+            
+            // Détails de l'erreur
+            ajouterRequeteSQL(
+                '🔍 VALIDATION - Détails erreur',
+                `-- Message: ${error.message}`,
+                `Stack: ${error.stack ? error.stack.substring(0, 200) + '...' : 'Stack non disponible'}`,
+                error.message
+            );
+            
+            // État du système au moment de l'erreur
+            ajouterRequeteSQL(
+                '📊 VALIDATION - État système',
+                `-- localStorage disponible: ${typeof Storage !== 'undefined'}`,
+                `window.fichierCourant: ${!!window.fichierCourant}, window.donneesImportees: ${!!window.donneesImportees}`,
+                null
+            );
+            
+            // Mise à jour de l'interface en cas d'erreur
+            try {
+                definirEtatIndicateur('validation-status', 'error');
+                mettreAJourProgression(75, 'Erreur de validation', error.message);
+                ajouterRequeteSQL(
+                    '⚠️ VALIDATION - Interface mise à jour',
+                    `-- LED passée en erreur, progression arrêtée`,
+                    null,
+                    null
+                );
+            } catch (uiError) {
+                ajouterRequeteSQL(
+                    '❌ VALIDATION - Erreur interface',
+                    `-- Impossible de mettre à jour l'interface: ${uiError.message}`,
+                    null,
+                    uiError.message
+                );
+            }
+            
+            // Notifications
+            console.error('❌ Erreur validation complète:', error);
+            YesDataUtils.showNotification(`Erreur de validation: ${error.message}`, 'error');
+            ajouterErreurAuDump('Validation complète', error.message);
+            
+            // Résumé d'échec WinPharma
+            ajouterRequeteSQL(
+                '💥 VALIDATION - Processus WinPharma échoué',
+                `-- ÉCHEC VALIDATION WINPHARMA à ${timestampErreur}`,
+                `Durée avant échec: ${dureeAvantErreur}ms, Format: ${formatDetecte}, Structure: ventes_pharmacie`,
+                error.message
+            );
+            
+            // Diagnostic spécifique WinPharma
+            if (formatDetecte === 'CSV WinPharma') {
+                ajouterRequeteSQL(
+                    '🔍 VALIDATION - Diagnostic WinPharma',
+                    `-- Diagnostic spécifique au format WinPharma`,
+                    `Colonnes attendues: Date, Heure, Dossier, Type, Operateur, Client, Montant`,
+                    null
+                );
+            }
+            
+            resolve(); // On continue même si la validation échoue
         }
     });
 }
@@ -815,7 +1733,7 @@ async function etapeValidation() {
 function finaliserProcessus() {
     setTimeout(() => {
         masquerProgression();
-        DiooUtils.showNotification(`Fichier ${window.fichierCourant.name} traité avec succès`, 'success');
+        YesDataUtils.showNotification(`Fichier ${window.fichierCourant.name} traité avec succès`, 'success');
         
         // Mettre le bouton dans l'état "loaded" (bleu avec LED verte)
         const chargerBtn = document.getElementById('charger-fichier');
@@ -836,10 +1754,10 @@ function finaliserProcessus() {
             
             // Afficher les informations Excel si disponibles
             if (window.donneesImportees.ongletUtilise) {
-                DiooUtils.showNotification(`Données chargées depuis l'onglet ${window.donneesImportees.ongletUtilise}: ${window.donneesImportees.feuilleActive}`, 'info');
+                YesDataUtils.showNotification(`Données chargées depuis l'onglet ${window.donneesImportees.ongletUtilise}: ${window.donneesImportees.feuilleActive}`, 'info');
             }
             if (window.donneesImportees.dateExtrait) {
-                DiooUtils.showNotification(`Date extraite: ${window.donneesImportees.dateExtrait}`, 'info');
+                YesDataUtils.showNotification(`Date extraite: ${window.donneesImportees.dateExtrait}`, 'info');
             }
         }
     }, 1000);
@@ -856,7 +1774,7 @@ function effacerDonnees() {
     console.log('🔍 AVANT EFFACEMENT:', stats);
     
     if (!stats.donnees.exists && !stats.summary.exists) {
-        DiooUtils.showNotification('Aucune donnée à effacer', 'info');
+        YesDataUtils.showNotification('Aucune donnée à effacer', 'info');
         console.log('ℹ️ Aucune donnée à effacer');
         return;
     }
@@ -909,7 +1827,7 @@ function effacerDonnees() {
             console.log('🔍 APRÈS EFFACEMENT:', statsApres);
             
             // Notification de succès
-            DiooUtils.showNotification('Données effacées avec succès', 'success');
+            YesDataUtils.showNotification('Données effacées avec succès', 'success');
             console.log('✅ SUCCÈS - Toutes les données ont été effacées');
             
         } else {
@@ -919,7 +1837,7 @@ function effacerDonnees() {
     } catch (error) {
         console.error('❌ ERREUR lors de l\'effacement:', error);
         console.error('❌ Stack trace:', error.stack);
-        DiooUtils.showNotification('Erreur lors de l\'effacement des données', 'error');
+        YesDataUtils.showNotification('Erreur lors de l\'effacement des données', 'error');
     }
 }
 
@@ -944,22 +1862,249 @@ function formatTailleFichier(bytes) {
  * @returns {Array} Données parsées
  */
 function parseCSV(csvText) {
+    console.log('🔍 DEBUG parseCSV - Début parsing CSV');
+    
     const lignes = csvText.split('\n');
-    const headers = lignes[0].split(',');
+    console.log(`🔍 DEBUG parseCSV - Nombre de lignes: ${lignes.length}`);
+    
+    if (lignes.length === 0) {
+        throw new Error('Fichier CSV vide');
+    }
+    
+    // Utiliser point-virgule comme séparateur pour le format WinPharma
+    const headersRaw = lignes[0].split(';');
+    console.log('🔍 DEBUG parseCSV - Headers bruts:', headersRaw);
+    
+    // Mapping des colonnes selon les spécifications
+    const columnMapping = {
+        'Date': 'Date',
+        'Heure': 'Heure', 
+        'Dossier': 'Dossier',
+        'Type': 'Type',
+        'Opér.': 'Operateur',
+        'Op�r.': 'Operateur', // Support pour l'encodage défaillant
+        'Client': 'Client',
+        'Mont., EUR': 'Montant',
+        'Réglé, EUR': null, // Colonne ignorée
+        'R�gl�, EUR': null, // Support pour l'encodage défaillant - colonne ignorée
+        'Dif./EnCom., EUR': 'Dif./EnCom., EUR'
+    };
+    
+    // Créer les headers finaux en appliquant le mapping
+    const headers = [];
+    const headerIndexes = [];
+    
+    headersRaw.forEach((header, index) => {
+        const cleanHeader = header.trim().replace(/"/g, ''); // Nettoyer les guillemets
+        const mappedHeader = columnMapping[cleanHeader];
+        
+        if (mappedHeader !== null) { // null = colonne ignorée
+            headers.push(mappedHeader || cleanHeader);
+            headerIndexes.push(index);
+        }
+    });
+    
+    console.log('🔍 DEBUG parseCSV - Headers finaux:', headers);
+    console.log('🔍 DEBUG parseCSV - Index des colonnes utilisées:', headerIndexes);
+    
     const donnees = [];
     
     for (let i = 1; i < lignes.length; i++) {
-        if (lignes[i].trim()) {
-            const valeurs = lignes[i].split(',');
+        const ligne = lignes[i].trim();
+        if (ligne) {
+            // Parser la ligne en tenant compte des guillemets
+            const valeurs = parseCSVLine(ligne);
+            
+            if (valeurs.length > 0) {
             const objet = {};
-            headers.forEach((header, index) => {
-                objet[header.trim()] = valeurs[index]?.trim() || '';
-            });
+                
+                headerIndexes.forEach((originalIndex, newIndex) => {
+                    const header = headers[newIndex];
+                    let valeur = valeurs[originalIndex]?.trim() || '';
+                    
+                    // Nettoyer les guillemets
+                    valeur = valeur.replace(/^"|"$/g, '');
+                    
+                    // Traitement spécial pour les montants (remplacer virgule par point)
+                    if (header === 'Montant' || header.includes('EUR')) {
+                        valeur = valeur.replace(',', '.');
+                    }
+                    
+                    objet[header] = valeur;
+                });
+                
             donnees.push(objet);
+            }
         }
     }
     
-    return { headers, donnees, totalLignes: donnees.length };
+    console.log(`✅ parseCSV - ${donnees.length} lignes parsées avec succès`);
+    console.log('🔍 DEBUG parseCSV - Exemple première ligne:', donnees[0]);
+    
+    return { 
+        headers, 
+        donnees, 
+        totalLignes: donnees.length,
+        format: 'CSV WinPharma',
+        separator: ';'
+    };
+}
+
+/**
+ * Parse une ligne CSV en tenant compte des guillemets et des points-virgules
+ * @param {string} ligne - Ligne CSV à parser
+ * @returns {Array} Tableau des valeurs
+ */
+function parseCSVLine(ligne) {
+    const valeurs = [];
+    let valeurCourante = '';
+    let dansGuillemets = false;
+    
+    for (let i = 0; i < ligne.length; i++) {
+        const char = ligne[i];
+        
+        if (char === '"') {
+            dansGuillemets = !dansGuillemets;
+            valeurCourante += char;
+        } else if (char === ';' && !dansGuillemets) {
+            valeurs.push(valeurCourante);
+            valeurCourante = '';
+        } else {
+            valeurCourante += char;
+        }
+    }
+    
+    // Ajouter la dernière valeur
+    if (valeurCourante || valeurs.length > 0) {
+        valeurs.push(valeurCourante);
+    }
+    
+    return valeurs;
+}
+
+/**
+ * Parser CSV par paquets pour gérer les gros fichiers
+ * @param {string} csvText - Contenu du fichier CSV
+ * @param {number} batchSize - Taille des paquets (défaut: 1000)
+ * @param {Function} onBatchProcessed - Callback appelé pour chaque paquet traité
+ * @returns {Promise<Object>} Données parsées avec métadonnées
+ */
+async function parseCSVByBatches(csvText, batchSize = 1000, onBatchProcessed = null) {
+    console.log('🔍 DEBUG parseCSVByBatches - Début parsing CSV par paquets');
+    
+    const lignes = csvText.split('\n');
+    console.log(`🔍 DEBUG parseCSVByBatches - Nombre total de lignes: ${lignes.length}`);
+    
+    if (lignes.length === 0) {
+        throw new Error('Fichier CSV vide');
+    }
+    
+    // Traiter les headers (même logique que parseCSV)
+    const headersRaw = lignes[0].split(';');
+    console.log('🔍 DEBUG parseCSVByBatches - Headers bruts:', headersRaw);
+    
+    const columnMapping = {
+        'Date': 'Date',
+        'Heure': 'Heure', 
+        'Dossier': 'Dossier',
+        'Type': 'Type',
+        'Opér.': 'Operateur',
+        'Op�r.': 'Operateur',
+        'Client': 'Client',
+        'Mont., EUR': 'Montant',
+        'Réglé, EUR': null,
+        'R�gl�, EUR': null,
+        'Dif./EnCom., EUR': 'Dif./EnCom., EUR'
+    };
+    
+    const headers = [];
+    const headerIndexes = [];
+    
+    headersRaw.forEach((header, index) => {
+        const cleanHeader = header.trim().replace(/"/g, '');
+        const mappedHeader = columnMapping[cleanHeader];
+        
+        if (mappedHeader !== null) {
+            headers.push(mappedHeader || cleanHeader);
+            headerIndexes.push(index);
+        }
+    });
+    
+    console.log('🔍 DEBUG parseCSVByBatches - Headers finaux:', headers);
+    
+    // Traitement par paquets
+    const totalDataLines = lignes.length - 1; // Exclure la ligne d'en-tête
+    const totalBatches = Math.ceil(totalDataLines / batchSize);
+    let totalProcessed = 0;
+    let allData = [];
+    
+    console.log(`📦 Traitement par paquets: ${totalDataLines} lignes en ${totalBatches} paquets de ${batchSize}`);
+    
+    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+        const startLine = 1 + (batchIndex * batchSize); // +1 pour ignorer les headers
+        const endLine = Math.min(startLine + batchSize, lignes.length);
+        
+        console.log(`📦 Traitement paquet ${batchIndex + 1}/${totalBatches}: lignes ${startLine} à ${endLine - 1}`);
+        
+        const batchData = [];
+        
+        for (let i = startLine; i < endLine; i++) {
+            const ligne = lignes[i].trim();
+            if (ligne) {
+                const valeurs = parseCSVLine(ligne);
+                
+                if (valeurs.length > 0) {
+                    const objet = {};
+                    
+                    headerIndexes.forEach((originalIndex, newIndex) => {
+                        const header = headers[newIndex];
+                        let valeur = valeurs[originalIndex]?.trim() || '';
+                        
+                        valeur = valeur.replace(/^"|"$/g, '');
+                        
+                        if (header === 'Montant' || header.includes('EUR')) {
+                            valeur = valeur.replace(',', '.');
+                        }
+                        
+                        objet[header] = valeur;
+                    });
+                    
+                    batchData.push(objet);
+                }
+            }
+        }
+        
+        totalProcessed += batchData.length;
+        allData = allData.concat(batchData);
+        
+        // Callback pour chaque paquet traité
+        if (onBatchProcessed) {
+            await onBatchProcessed({
+                batchIndex: batchIndex + 1,
+                totalBatches,
+                batchSize: batchData.length,
+                totalProcessed,
+                totalLines: totalDataLines,
+                progress: Math.round((totalProcessed / totalDataLines) * 100)
+            });
+        }
+        
+        // Petite pause pour ne pas bloquer l'interface
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    
+    console.log(`✅ parseCSVByBatches - ${totalProcessed} lignes parsées en ${totalBatches} paquets`);
+    
+    return { 
+        headers, 
+        donnees: allData, 
+        totalLignes: totalProcessed,
+        format: 'CSV WinPharma',
+        separator: ';',
+        processedInBatches: true,
+        batchSize,
+        totalBatches
+    };
 }
 
 /**
@@ -1262,21 +2407,21 @@ function reinitialiserEtats() {
 }
 
 /**
- * Définir l'état d'un indicateur
+ * Définir l'état d'un indicateur LED (sans icônes)
  * @param {string} indicatorId - ID de l'indicateur
- * @param {string} state - État: 'inactive', 'active', 'completed'
+ * @param {string} state - État: 'inactive', 'active', 'completed', 'error'
  */
 function definirEtatIndicateur(indicatorId, state) {
     const indicator = document.getElementById(indicatorId);
     if (!indicator) return;
     
     // Supprimer tous les états
-    indicator.classList.remove('inactive', 'active', 'completed');
+    indicator.classList.remove('inactive', 'active', 'completed', 'error');
     
     // Ajouter le nouvel état
     indicator.classList.add(state);
     
-    console.log(`🔄 Indicateur ${indicatorId}: ${state}`);
+    console.log(`🔄 Indicateur LED ${indicatorId}: ${state}`);
 }
 
 /**
@@ -1352,15 +2497,13 @@ function toggleOverviewSection() {
     window.dumpData.estOuverte = !window.dumpData.estOuverte;
     
     if (window.dumpData.estOuverte) {
-        content.classList.remove('collapsed');
+        content.classList.add('expanded');
         if (led) led.classList.add('active');
         if (arrow) arrow.classList.add('rotated');
-        content.style.maxHeight = content.scrollHeight + 'px';
     } else {
-        content.classList.add('collapsed');
+        content.classList.remove('expanded');
         if (led) led.classList.remove('active');
         if (arrow) arrow.classList.remove('rotated');
-        content.style.maxHeight = '0';
     }
     
     console.log(`📋 Section Overview: ${window.dumpData.estOuverte ? 'ouverte' : 'fermée'}`);
@@ -1369,6 +2512,31 @@ function toggleOverviewSection() {
 // Fonction de compatibilité pour l'ancienne section Dump
 function toggleDumpSection() {
     toggleOverviewSection();
+}
+
+/**
+ * Basculer l'affichage de la section Chargement
+ */
+function toggleChargementSection() {
+    const content = document.getElementById('chargement-content');
+    const led = document.getElementById('chargement-led');
+    const arrow = document.getElementById('chargement-arrow');
+    
+    if (!content) return;
+    
+    const isExpanded = content.classList.contains('expanded');
+    
+    if (isExpanded) {
+        content.classList.remove('expanded');
+        if (led) led.classList.remove('active');
+        if (arrow) arrow.classList.remove('rotated');
+    } else {
+        content.classList.add('expanded');
+        if (led) led.classList.add('active');
+        if (arrow) arrow.classList.add('rotated');
+    }
+    
+    console.log(`📁 Section Chargement: ${isExpanded ? 'fermée' : 'ouverte'}`);
 }
 
 /**
@@ -1492,7 +2660,7 @@ function effacerDumpInsertion() {
         console.log('🗑️ Effacement du dump d\'insertion');
         window.insertionDump = [];
         mettreAJourDumpInsertion();
-        DiooUtils.showNotification('Dump d\'insertion effacé', 'success');
+        YesDataUtils.showNotification('Dump d\'insertion effacé', 'success');
     }
 }
 
@@ -1625,7 +2793,7 @@ function mettreAJourImportDump() {
             if (emptyElement) {
                 emptyElement.style.display = 'block';
             }
-            listElement.innerHTML = '<div class="dump-empty" id="import-dump-empty"><p>Aucune requête d\'import/validation</p><p class="dump-empty-hint">Les requêtes d\'import et validation apparaîtront ici</p></div>';
+            listElement.innerHTML = '<div class="dump-empty" id="import-dump-empty"><p>Aucune erreur détectée</p><p class="dump-empty-hint">Toutes les erreurs d\'import, validation et insertion DB apparaîtront ici avec détails techniques</p></div>';
         } else {
             // Masquer l'état vide et afficher les requêtes
             if (emptyElement) {
@@ -1664,11 +2832,22 @@ function mettreAJourImportDump() {
  * Effacer le dump d'import/validation
  */
 function effacerImportDump() {
-    if (confirm('Êtes-vous sûr de vouloir effacer toutes les requêtes d\'import/validation ?')) {
-        console.log('🗑️ Effacement du dump d\'import/validation');
-        window.importDump = [];
-        mettreAJourImportDump();
-        DiooUtils.showNotification('Dump d\'import/validation effacé', 'success');
+    if (confirm('Êtes-vous sûr de vouloir effacer toutes les erreurs ?')) {
+        console.log('🗑️ Effacement du dump d\'erreurs');
+        
+        // Effacer la liste des erreurs
+        const liste = document.getElementById('import-dump-list');
+        if (liste) {
+            liste.innerHTML = '<div class="dump-empty" id="import-dump-empty"><p>Aucune erreur détectée</p><p class="dump-empty-hint">Toutes les erreurs d\'import, validation et insertion DB apparaîtront ici avec détails techniques</p></div>';
+        }
+        
+        // Réinitialiser le compteur
+        const countElement = document.getElementById('import-dump-count');
+        if (countElement) {
+            countElement.textContent = '0';
+        }
+        
+        YesDataUtils.showNotification('Dump d\'erreurs effacé', 'success');
     }
 }
 
@@ -1922,7 +3101,7 @@ function allerALaPage(page) {
 function calculerConsolidation() {
     calculerConsolidationAsync().catch(error => {
         console.error('❌ Erreur calculerConsolidation:', error);
-        DiooUtils.showNotification(`Erreur: ${error.message}`, 'error');
+        YesDataUtils.showNotification(`Erreur: ${error.message}`, 'error');
     });
 }
 
@@ -1935,7 +3114,7 @@ async function calculerConsolidationAsync() {
     // Vérifier que DatabaseManager est prêt
     if (!window.DatabaseManager.isInitialized()) {
         console.error('❌ DatabaseManager non initialisé');
-        DiooUtils.showNotification('Base de données non initialisée. Veuillez recharger la page.', 'error');
+        YesDataUtils.showNotification('Base de données non initialisée. Veuillez recharger la page.', 'error');
         return;
     }
     
@@ -1952,7 +3131,7 @@ async function calculerConsolidationAsync() {
         // Effectuer les calculs avec des vraies requêtes SQL
         const resultats = await effectuerCalculsConsolidationSQL();
         
-        // Sauvegarder dans Dioo_Summary
+        // Sauvegarder dans YesData_Summary
         sauvegarderDansHistorique(resultats);
         
         // Afficher les résultats
@@ -1961,11 +3140,11 @@ async function calculerConsolidationAsync() {
         // Marquer comme terminé
         definirEtatIndicateur('calcul-status', 'completed');
         
-        DiooUtils.showNotification('Calculs de consolidation terminés avec succès', 'success');
+        YesDataUtils.showNotification('Calculs de consolidation terminés avec succès', 'success');
         
     } catch (error) {
         console.error('❌ Erreur dans le calcul de consolidation:', error);
-        DiooUtils.showNotification(`Erreur: ${error.message}`, 'error');
+        YesDataUtils.showNotification(`Erreur: ${error.message}`, 'error');
         definirEtatIndicateur('calcul-status', 'inactive');
     }
 }
@@ -2600,11 +3779,11 @@ Monitored in HCC: ${entry.monitoredHCC} (${entry.pctMonitoredHCC}%)
 Confirmed Not Required in HCC: ${entry.notRequiredHCC} (${entry.pctNotRequiredHCC}%)
             `;
             
-            DiooUtils.showNotification(details, 'info');
+            YesDataUtils.showNotification(details, 'info');
         }
     } catch (error) {
         console.error('❌ Erreur lors de l\'affichage des détails:', error);
-        DiooUtils.showNotification('Erreur lors de l\'affichage des détails', 'error');
+        YesDataUtils.showNotification('Erreur lors de l\'affichage des détails', 'error');
     }
 }
 
@@ -3953,49 +5132,168 @@ function viderListeRequetesSQL() {
 }
 
 /**
- * Ajouter une requête SQL à l'affichage
+ * Effacer complètement le dump SQL
+ */
+function effacerDumpSQL() {
+    const liste = document.getElementById('import-dump-list');
+    if (liste) {
+        liste.innerHTML = '<div class="dump-empty" id="import-dump-empty"><p>Aucune erreur détectée</p><p class="dump-empty-hint">Toutes les erreurs d\'import, validation et insertion DB apparaîtront ici avec détails techniques</p></div>';
+        console.log('🧹 Dump SQL effacé');
+    }
+    
+    // Réinitialiser le compteur
+    const countElement = document.getElementById('import-dump-count');
+    if (countElement) {
+        countElement.textContent = '0';
+    }
+}
+
+/**
+ * Ajouter une erreur au dump pour qu'elle reste visible
+ */
+function ajouterErreurAuDump(titre, messageErreur) {
+    const timestamp = new Date().toLocaleTimeString();
+    
+    // Ajouter à la section des requêtes SQL comme une erreur persistante
+    ajouterRequeteSQL(
+        `❌ ${titre}`, 
+        `Erreur survenue à ${timestamp}`, 
+        null, 
+        messageErreur
+    );
+    
+    // Aussi l'ajouter à la section dump d'insertion si elle existe
+    const dumpSection = document.getElementById('dump-content');
+    if (dumpSection) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'dump-error-message';
+        errorDiv.innerHTML = `
+            <div class="error-header">❌ ${titre} - ${timestamp}</div>
+            <div class="error-details">${messageErreur}</div>
+        `;
+        dumpSection.appendChild(errorDiv);
+    }
+}
+
+/**
+ * Diagnostiquer les erreurs actuelles dans le dump
+ */
+function diagnostiquerErreurs() {
+    console.log('🔍 DIAGNOSTIC ERREURS:');
+    
+    const liste = document.getElementById('import-dump-list');
+    const countElement = document.getElementById('import-dump-count');
+    
+    console.log('- Liste dump trouvée:', !!liste);
+    console.log('- Compteur trouvé:', !!countElement);
+    console.log('- Compteur valeur:', countElement?.textContent);
+    console.log('- Contenu liste:', liste?.innerHTML?.substring(0, 200));
+    
+    const erreurs = liste?.querySelectorAll('.error-item');
+    console.log('- Nombre d\'erreurs dans DOM:', erreurs?.length || 0);
+    
+    if (erreurs && erreurs.length > 0) {
+        erreurs.forEach((erreur, index) => {
+            const titre = erreur.querySelector('.sql-query-title')?.textContent;
+            const message = erreur.querySelector('.error-message')?.textContent;
+            console.log(`  Erreur ${index + 1}: ${titre} - ${message}`);
+        });
+    }
+    
+    return {
+        listeExiste: !!liste,
+        compteurExiste: !!countElement,
+        compteurValeur: countElement?.textContent,
+        nombreErreurs: erreurs?.length || 0
+    };
+}
+
+/**
+ * Ajouter une requête SQL à l'affichage - ERREURS UNIQUEMENT
  */
 function ajouterRequeteSQL(titre, requete, resultat = null, erreur = null) {
-    const liste = document.getElementById('sql-query-list');
+    const liste = document.getElementById('import-dump-list');
     if (!liste) return;
     
-    // Supprimer le message "aucune requête"
+    // NOUVELLE LOGIQUE: N'afficher que les erreurs dans le dump
+    if (!erreur) {
+        // Si ce n'est pas une erreur, ne pas l'afficher dans le dump
+        return;
+    }
+    
+    // Supprimer le message "aucune requête" et "aucune erreur détectée"
     const noQueries = liste.querySelector('.no-queries');
     if (noQueries) {
         noQueries.remove();
     }
     
+    // Supprimer le message "Aucune erreur détectée" s'il existe
+    const noErrors = liste.querySelector('.dump-empty');
+    if (noErrors) {
+        noErrors.remove();
+    }
+    
     const timestamp = new Date().toLocaleTimeString();
+    const fullTimestamp = new Date().toISOString();
     
     const queryItem = document.createElement('div');
-    queryItem.className = 'sql-query-item';
+    queryItem.className = 'sql-query-item error-item';
     
-    let resultHtml = '';
+    // Détails techniques de l'erreur
+    let detailsTechniques = '';
     if (erreur) {
-        resultHtml = `<div class="sql-query-error">❌ Erreur: ${erreur}</div>`;
-    } else if (resultat !== null) {
-        if (typeof resultat === 'number') {
-            resultHtml = `<div class="sql-query-result">✅ Résultat: ${resultat}</div>`;
-        } else if (Array.isArray(resultat)) {
-            resultHtml = `<div class="sql-query-result">✅ ${resultat.length} ligne(s) retournée(s)</div>`;
-        } else {
-            resultHtml = `<div class="sql-query-result">✅ Exécutée avec succès</div>`;
-        }
+        detailsTechniques = `
+            <div class="error-technical-details">
+                <div class="error-header">
+                    <strong>🔍 DÉTAILS TECHNIQUES DE L'ERREUR</strong>
+                </div>
+                <div class="error-details">
+                    <div><strong>Timestamp complet:</strong> ${fullTimestamp}</div>
+                    <div><strong>Message d'erreur:</strong> ${erreur}</div>
+                    <div><strong>Contexte:</strong> ${titre}</div>
+                    <div><strong>Requête/Action:</strong> ${requete || 'N/A'}</div>
+                    <div><strong>Type d'erreur:</strong> ${erreur.includes('localStorage') ? 'Storage' : erreur.includes('JSON') ? 'Sérialisation' : erreur.includes('SQL') ? 'Base de données' : 'Générique'}</div>
+                </div>
+            </div>
+        `;
     }
     
     queryItem.innerHTML = `
-        <div class="sql-query-header">
-            <div class="sql-query-title">${titre}</div>
+        <div class="sql-query-header error-header">
+            <div class="sql-query-title">❌ ${titre}</div>
             <div class="sql-query-time">${timestamp}</div>
         </div>
-        <div class="sql-query-code">${requete}</div>
-        ${resultHtml}
+        <div class="sql-query-error">
+            <div class="error-message">💥 ${erreur}</div>
+            ${detailsTechniques}
+        </div>
+        ${requete ? `<div class="sql-query-code">Contexte: ${requete}</div>` : ''}
     `;
     
     liste.appendChild(queryItem);
     
-    // Scroll vers le bas pour voir la nouvelle requête
+    // Afficher automatiquement la section des erreurs
+    const section = document.getElementById('import-dump-section');
+    if (section) {
+        section.style.display = 'block';
+        // Ouvrir la section si elle est fermée
+        const content = document.getElementById('import-dump-content');
+        const arrow = document.getElementById('import-dump-arrow');
+        if (content && content.style.display === 'none') {
+            content.style.display = 'block';
+            if (arrow) arrow.innerHTML = '▼';
+        }
+    }
+    
+    // Scroll vers le bas pour voir la nouvelle erreur
     liste.scrollTop = liste.scrollHeight;
+    
+    // Mettre à jour le compteur d'erreurs
+    const countElement = document.getElementById('import-dump-count');
+    if (countElement) {
+        const currentCount = parseInt(countElement.textContent) || 0;
+        countElement.textContent = currentCount + 1;
+    }
 }
 
 /**

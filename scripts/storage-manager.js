@@ -1,6 +1,6 @@
 /**
  * Module de gestion centralisée du localStorage
- * Centralise tous les accès aux données persistantes de l'application DIOO
+ * Centralise tous les accès aux données persistantes de l'application YesData Frequentation
  */
 
 const StorageManager = {
@@ -9,9 +9,9 @@ const StorageManager = {
     // ========================================
     
     KEYS: {
-        DIOO_DONNEES: 'dioo_donnees',
-        DIOO_SUMMARY: 'dioo_summary', 
-        DIOO_RAND_COUNTER: 'dioo_rand_counter'
+        WINPHARMA_VENTES: 'winpharma_ventes',
+        YESDATA_SUMMARY: 'yesdata_summary',
+        YESDATA_RAND_COUNTER: 'yesdata_rand_counter'
     },
     
     // ========================================
@@ -19,36 +19,36 @@ const StorageManager = {
     // ========================================
     
     /**
-     * Récupère les données principales DIOO
+     * Récupère les données principales YesData Frequentation
      * @returns {Object} Structure: { donnees: [...], headers: [...] }
      */
     getDonnees() {
         try {
-            const data = localStorage.getItem(this.KEYS.DIOO_DONNEES);
+            const data = localStorage.getItem(this.KEYS.WINPHARMA_VENTES);
             const parsed = JSON.parse(data || '{}');
-            console.log('📖 StorageManager - Lecture dioo_donnees:', {
+            console.log('📖 StorageManager - Lecture winpharma_ventes:', {
                 hasData: !!data,
                 structure: Object.keys(parsed),
                 dataLength: parsed.donnees?.donnees?.length || parsed.donnees?.length || 0
             });
             return parsed;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur lecture dioo_donnees:', error);
+            console.error('❌ StorageManager - Erreur lecture winpharma_ventes:', error);
             return {};
         }
     },
     
     /**
-     * Sauvegarde les données principales DIOO
+     * Sauvegarde les données principales YesData Frequentation
      * @param {Object} donnees - Structure: { donnees: [...], headers: [...] }
      * @returns {boolean} true si succès, false sinon
      */
     setDonnees(donnees) {
         try {
             const dataString = JSON.stringify(donnees);
-            localStorage.setItem(this.KEYS.DIOO_DONNEES, dataString);
+            localStorage.setItem(this.KEYS.WINPHARMA_VENTES, dataString);
             
-            console.log('💾 StorageManager - Sauvegarde dioo_donnees:', {
+            console.log('💾 StorageManager - Sauvegarde winpharma_ventes:', {
                 size: dataString.length,
                 structure: Object.keys(donnees),
                 dataLength: donnees.donnees?.donnees?.length || donnees.donnees?.length || 0
@@ -66,22 +66,22 @@ const StorageManager = {
             
             return success;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur sauvegarde dioo_donnees:', error);
+            console.error('❌ StorageManager - Erreur sauvegarde winpharma_ventes:', error);
             return false;
         }
     },
     
     /**
-     * Supprime les données principales DIOO
+     * Supprime les données principales YesData Frequentation
      * @returns {boolean} true si succès
      */
     removeDonnees() {
         try {
-            localStorage.removeItem(this.KEYS.DIOO_DONNEES);
-            console.log('🗑️ StorageManager - Suppression dioo_donnees');
+                        localStorage.removeItem(this.KEYS.WINPHARMA_VENTES);
+            console.log('🗑️ StorageManager - Suppression winpharma_ventes');
             return true;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur suppression dioo_donnees:', error);
+            console.error('❌ StorageManager - Erreur suppression winpharma_ventes:', error);
             return false;
         }
     },
@@ -96,15 +96,15 @@ const StorageManager = {
      */
     getSummary() {
         try {
-            const data = localStorage.getItem(this.KEYS.DIOO_SUMMARY);
+            const data = localStorage.getItem(this.KEYS.YESDATA_SUMMARY);
             const parsed = JSON.parse(data || '[]');
-            console.log('📖 StorageManager - Lecture dioo_summary:', {
+            console.log('📖 StorageManager - Lecture yesdata_summary:', {
                 hasData: !!data,
                 length: parsed.length
             });
             return parsed;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur lecture dioo_summary:', error);
+            console.error('❌ StorageManager - Erreur lecture yesdata_summary:', error);
             return [];
         }
     },
@@ -117,16 +117,16 @@ const StorageManager = {
     setSummary(summary) {
         try {
             const dataString = JSON.stringify(summary);
-            localStorage.setItem(this.KEYS.DIOO_SUMMARY, dataString);
+            localStorage.setItem(this.KEYS.YESDATA_SUMMARY, dataString);
             
-            console.log('💾 StorageManager - Sauvegarde dioo_summary:', {
+            console.log('💾 StorageManager - Sauvegarde yesdata_summary:', {
                 size: dataString.length,
                 length: summary.length
             });
             
             return true;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur sauvegarde dioo_summary:', error);
+            console.error('❌ StorageManager - Erreur sauvegarde yesdata_summary:', error);
             return false;
         }
     },
@@ -160,11 +160,11 @@ const StorageManager = {
      */
     removeSummary() {
         try {
-            localStorage.removeItem(this.KEYS.DIOO_SUMMARY);
-            console.log('🗑️ StorageManager - Suppression dioo_summary');
+            localStorage.removeItem(this.KEYS.YESDATA_SUMMARY);
+        console.log('🗑️ StorageManager - Suppression yesdata_summary');
             return true;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur suppression dioo_summary:', error);
+            console.error('❌ StorageManager - Erreur suppression yesdata_summary:', error);
             return false;
         }
     },
@@ -179,12 +179,12 @@ const StorageManager = {
      */
     getRandCounter() {
         try {
-            const value = localStorage.getItem(this.KEYS.DIOO_RAND_COUNTER);
+            const value = localStorage.getItem(this.KEYS.YESDATA_RAND_COUNTER);
             const counter = parseInt(value || '0');
-            console.log('📖 StorageManager - Lecture dioo_rand_counter:', counter);
+            console.log('📖 StorageManager - Lecture yesdata_rand_counter:', counter);
             return counter;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur lecture dioo_rand_counter:', error);
+            console.error('❌ StorageManager - Erreur lecture yesdata_rand_counter:', error);
             return 0;
         }
     },
@@ -196,11 +196,11 @@ const StorageManager = {
      */
     setRandCounter(counter) {
         try {
-            localStorage.setItem(this.KEYS.DIOO_RAND_COUNTER, counter.toString());
-            console.log('💾 StorageManager - Sauvegarde dioo_rand_counter:', counter);
+            localStorage.setItem(this.KEYS.YESDATA_RAND_COUNTER, counter.toString());
+        console.log('💾 StorageManager - Sauvegarde yesdata_rand_counter:', counter);
             return true;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur sauvegarde dioo_rand_counter:', error);
+            console.error('❌ StorageManager - Erreur sauvegarde yesdata_rand_counter:', error);
             return false;
         }
     },
@@ -222,11 +222,11 @@ const StorageManager = {
      */
     removeRandCounter() {
         try {
-            localStorage.removeItem(this.KEYS.DIOO_RAND_COUNTER);
-            console.log('🗑️ StorageManager - Suppression dioo_rand_counter');
+            localStorage.removeItem(this.KEYS.YESDATA_RAND_COUNTER);
+        console.log('🗑️ StorageManager - Suppression yesdata_rand_counter');
             return true;
         } catch (error) {
-            console.error('❌ StorageManager - Erreur suppression dioo_rand_counter:', error);
+            console.error('❌ StorageManager - Erreur suppression yesdata_rand_counter:', error);
             return false;
         }
     },
@@ -236,7 +236,7 @@ const StorageManager = {
     // ========================================
     
     /**
-     * Efface toutes les données DIOO du localStorage
+     * Efface toutes les données YesData Frequentation du localStorage
      * @returns {Object} Rapport de suppression
      */
     clearAll() {

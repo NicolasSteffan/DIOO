@@ -2,10 +2,10 @@
 setlocal EnableDelayedExpansion
 
 :: =============================================================================
-:: Script de lancement DIOO
-:: Description: Lance l'application DIOO sur le port 3020
+:: Script de lancement YesData Frequentation
+:: Description: Lance l'application YesData Frequentation (WinPharma) sur les ports 3020 et 3021
 :: Auteur: Nicolas Steffan
-:: Version: 1.1.0
+:: Version: 2.2.0 - Traitement par paquets pour gros fichiers + capture erreurs
 :: =============================================================================
 
 :: Centrer la fenêtre DOS actuelle
@@ -13,23 +13,39 @@ mode con: cols=100 lines=30
 
 echo.
 echo ===============================================
-echo         DIOO - Lancement de l'application
+echo    YesData Frequentation - Lancement de l'application
 echo ===============================================
 echo.
 
 :: Configuration
-set PORT=3020
-set APP_NAME=DIOO
-set URL=http://localhost:%PORT%
+set PORT_MAIN=3020
+set PORT_ALT=3021
+set APP_NAME=YesData Frequentation
+set URL_MAIN=http://localhost:%PORT_MAIN%
+set URL_ALT=http://localhost:%PORT_ALT%
 
 :: ETAPE 1: ARRETER LES SERVEURS EXISTANTS
 echo [ETAPE 1] Arret des serveurs existants...
-echo [INFO] Recherche des processus sur le port %PORT%...
+echo [INFO] Recherche des processus sur les ports %PORT_MAIN% et %PORT_ALT%...
 
 :: Fonction d'arrêt intégrée (fusion de stop.bat)
-for /f "tokens=5" %%i in ('netstat -ano 2^>nul ^| findstr :%PORT%') do (
+:: Arrêt des processus sur le port principal
+for /f "tokens=5" %%i in ('netstat -ano 2^>nul ^| findstr :%PORT_MAIN%') do (
     if "%%i" neq "" if "%%i" neq "0" (
-        echo [INFO] Arret du processus %%i...
+        echo [INFO] Arret du processus %%i sur port %PORT_MAIN%...
+        taskkill /F /PID %%i >nul 2>nul
+        if not errorlevel 1 (
+            echo [OK] Processus %%i arrete
+        ) else (
+            echo [WARNING] Impossible d'arreter le processus %%i
+        )
+    )
+)
+
+:: Arrêt des processus sur le port alternatif
+for /f "tokens=5" %%i in ('netstat -ano 2^>nul ^| findstr :%PORT_ALT%') do (
+    if "%%i" neq "" if "%%i" neq "0" (
+        echo [INFO] Arret du processus %%i sur port %PORT_ALT%...
         taskkill /F /PID %%i >nul 2>nul
         if not errorlevel 1 (
             echo [OK] Processus %%i arrete
@@ -41,11 +57,15 @@ for /f "tokens=5" %%i in ('netstat -ano 2^>nul ^| findstr :%PORT%') do (
 
 :: Vérification finale
 timeout /t 2 /nobreak >nul
-netstat -an 2>nul | findstr :%PORT% >nul
-if %errorlevel% neq 0 (
-    echo [OK] Aucun serveur actif sur le port %PORT%
+netstat -an 2>nul | findstr :%PORT_MAIN% >nul
+set main_free=%errorlevel%
+netstat -an 2>nul | findstr :%PORT_ALT% >nul
+set alt_free=%errorlevel%
+
+if %main_free% neq 0 if %alt_free% neq 0 (
+    echo [OK] Aucun serveur actif sur les ports %PORT_MAIN% et %PORT_ALT%
 ) else (
-    echo [WARNING] Des processus peuvent encore utiliser le port %PORT%
+    echo [WARNING] Des processus peuvent encore utiliser les ports
 )
 
 echo [OK] Nettoyage termine
@@ -86,10 +106,13 @@ echo ===============================================
 
 :: ETAPE 3: LANCEMENT DU SERVEUR
 echo [ETAPE 3] Lancement du serveur...
-echo [INFO] Demarrage sur le port %PORT%...
+echo [INFO] Demarrage sur le port principal %PORT_MAIN%...
 
-:: Lancer le serveur en arrière-plan
-start "DIOO Server" /MIN cmd /c "http-server . -p %PORT% -c-1 --cors --silent"
+:: Lancer le serveur principal en arrière-plan
+start "YesData Server Main" /MIN cmd /c "http-server . -p %PORT_MAIN% -c-1 --cors --silent"
+
+:: Optionnel: Lancer aussi un serveur alternatif (commenté par défaut)
+:: start "YesData Server Alt" /MIN cmd /c "http-server . -p %PORT_ALT% -c-1 --cors --silent"
 
 :: Attendre que le serveur démarre
 echo [INFO] Attente du demarrage du serveur...
@@ -99,7 +122,7 @@ set /a "tentatives=0"
 set /a "tentatives+=1"
 timeout /t 1 /nobreak >nul
 
-netstat -an 2>nul | findstr :%PORT% >nul
+netstat -an 2>nul | findstr :%PORT_MAIN% >nul
 if %errorlevel% equ 0 (
     echo [OK] Serveur demarre avec succes !
     goto :open_browser
@@ -116,10 +139,11 @@ goto :manual_launch
 :open_browser
 echo.
 echo ===============================================
-echo           APPLICATION DIOO PRETE
+echo      APPLICATION YESDATA FREQUENTATION PRETE
 echo ===============================================
 echo.
-echo [OK] Serveur lance sur: %URL%
+echo [OK] Serveur principal lance sur: %URL_MAIN%
+echo [INFO] Port alternatif disponible: %URL_ALT%
 echo [INFO] Ouverture du navigateur...
 
 :: ETAPE 4: OUVERTURE DU NAVIGATEUR
@@ -129,7 +153,7 @@ echo [ETAPE 4] Ouverture du navigateur...
 where msedge >nul 2>nul
 if %errorlevel% equ 0 (
     echo [INFO] Ouverture avec Microsoft Edge...
-    start "" msedge "%URL%"
+    start "" msedge "%URL_MAIN%"
     echo [OK] Application ouverte dans Edge
     goto :success
 )
@@ -138,14 +162,14 @@ if %errorlevel% equ 0 (
 where chrome >nul 2>nul
 if %errorlevel% equ 0 (
     echo [INFO] Edge non trouve, ouverture avec Chrome...
-    start "" chrome "%URL%"
+    start "" chrome "%URL_MAIN%"
     echo [OK] Application ouverte dans Chrome
     goto :success
 )
 
 :: Fallback sur le navigateur par défaut
 echo [INFO] Edge et Chrome non trouves, navigateur par defaut...
-start "" "%URL%"
+start "" "%URL_MAIN%"
 echo [OK] Application ouverte dans le navigateur par defaut
 
 :success
@@ -154,16 +178,29 @@ echo ===============================================
 echo              INFORMATIONS UTILES
 echo ===============================================
 echo.
-echo URL de l'application: %URL%
-echo Port utilise: %PORT%
+echo URL principale: %URL_MAIN%
+echo URL alternative: %URL_ALT%
+echo Ports utilises: %PORT_MAIN% (principal), %PORT_ALT% (alternatif)
 echo Repertoire: %~dp0
 echo Heure de lancement: %date% %time%
 echo.
 echo Commandes utiles:
 echo - Ctrl+C dans la fenetre serveur pour arreter
 echo - F5 dans le navigateur pour actualiser
-echo - Alt+1 : Module Chargement
+echo - Alt+1 : Module Chargement (fichiers WinPharma)
 echo - Alt+2 : Module Monitoring
+echo.
+echo Formats supportes:
+echo - CSV WinPharma : Separateur point-virgule (;)
+echo.
+echo Nouveautes v2.2.0:
+echo - TRAITEMENT PAR PAQUETS: gros fichiers CSV traites par blocs de 1000 lignes
+echo - DETECTION AUTOMATIQUE: fichiers >2MB ou >5000 lignes = mode paquets
+echo - PROGRESSION EN TEMPS REEL: indicateur de progression par paquet
+echo - SAUVEGARDE OPTIMISEE: metadata + echantillon pour gros fichiers
+echo - PLUS D'ERREUR QUOTA: contournement limite localStorage (5-10MB)
+echo - PERFORMANCE AMELIOREE: traitement asynchrone sans blocage interface
+echo - SUPPORT FICHIERS VOLUMINEUX: jusqu'a plusieurs dizaines de MB
 echo.
 echo ===============================================
 echo             APPLICATION LANCEE

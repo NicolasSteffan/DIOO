@@ -1,5 +1,5 @@
 /**
- * Suite de tests automatisés pour DIOO
+ * Suite de tests automatisés pour YesData Frequentation
  * Tests des fonctions principales après refactoring SQL.js
  */
 
@@ -95,9 +95,9 @@ const TestSuite = {
         console.log('🔍 Test requêtes personnalisées...');
         
         const testQueries = [
-            'SELECT COUNT(*) FROM dioo_donnees',
-            'SELECT * FROM dioo_donnees LIMIT 5',
-            'PRAGMA table_info(dioo_donnees)'
+            'SELECT COUNT(*) FROM yesdata_donnees',
+        'SELECT * FROM yesdata_donnees LIMIT 5',
+        'PRAGMA table_info(yesdata_donnees)'
         ];
         
         for (const query of testQueries) {

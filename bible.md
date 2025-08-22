@@ -1,4 +1,4 @@
-# 📖 Bible du Projet FDJ
+# 📖 Bible du Projet YesData Frequentation
 
 ## Règles Fondamentales du Projet
 

@@ -2,13 +2,13 @@
 setlocal
 
 :: =============================================================================
-:: Script de configuration DIOO
-:: Description: Configure l'environnement pour l'application DIOO
+:: Script de configuration YesData Frequentation
+:: Description: Configure l'environnement pour l'application YesData Frequentation
 :: =============================================================================
 
 echo.
 echo ===============================================
-echo       DIOO - Configuration de l'environnement
+echo       YesData Frequentation - Configuration de l'environnement
 echo ===============================================
 echo.
 

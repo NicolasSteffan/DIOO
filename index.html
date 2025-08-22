@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIOO - Application de Gestion</title>
+    <title>YesData Frequentation - Application de Gestion</title>
     <link rel="stylesheet" href="styles/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -162,38 +162,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
-    <!-- Background effects - Style FDJ -->
+    <!-- Background effects - Style YesData -->
     <div class="background"></div>
     
     <div class="app-container">
-        <!-- Header avec navigation - Style FDJ -->
+        <!-- Header avec navigation - Style YesData -->
         <header class="app-header">
             <div class="header-content">
                 <!-- Canvas pour effet cylindrique du menu -->
                 <canvas id="menuCanvas"></canvas>
                 
                 <div class="logo">
-                    <i class="fas fa-cube"></i>
-                    <h1>DIOO</h1>
+                    
+                    <h1>YesData Frequentation</h1>
                 </div>
                 
                 <nav class="main-navigation">
                     <ul>
                         <li>
                             <button class="nav-btn active" data-page="chargement">
-                                <i class="fas fa-upload"></i>
+                                
                                 <span>Chargement</span>
                             </button>
                         </li>
                         <li>
                             <button class="nav-btn" data-page="monitoring">
-                                <i class="fas fa-chart-line"></i>
+                                
                                 <span>Monitoring</span>
                             </button>
                         </li>
                         <li>
                             <button class="nav-btn" data-page="database">
-                                <i class="fas fa-database"></i>
+                                
                                 <span>DataBase</span>
                             </button>
                         </li>
@@ -207,50 +207,56 @@
             <!-- Page Chargement -->
             <div id="chargement-page" class="page active">
                 <div class="page-header">
-                    <h2><i class="fas fa-upload"></i> Chargement</h2>
+                    <h2>Module Chargement</h2>
                     <p class="page-description">Page de chargement des données et fichiers</p>
                 </div>
                 <div class="page-content">
                                     <div class="empty-state">
-                    <i class="fas fa-rocket"></i>
-                    <h3>Module Chargement</h3>
-                    <p>Interface de gestion pour le chargement et l'import de données dans le système DIOO.</p>
-                                            <div class="feature-list">
-                        <!-- 1. Charger fichier DIOO -->
+                    <!-- Section Chargement pliable -->
+                    <div class="summary-section">
+                        <div class="summary-header" onclick="toggleChargementSection()">
+                            <div class="section-title">
+                                <div class="led-indicator active" id="chargement-led"></div>
+                                <h4>Chargement</h4>
+                            </div>
+                            <div class="arrow-indicator rotated" id="chargement-arrow">▼</div>
+                        </div>
+                        <div class="summary-content expanded" id="chargement-content">
+                            <div class="feature-list">
+                        <!-- 1. Charger fichier de ventes WinPharma -->
                         <div class="feature-item clickable-item" id="charger-fichier" onclick="gererClicCharger()">
-                            <i class="fas fa-file-upload"></i>
-                            <span>Charger fichier DIOO</span>
+                            
+                            <span>Charger un fichier de ventes WinPharma</span>
                             <div class="state-indicator" id="charger-status">
-                                <i class="fas fa-circle"></i>
                             </div>
                         </div>
                         
                         <!-- 2. Import de données -->
                         <div class="feature-item state-item" id="import-donnees">
-                            <i class="fas fa-check-circle"></i>
+                            
                             <span>Import de données</span>
                             <div class="state-indicator" id="import-status">
-                                <i class="fas fa-circle"></i>
                             </div>
                         </div>
                         
                         <!-- 3. Validation -->
                         <div class="feature-item state-item" id="validation">
-                            <i class="fas fa-check-circle"></i>
+                            
                             <span>Validation</span>
                             <div class="state-indicator" id="validation-status">
-                                <i class="fas fa-circle"></i>
                             </div>
                         </div>
+                            </div>
+                            
+                            <!-- Sélecteur de fichier caché -->
+                            <input type="file" id="selecteur-fichier" accept=".xlsx,.json,.csv,.xml,.txt" style="display: none;" onchange="fichierSelectionne(this)">
+                        </div>
                     </div>
-                    
-                    <!-- Sélecteur de fichier caché -->
-                    <input type="file" id="selecteur-fichier" accept=".xlsx,.json,.csv,.xml,.txt" style="display: none;" onchange="fichierSelectionne(this)">
                     
                     <!-- Zone de progression -->
                     <div id="progress-info" class="progress-info" style="display: none;">
                         <div class="progress-content">
-                            <h4><i class="fas fa-cog fa-spin"></i> <span id="progress-title">Traitement en cours...</span></h4>
+                            <h4> <span id="progress-title">Traitement en cours...</span></h4>
                             <div class="progress-bar">
                                 <div class="progress-fill" id="progress-fill"></div>
                             </div>
@@ -258,56 +264,54 @@
                         </div>
                     </div>
 
-                    <!-- Section Dump pour les requêtes d'import/validation -->
+                    <!-- Section Dump pour les ERREURS uniquement -->
                     <div id="import-dump-section" class="dump-section" style="display: none;">
                         <div class="dump-header" onclick="toggleImportDumpSection()">
                             <div class="section-title">
                                 <div class="led-indicator" id="import-dump-led"></div>
-                                <h4>Dump</h4>
+                                <h4>Dump Erreurs</h4>
                             </div>
                             <div class="arrow-indicator" id="import-dump-arrow">
-                                <i class="fas fa-chevron-down"></i>
+                                
                             </div>
                         </div>
                         <div class="dump-content" id="import-dump-content">
                             <div class="dump-info">
-                                <p><strong>Requêtes d'import/validation :</strong> <span id="import-dump-count">0</span></p>
-                                <button class="nav-btn" onclick="effacerImportDump()" title="Effacer le dump">
-                                    <i class="fas fa-trash"></i> Effacer
+                                <p><strong>Erreurs capturées :</strong> <span id="import-dump-count">0</span></p>
+                                <button class="nav-btn" onclick="effacerImportDump()" title="Effacer le dump d'erreurs">
+                                     Effacer
                                 </button>
                             </div>
                             
                             <div class="dump-table-container">
                                 <div id="import-dump-list" class="insertion-list">
-                                    <div class="dump-empty" id="import-dump-empty">
-                                        <p>Aucune requête d'import/validation</p>
-                                        <p class="dump-empty-hint">Les requêtes d'import et validation apparaîtront ici</p>
-                                    </div>
+                                                                    <div class="dump-empty" id="import-dump-empty">
+                                    <p>Aucune erreur détectée</p>
+                                    <p class="dump-empty-hint">Toutes les erreurs d'import, validation et insertion DB apparaîtront ici avec détails techniques</p>
+                                </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Section Overview fichier pliable -->
-                    <div id="overview-section" class="dump-section" style="display: none;">
-                        <div class="dump-header" onclick="toggleOverviewSection()">
+                    <div id="overview-section" class="summary-section" style="display: none;">
+                        <div class="summary-header" onclick="toggleOverviewSection()">
                             <div class="section-title">
                                 <div class="led-indicator" id="overview-led"></div>
                                 <h4>Overview fichier</h4>
                             </div>
-                            <div class="arrow-indicator" id="overview-arrow">
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
+                            <div class="arrow-indicator" id="overview-arrow">▼</div>
                         </div>
-                        <div class="dump-content" id="overview-content">
+                        <div class="summary-content" id="overview-content">
                             <!-- Contrôles de navigation -->
                             <div class="dump-controls">
                                 <div class="navigation-controls">
                                     <button class="nav-btn" id="first-page" onclick="allerPremierePage()" title="Première page">
-                                        <i class="fas fa-angle-double-left"></i>
+                                        
                                     </button>
                                     <button class="nav-btn" id="prev-page" onclick="pagePrecedente()" title="Page précédente">
-                                        <i class="fas fa-angle-left"></i>
+                                        
                                     </button>
                                     <div class="page-info">
                                         <span>Ligne </span>
@@ -315,10 +319,10 @@
                                         <span> sur <span id="total-pages">1</span></span>
                                     </div>
                                     <button class="nav-btn" id="next-page" onclick="pageSuivante()" title="Page suivante">
-                                        <i class="fas fa-angle-right"></i>
+                                        
                                     </button>
                                     <button class="nav-btn" id="last-page" onclick="allerDernierePage()" title="Dernière page">
-                                        <i class="fas fa-angle-double-right"></i>
+                                        
                                     </button>
                                 </div>
                                 <div class="dump-info">
@@ -353,14 +357,14 @@
                                 <h4>Dump</h4>
                             </div>
                             <div class="arrow-indicator" id="insertion-dump-arrow">
-                                <i class="fas fa-chevron-down"></i>
+                                
                             </div>
                         </div>
                         <div class="dump-content" id="insertion-dump-content">
                             <div class="dump-info">
                                 <p><strong>Requêtes d'insertion :</strong> <span id="insertion-count">0</span></p>
                                 <button class="nav-btn" onclick="effacerDumpInsertion()" title="Effacer le dump">
-                                    <i class="fas fa-trash"></i> Effacer
+                                     Effacer
                                 </button>
                             </div>
                             
@@ -381,22 +385,22 @@
             <!-- Page Monitoring -->
             <div id="monitoring-page" class="page">
                 <div class="page-header">
-                    <h2><i class="fas fa-chart-line"></i> Monitoring</h2>
+                    <h2> Monitoring</h2>
                     <p class="page-description">Surveillance et monitoring des systèmes</p>
                 </div>
                 <div class="page-content">
                     <div class="empty-state">
-                        <i class="fas fa-satellite-dish"></i>
+                        
                         <h3>Module Monitoring</h3>
-                        <p>Interface de surveillance et d'analyse des applications critiques DIOO.</p>
+                        <p>Interface de surveillance et d'analyse des applications critiques YesData Frequentation.</p>
                         
                         <!-- Contrôles de monitoring -->
                         <div class="monitoring-controls">
                             <div class="feature-item clickable-item" id="calculer-consolidation" onclick="calculerConsolidation()">
-                                <i class="fas fa-calculator"></i>
+                                
                                 <span>Calculer consolidation</span>
                                 <div class="state-indicator" id="calcul-status">
-                                    <i class="fas fa-circle"></i>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -406,10 +410,10 @@
                             <div class="summary-header" onclick="toggleSection('sql-queries-content')">
                                 <div class="section-title">
                                     <div class="led-indicator" id="sql-queries-led"></div>
-                                    <h4>🔍 Requêtes SQL Exécutées</h4>
+                                    <h4>Requêtes SQL Exécutées</h4>
                                 </div>
                                 <div class="arrow-indicator" id="sql-queries-arrow">
-                                    <i class="fas fa-chevron-down"></i>
+                                    
                                 </div>
                             </div>
                             <div class="summary-content" id="sql-queries-content">
@@ -427,7 +431,7 @@
                                     <h4>DP - Applications Critiques</h4>
                                 </div>
                                 <div class="arrow-indicator" id="dp-arrow">
-                                    <i class="fas fa-chevron-down"></i>
+                                    
                                 </div>
                             </div>
                             <div class="summary-content" id="dp-content">
@@ -487,7 +491,7 @@
                                     <h4>DPA - Applications Critiques</h4>
                                 </div>
                                 <div class="arrow-indicator" id="dpa-arrow">
-                                    <i class="fas fa-chevron-down"></i>
+                                    
                                 </div>
                             </div>
                             <div class="summary-content" id="dpa-content">
@@ -515,7 +519,7 @@
                                     <h4>DPB - Applications Critiques</h4>
                                 </div>
                                 <div class="arrow-indicator" id="dpb-arrow">
-                                    <i class="fas fa-chevron-down"></i>
+                                    
                                 </div>
                             </div>
                             <div class="summary-content" id="dpb-content">
@@ -543,7 +547,7 @@
                                     <h4>DPC - Applications Critiques</h4>
                                 </div>
                                 <div class="arrow-indicator" id="dpc-arrow">
-                                    <i class="fas fa-chevron-down"></i>
+                                    
                                 </div>
                             </div>
                             <div class="summary-content" id="dpc-content">
@@ -571,7 +575,7 @@
                                     <h4>DPP - Applications Critiques</h4>
                                 </div>
                                 <div class="arrow-indicator" id="dpp-arrow">
-                                    <i class="fas fa-chevron-down"></i>
+                                    
                                 </div>
                             </div>
                             <div class="summary-content" id="dpp-content">
@@ -599,7 +603,7 @@
                                     <h4>DPS - Applications Critiques</h4>
                                 </div>
                                 <div class="arrow-indicator" id="dps-arrow">
-                                    <i class="fas fa-chevron-down"></i>
+                                    
                                 </div>
                             </div>
                             <div class="summary-content" id="dps-content">
@@ -673,7 +677,7 @@
                                 <div class="query-input-section">
                                     <label for="custom-query-input">Entrez votre requête :</label>
                                     <textarea id="custom-query-input" class="query-textarea" placeholder="Exemple : Filtrer par [Business criticality] = 'Critical'">SELECT COUNT(*) AS monitored_bsm
-FROM dioo_donnees;</textarea>
+FROM yesdata_donnees;</textarea>
                                     <button class="btn btn-primary" onclick="executeCustomQuery()">Exécuter</button>
                                     
 
@@ -719,10 +723,10 @@ FROM dioo_donnees;</textarea>
                                 <div class="dump-controls" id="results-controls" style="display: none;">
                                     <div class="navigation-controls">
                                         <button class="nav-btn" id="results-first-page" onclick="allerPremierePageResultats()" title="Première page">
-                                            <i class="fas fa-angle-double-left"></i>
+                                            
                                         </button>
                                         <button class="nav-btn" id="results-prev-page" onclick="pagePrecedenteResultats()" title="Page précédente">
-                                            <i class="fas fa-angle-left"></i>
+                                            
                                         </button>
                                         <div class="page-info">
                                             <span>Page </span>
@@ -730,10 +734,10 @@ FROM dioo_donnees;</textarea>
                                             <span> sur <span id="results-total-pages">1</span></span>
                                         </div>
                                         <button class="nav-btn" id="results-next-page" onclick="pageSuivanteResultats()" title="Page suivante">
-                                            <i class="fas fa-angle-right"></i>
+                                            
                                         </button>
                                         <button class="nav-btn" id="results-last-page" onclick="allerDernierePageResultats()" title="Dernière page">
-                                            <i class="fas fa-angle-double-right"></i>
+                                            
                                         </button>
                                     </div>
                                     <div class="dump-info">
@@ -756,11 +760,11 @@ FROM dioo_donnees;</textarea>
         <!-- Footer -->
         <footer class="app-footer">
             <div class="footer-content">
-                <p>&copy; 2025 DIOO - Application de Gestion</p>
+                <p>&copy; 2025 YesData Frequentation - Application de Gestion</p>
                 <div class="footer-info">
                     <span class="version">v0.000-stable-extract-viewer-database</span>
                     <span class="status">
-                        <i class="fas fa-circle status-online"></i>
+                        
                         En ligne
                     </span>
                 </div>
