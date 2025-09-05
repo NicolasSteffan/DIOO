@@ -187,6 +187,7 @@ npm install http-server
 2. **WSL** : Ces scripts fonctionnent aussi sous Windows Subsystem for Linux
 3. **Docker** : Possibilité de conteneuriser avec un Dockerfile basé sur Ubuntu
 4. **Systemd** : Possibilité de créer un service système pour démarrage automatique
+5. **🖥️ Serveur Headless** : Pour les machines sans interface graphique, voir `SERVEUR-HEADLESS.md`
 
 ---
 

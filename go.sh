@@ -149,29 +149,61 @@ echo
 echo -e "${GREEN}[OK]${NC} Serveur lancé sur: $URL"
 echo -e "${BLUE}[INFO]${NC} Ouverture du navigateur..."
 
-# ETAPE 4: OUVERTURE DU NAVIGATEUR
-echo -e "${BLUE}[ETAPE 4]${NC} Ouverture du navigateur..."
+# ETAPE 4: DETECTION DE L'ENVIRONNEMENT
+echo -e "${BLUE}[ETAPE 4]${NC} Détection de l'environnement..."
 
-# Essayer différents navigateurs
-if command -v google-chrome &> /dev/null; then
-    echo -e "${BLUE}[INFO]${NC} Ouverture avec Google Chrome..."
-    google-chrome "$URL" &> /dev/null &
-    echo -e "${GREEN}[OK]${NC} Application ouverte dans Chrome"
-elif command -v chromium-browser &> /dev/null; then
-    echo -e "${BLUE}[INFO]${NC} Ouverture avec Chromium..."
-    chromium-browser "$URL" &> /dev/null &
-    echo -e "${GREEN}[OK]${NC} Application ouverte dans Chromium"
-elif command -v firefox &> /dev/null; then
-    echo -e "${BLUE}[INFO]${NC} Ouverture avec Firefox..."
-    firefox "$URL" &> /dev/null &
-    echo -e "${GREEN}[OK]${NC} Application ouverte dans Firefox"
-elif command -v xdg-open &> /dev/null; then
-    echo -e "${BLUE}[INFO]${NC} Ouverture avec le navigateur par défaut..."
-    xdg-open "$URL" &> /dev/null &
-    echo -e "${GREEN}[OK]${NC} Application ouverte dans le navigateur par défaut"
+# Vérifier si on est dans un environnement graphique
+if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
+    echo -e "${YELLOW}[INFO]${NC} Environnement sans interface graphique détecté"
+    echo -e "${BLUE}[INFO]${NC} Mode serveur headless activé"
+    
+    # Obtenir l'adresse IP pour l'accès distant
+    LOCAL_IP=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "localhost")
+    
+    echo
+    echo "==============================================="
+    echo "        SERVEUR HEADLESS - ACCÈS DISTANT"
+    echo "==============================================="
+    echo
+    echo -e "${GREEN}[SERVEUR PRÊT]${NC} Application accessible via :"
+    echo
+    echo -e "${BLUE}• Accès local SSH tunnel :${NC}"
+    echo "  ssh -L 3020:localhost:3020 user@$LOCAL_IP"
+    echo "  Puis ouvrir: http://localhost:3020"
+    echo
+    echo -e "${BLUE}• Accès réseau direct :${NC}"
+    echo "  http://$LOCAL_IP:3020"
+    echo
+    echo -e "${BLUE}• Accès via nom d'hôte :${NC}"
+    echo "  http://$(hostname):3020"
+    echo
+    echo -e "${YELLOW}[SÉCURITÉ]${NC} Pour l'accès réseau, vérifiez le firewall :"
+    echo "  sudo ufw allow 3020"
+    echo
 else
-    echo -e "${YELLOW}[WARNING]${NC} Aucun navigateur détecté"
-    echo -e "${BLUE}[INFO]${NC} Ouvrez manuellement: $URL"
+    echo -e "${BLUE}[INFO]${NC} Interface graphique disponible"
+    
+    # Essayer différents navigateurs
+    if command -v google-chrome &> /dev/null; then
+        echo -e "${BLUE}[INFO]${NC} Ouverture avec Google Chrome..."
+        google-chrome "$URL" &> /dev/null &
+        echo -e "${GREEN}[OK]${NC} Application ouverte dans Chrome"
+    elif command -v chromium-browser &> /dev/null; then
+        echo -e "${BLUE}[INFO]${NC} Ouverture avec Chromium..."
+        chromium-browser "$URL" &> /dev/null &
+        echo -e "${GREEN}[OK]${NC} Application ouverte dans Chromium"
+    elif command -v firefox &> /dev/null; then
+        echo -e "${BLUE}[INFO]${NC} Ouverture avec Firefox..."
+        firefox "$URL" &> /dev/null &
+        echo -e "${GREEN}[OK]${NC} Application ouverte dans Firefox"
+    elif command -v xdg-open &> /dev/null; then
+        echo -e "${BLUE}[INFO]${NC} Ouverture avec le navigateur par défaut..."
+        xdg-open "$URL" &> /dev/null &
+        echo -e "${GREEN}[OK]${NC} Application ouverte dans le navigateur par défaut"
+    else
+        echo -e "${YELLOW}[WARNING]${NC} Aucun navigateur détecté"
+        echo -e "${BLUE}[INFO]${NC} Ouvrez manuellement: $URL"
+    fi
 fi
 
 echo
