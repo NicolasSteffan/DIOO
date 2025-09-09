@@ -14,11 +14,16 @@ class DiooApp {
      * Initialisation de l'application
      */
     init() {
-        this.setupEventListeners();
-        this.updatePageTitle();
-        this.showWelcomeMessage();
-        this.initCanvasMenu();
-        console.log('✅ Application DIOO initialisée avec succès - Style FDJ');
+        console.log('🔧 Initialisation DiooApp...');
+        
+        // Délai pour s'assurer que le DOM est complètement chargé
+        setTimeout(() => {
+            this.setupEventListeners();
+            this.updatePageTitle();
+            this.showWelcomeMessage();
+            this.initCanvasMenu();
+            console.log('✅ Application DIOO initialisée avec succès - Style FDJ');
+        }, 100);
     }
 
     /**
@@ -37,6 +42,9 @@ class DiooApp {
             allNavButtons.forEach((btn, i) => {
                 console.log(`🔍 Bouton ${i}: data-page="${btn.dataset.page}", text="${btn.textContent.trim()}"`);
             });
+            
+            // Solution de fallback : attacher manuellement les event listeners
+            this.setupFallbackNavigation();
         }
         
         navButtons.forEach((button, index) => {
@@ -65,6 +73,42 @@ class DiooApp {
                 e.preventDefault();
             }
         });
+    }
+
+    /**
+     * Configuration de fallback pour la navigation
+     */
+    setupFallbackNavigation() {
+        console.log('🔧 Configuration fallback navigation...');
+        
+        // Attacher manuellement aux boutons principaux
+        const chargementBtn = document.querySelector('button[data-page="chargement"]');
+        const monitoringBtn = document.querySelector('button[data-page="monitoring"]');
+        const databaseBtn = document.querySelector('button[data-page="database"]');
+        
+        if (chargementBtn) {
+            chargementBtn.addEventListener('click', () => {
+                console.log('🖱️ Clic fallback: chargement');
+                this.navigateToPage('chargement');
+            });
+            console.log('✅ Event listener fallback attaché: chargement');
+        }
+        
+        if (monitoringBtn) {
+            monitoringBtn.addEventListener('click', () => {
+                console.log('🖱️ Clic fallback: monitoring');
+                this.navigateToPage('monitoring');
+            });
+            console.log('✅ Event listener fallback attaché: monitoring');
+        }
+        
+        if (databaseBtn) {
+            databaseBtn.addEventListener('click', () => {
+                console.log('🖱️ Clic fallback: database');
+                this.navigateToPage('database');
+            });
+            console.log('✅ Event listener fallback attaché: database');
+        }
     }
 
     /**
