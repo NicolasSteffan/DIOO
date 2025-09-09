@@ -1,0 +1,118 @@
+# =============================================================================
+# DIOO Docker Compose - Alpine + Nginx + SSL
+# Description: Stack complète pour production avec HTTPS automatique
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # Application DIOO sur Alpine Linux
+  dioo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.alpine
+    container_name: dioo-application
+    restart: unless-stopped
+    networks:
+      - dioo-network
+    environment:
+      - NODE_ENV=production
+      - PORT=3020
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3020/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy avec SSL
+  nginx:
+    image: nginx:alpine
+    container_name: dioo-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+      - nginx-logs:/var/log/nginx
+    networks:
+      - dioo-network
+    depends_on:
+      - dioo-app
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Certbot pour Let's Encrypt (SSL automatique)
+  certbot:
+    image: certbot/certbot
+    container_name: dioo-certbot
+    volumes:
+      - ./ssl:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+      - certbot-logs:/var/log/letsencrypt
+    # Cette commande sera remplacée par le script de déploiement
+    command: certonly --webroot --webroot-path=/var/www/certbot --email VOTRE_EMAIL --agree-tos --no-eff-email -d VOTRE_DOMAINE
+    depends_on:
+      - nginx
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # Watchtower pour mise à jour automatique (optionnel)
+  watchtower:
+    image: containrrr/watchtower
+    container_name: dioo-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=3600
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    command: --interval 3600 dioo-application dioo-nginx
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  certbot-www:
+    driver: local
+  nginx-logs:
+    driver: local
+  certbot-logs:
+    driver: local
+
+networks:
+  dioo-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: dioo-br0

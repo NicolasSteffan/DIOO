@@ -1,0 +1,52 @@
+# =============================================================================
+# DIOO Application - Dockerfile Alpine Optimisé
+# Description: Image ultra-légère pour production (~5MB)
+# =============================================================================
+
+FROM node:18-alpine
+
+# Métadonnées
+LABEL maintainer="DIOO Team"
+LABEL description="DIOO Application - Alpine Linux Production"
+LABEL version="1.0"
+
+# Variables d'environnement
+ENV NODE_ENV=production
+ENV PORT=3020
+ENV USER=dioo
+
+# Installer les dépendances système minimales
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Créer un utilisateur non-root pour la sécurité
+RUN addgroup -g 1001 -S $USER && \
+    adduser -S -D -H -u 1001 -h /app -s /sbin/nologin -G $USER -g $USER $USER
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Installer http-server globalement (optimisé pour production)
+RUN npm install -g http-server@latest && \
+    npm cache clean --force
+
+# Copier les fichiers de l'application avec les bonnes permissions
+COPY --chown=$USER:$USER . .
+
+# Changer vers l'utilisateur non-root
+USER $USER
+
+# Exposer le port de l'application
+EXPOSE $PORT
+
+# Point de santé pour Docker Swarm/Kubernetes
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:$PORT/ || exit 1
+
+# Utiliser dumb-init comme PID 1 pour une gestion propre des signaux
+ENTRYPOINT ["dumb-init", "--"]
+
+# Commande de démarrage optimisée pour production
+CMD ["http-server", ".", "-p", "3020", "-c-1", "--cors", "--silent", "-d", "false"]
