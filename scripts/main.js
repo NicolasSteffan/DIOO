@@ -2721,7 +2721,7 @@ function creerGraphiqueSection(section, data) {
                     } : false
                 }
             },
-            plugins: typeof ChartDataLabels === 'undefined' ? [{
+            plugins: [{
                 id: 'customLabels',
                 afterDatasetsDraw: function(chart) {
                     console.log('🎨 Plugin customLabels activé - Dessin des labels');
@@ -2776,7 +2776,7 @@ function creerGraphiqueSection(section, data) {
                     
                     ctx.restore();
                 }
-            }] : [],
+            }],
             options: {
                 responsive: true,
                 plugins: {
@@ -2822,36 +2822,9 @@ function creerGraphiqueSection(section, data) {
                             padding: 6
                         }
                     },
-                    datalabels: typeof ChartDataLabels !== 'undefined' ? {
-                        display: true,
-                        formatter: function(value, context) {
-                            const datasetIndex = context.datasetIndex;
-                            const dataIndex = context.dataIndex;
-                            
-                            if (datasetIndex === 0) {
-                                // Couronne externe : Critical Business Services
-                                return totalCritiques;
-                            } else {
-                                // Couronne interne : Already + Still avec pourcentages
-                                if (dataIndex === 0) {
-                                    return `${alreadyOnboarded}\n(${alreadyPct}%)`;
-                                } else {
-                                    return `${stillToOnboard}\n(${stillPct}%)`;
-                                }
-                            }
-                        },
-                        color: 'white',
-                        font: {
-                            size: function(context) {
-                                const datasetIndex = context.datasetIndex;
-                                return datasetIndex === 0 ? 16 : 13;  // Police plus grosse
-                            },
-                            weight: 'bold'
-                        },
-                        textAlign: 'center',
-                        anchor: 'center',
-                        align: 'center'
-                    } : false,
+                    datalabels: {
+                        display: false  // Désactiver le plugin officiel pour éviter les conflits
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
