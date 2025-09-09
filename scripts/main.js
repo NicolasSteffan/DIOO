@@ -2580,7 +2580,7 @@ function creerGraphiqueSection(section, data) {
                 plugins: {
                     legend: {
                         display: true,
-                        position: 'bottom',
+                        position: 'left',
                         labels: {
                             generateLabels: function(chart) {
                                 const labels = [];

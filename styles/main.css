@@ -1212,6 +1212,27 @@ button:active {
   box-shadow: 0 8px 25px rgba(63,182,255,0.2);
 }
 
+/* Cartes colorées pour Already et Still */
+.metric-card.already-onboarded {
+  background: rgba(46, 204, 113, 0.1);
+  border-color: rgba(46, 204, 113, 0.3);
+}
+
+.metric-card.already-onboarded:hover {
+  border-color: rgba(46, 204, 113, 0.6);
+  box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+}
+
+.metric-card.still-to-onboard {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.metric-card.still-to-onboard:hover {
+  border-color: rgba(255, 193, 7, 0.6);
+  box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+}
+
 .metric-value {
   font-size: 2.5rem;
   font-weight: bold;
