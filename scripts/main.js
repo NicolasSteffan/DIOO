@@ -2582,7 +2582,46 @@ function creerGraphiqueSection(section, data) {
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: false  // Masquer les légendes pour éviter le débordement
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: {
+                            generateLabels: function(chart) {
+                                const labels = [];
+                                
+                                // Légende pour la couronne externe (Critical - sans valeur)
+                                labels.push({
+                                    text: 'Critical Business Services',
+                                    fillStyle: 'rgba(63, 182, 255, 0.8)',
+                                    strokeStyle: 'rgba(63, 182, 255, 1)',
+                                    lineWidth: 3,
+                                    fontColor: 'rgba(63, 182, 255, 1)'
+                                });
+                                
+                                // Légendes pour la couronne interne (sans valeurs)
+                                labels.push({
+                                    text: 'Already onboarded',
+                                    fillStyle: 'rgba(46, 204, 113, 0.8)',
+                                    strokeStyle: 'rgba(46, 204, 113, 1)',
+                                    lineWidth: 3,
+                                    fontColor: 'rgba(46, 204, 113, 1)'
+                                });
+                                
+                                labels.push({
+                                    text: 'Still to be onboarded',
+                                    fillStyle: 'rgba(255, 193, 7, 0.8)',
+                                    strokeStyle: 'rgba(255, 193, 7, 1)',
+                                    lineWidth: 3,
+                                    fontColor: 'rgba(255, 193, 7, 1)'
+                                });
+                                
+                                return labels;
+                            },
+                            font: {
+                                size: 10
+                            },
+                            padding: 6
+                        }
                     },
                     datalabels: {
                         display: true,
@@ -2606,7 +2645,7 @@ function creerGraphiqueSection(section, data) {
                         font: {
                             size: function(context) {
                                 const datasetIndex = context.datasetIndex;
-                                return datasetIndex === 0 ? 14 : 11;  // Plus grand pour couronne externe
+                                return datasetIndex === 0 ? 16 : 13;  // Police plus grosse
                             },
                             weight: 'bold'
                         },
@@ -2622,16 +2661,27 @@ function creerGraphiqueSection(section, data) {
                                 
                                 if (datasetIndex === 0) {
                                     // Couronne externe : Critical Business Services
-                                    return `Critical Business Services: ${totalCritiques}`;
+                                    return [`Critical Business Services:`, `${totalCritiques} applications`];
                                 } else {
                                     // Couronne interne : Already + Still
                                     if (dataIndex === 0) {
-                                        return `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`;
+                                        return [`Already onboarded:`, `${alreadyOnboarded} applications`, `(${alreadyPct}% of Critical)`];
                                     } else {
-                                        return `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`;
+                                        return [`Still to be onboarded:`, `${stillToOnboard} applications`, `(${stillPct}% of Critical)`];
                                     }
                                 }
                             }
+                        },
+                        displayColors: true,
+                        bodySpacing: 4,
+                        titleSpacing: 4,
+                        cornerRadius: 6,
+                        bodyFont: {
+                            size: 12
+                        },
+                        titleFont: {
+                            size: 13,
+                            weight: 'bold'
                         }
                     }
                 }
