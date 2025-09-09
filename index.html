@@ -89,6 +89,123 @@
             padding: 20px;
         }
         
+        /* Styles pour la sélection de feuille Excel */
+        .sheet-list {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .sheet-item {
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .sheet-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 3px 12px rgba(52, 152, 219, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .sheet-item.selected {
+            border-color: #2ecc71;
+            background: #f8fff8;
+            box-shadow: 0 4px 16px rgba(46, 204, 113, 0.2);
+        }
+        
+        .sheet-item.selected::after {
+            content: "✓";
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .sheet-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 16px;
+            padding-right: 30px;
+        }
+        
+        .sheet-info {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .sheet-month {
+            background: #f39c12;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .sheet-rows {
+            background: #3498db;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .sheet-selection-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e8ed;
+        }
+        
+        .nav-btn.secondary {
+            background: #95a5a6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+        
+        .nav-btn.secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .nav-btn.primary {
+            background: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+        
+        .nav-btn.primary:hover:not(:disabled) {
+            background: #27ae60;
+        }
+        
+        .nav-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
         /* Styles pour les cartes monitoring */
         .metric-label-monitoring {
             text-align: center;
@@ -246,6 +363,34 @@
                     
                     <!-- Sélecteur de fichier caché -->
                     <input type="file" id="selecteur-fichier" accept=".xlsx,.json,.csv,.xml,.txt" style="display: none;" onchange="fichierSelectionne(this)">
+                    
+                    <!-- Sélection de feuille Excel -->
+                    <div id="sheet-selection-section" class="summary-section" style="display: none;">
+                        <div class="summary-header" onclick="toggleSection('sheet-selection-content')">
+                            <div class="section-title">
+                                <div class="led-indicator" id="sheet-selection-led"></div>
+                                <h4>Sélection de la feuille Excel</h4>
+                            </div>
+                            <div class="arrow-indicator" id="sheet-selection-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-content" id="sheet-selection-content">
+                            <div class="sheet-list" id="sheet-list">
+                                <!-- Les feuilles seront ajoutées dynamiquement -->
+                            </div>
+                            
+                            <div class="sheet-selection-actions">
+                                <button class="nav-btn secondary" onclick="annulerSelectionFeuille()">
+                                    Annuler
+                                </button>
+                                <button class="nav-btn primary" onclick="confirmerSelectionFeuille()" id="confirm-sheet-btn" disabled>
+                                    Confirmer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- Zone de progression -->
                     <div id="progress-info" class="progress-info" style="display: none;">

@@ -451,9 +451,17 @@ document.addEventListener('DOMContentLoaded', () => {
         totalPages: 1
     };
     
+    // Variables pour la sélection de feuille Excel
+    window.excelSheetsAnalysis = null;
+    window.selectedSheetName = null;
+    window.fichierCourant = null;
+    window.donneesImportees = null;
+    
     console.log('✅ Variables globales initialisées:', {
         dumpData: !!window.dumpData,
-        resultsData: !!window.resultsData
+        resultsData: !!window.resultsData,
+        excelSheetsAnalysis: !!window.excelSheetsAnalysis,
+        selectedSheetName: !!window.selectedSheetName
     });
 
     // ========================================
@@ -613,8 +621,70 @@ function fichierSelectionne(input) {
         lastModified: new Date(fichier.lastModified)
     };
 
-    // Démarrer le processus enchainé
-    demarrerProcessusEnchaine();
+    // Vérifier si c'est un fichier Excel
+    const extension = fichier.name.split('.').pop().toLowerCase();
+    if (extension === 'xlsx') {
+        console.log('📊 Fichier Excel détecté - Analyse des feuilles...');
+        analyserFeuillesExcel();
+    } else {
+        console.log('📄 Fichier non-Excel - Import direct');
+        // Démarrer le processus enchainé directement pour les autres formats
+        demarrerProcessusEnchaine();
+    }
+}
+
+/**
+ * Analyser les feuilles d'un fichier Excel avant l'import
+ */
+async function analyserFeuillesExcel() {
+    try {
+        console.log('🔍 Début analyse feuilles Excel');
+        
+        // Afficher un indicateur de chargement
+        mettreAJourProgression(10, 'Analyse du fichier Excel', 'Lecture des feuilles disponibles...');
+        afficherProgression();
+        
+        // Lire le fichier
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            try {
+                console.log('📊 Analyse des feuilles Excel en cours...');
+                
+                // Analyser les feuilles sans parser le contenu complet
+                const sheetsAnalysis = analyzeExcelSheets(e.target.result);
+                console.log('✅ Analyse terminée:', sheetsAnalysis);
+                
+                // Masquer la progression
+                masquerProgression();
+                
+                // Afficher l'interface de sélection
+                afficherSelectionFeuille(sheetsAnalysis);
+                
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'analyse des feuilles:', error);
+                masquerProgression();
+                alert(`Erreur lors de l'analyse du fichier Excel: ${error.message}`);
+                reinitialiserEtats();
+            }
+        };
+        
+        reader.onerror = function() {
+            console.error('❌ Erreur de lecture du fichier');
+            masquerProgression();
+            alert('Erreur lors de la lecture du fichier.');
+            reinitialiserEtats();
+        };
+        
+        // Lire le fichier Excel
+        reader.readAsArrayBuffer(window.fichierCourant.file);
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'analyse des feuilles Excel:', error);
+        masquerProgression();
+        alert(`Erreur: ${error.message}`);
+        reinitialiserEtats();
+    }
 }
 
 /**
@@ -683,8 +753,9 @@ async function etapeImportDonnees() {
                         donnees = parseCSV(e.target.result);
                         break;
                     case 'xlsx':
-                        console.log('🔍 DEBUG - Parsing XLSX...');
-                        donnees = parseXLSX(e.target.result);
+                        console.log('🔍 DEBUG - Parsing XLSX avec feuille sélectionnée...');
+                        console.log('🔍 DEBUG - Feuille sélectionnée:', window.selectedSheetName);
+                        donnees = parseXLSX(e.target.result, window.selectedSheetName);
                         console.log('🔍 DEBUG - Résultat parseXLSX:', donnees);
                         break;
                     default:
@@ -842,6 +913,9 @@ function finaliserProcessus() {
                 DiooUtils.showNotification(`Date extraite: ${window.donneesImportees.dateExtrait}`, 'info');
             }
         }
+        
+        // Fermer automatiquement les sections dump et overview après l'import
+        fermerSectionsApresImport();
     }, 1000);
 }
 
@@ -963,11 +1037,181 @@ function parseCSV(csvText) {
 }
 
 /**
+ * Analyser les feuilles Excel disponibles sans parser le contenu
+ * @param {ArrayBuffer} arrayBuffer - Contenu du fichier Excel
+ * @returns {Object} Liste des feuilles avec analyse des noms
+ */
+function analyzeExcelSheets(arrayBuffer) {
+    try {
+        console.log('🔍 DEBUG analyzeExcelSheets - Analyse des feuilles Excel');
+        
+        // Lire le fichier Excel avec SheetJS
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        console.log('📊 Feuilles Excel disponibles:', workbook.SheetNames);
+        
+        const sheets = workbook.SheetNames.map((sheetName, index) => {
+            const monthInfo = detectMonthFromSheetName(sheetName);
+            const worksheet = workbook.Sheets[sheetName];
+            
+            // Compter approximativement les lignes (sans parser complètement)
+            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+            const rowCount = range.e.r - range.s.r;
+            
+            return {
+                index: index,
+                name: sheetName,
+                displayName: sheetName,
+                monthInfo: monthInfo,
+                estimatedRows: rowCount,
+                isRecommended: monthInfo.detected || index === 1 // Recommander si mois détecté ou onglet 2
+            };
+        });
+        
+        // Trier par recommandation puis par index
+        sheets.sort((a, b) => {
+            if (a.isRecommended && !b.isRecommended) return -1;
+            if (!a.isRecommended && b.isRecommended) return 1;
+            return a.index - b.index;
+        });
+        
+        return {
+            sheets: sheets,
+            totalSheets: sheets.length,
+            workbook: workbook // Garder le workbook pour l'import final
+        };
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'analyse des feuilles Excel:', error);
+        throw new Error(`Erreur lors de l'analyse du fichier Excel: ${error.message}`);
+    }
+}
+
+/**
+ * Détecter le mois depuis le nom d'une feuille Excel
+ * @param {string} sheetName - Nom de la feuille
+ * @returns {Object} Informations sur le mois détecté
+ */
+function detectMonthFromSheetName(sheetName) {
+    const monthNames = {
+        'janvier': { number: 1, short: 'Jan', season: 'Hiver' },
+        'jan': { number: 1, short: 'Jan', season: 'Hiver' },
+        'février': { number: 2, short: 'Fév', season: 'Hiver' },
+        'fevrier': { number: 2, short: 'Fév', season: 'Hiver' },
+        'fév': { number: 2, short: 'Fév', season: 'Hiver' },
+        'fev': { number: 2, short: 'Fév', season: 'Hiver' },
+        'mars': { number: 3, short: 'Mar', season: 'Printemps' },
+        'mar': { number: 3, short: 'Mar', season: 'Printemps' },
+        'avril': { number: 4, short: 'Avr', season: 'Printemps' },
+        'avr': { number: 4, short: 'Avr', season: 'Printemps' },
+        'mai': { number: 5, short: 'Mai', season: 'Printemps' },
+        'juin': { number: 6, short: 'Jun', season: 'Été' },
+        'jun': { number: 6, short: 'Jun', season: 'Été' },
+        'juillet': { number: 7, short: 'Jul', season: 'Été' },
+        'jul': { number: 7, short: 'Jul', season: 'Été' },
+        'août': { number: 8, short: 'Aoû', season: 'Été' },
+        'aout': { number: 8, short: 'Aoû', season: 'Été' },
+        'septembre': { number: 9, short: 'Sep', season: 'Automne' },
+        'sep': { number: 9, short: 'Sep', season: 'Automne' },
+        'octobre': { number: 10, short: 'Oct', season: 'Automne' },
+        'oct': { number: 10, short: 'Oct', season: 'Automne' },
+        'novembre': { number: 11, short: 'Nov', season: 'Automne' },
+        'nov': { number: 11, short: 'Nov', season: 'Automne' },
+        'décembre': { number: 12, short: 'Déc', season: 'Hiver' },
+        'decembre': { number: 12, short: 'Déc', season: 'Hiver' },
+        'déc': { number: 12, short: 'Déc', season: 'Hiver' },
+        'dec': { number: 12, short: 'Déc', season: 'Hiver' }
+    };
+    
+    const englishMonths = {
+        'january': { number: 1, short: 'Jan', season: 'Hiver' },
+        'february': { number: 2, short: 'Feb', season: 'Hiver' },
+        'march': { number: 3, short: 'Mar', season: 'Printemps' },
+        'april': { number: 4, short: 'Apr', season: 'Printemps' },
+        'may': { number: 5, short: 'May', season: 'Printemps' },
+        'june': { number: 6, short: 'Jun', season: 'Été' },
+        'july': { number: 7, short: 'Jul', season: 'Été' },
+        'august': { number: 8, short: 'Aug', season: 'Été' },
+        'september': { number: 9, short: 'Sep', season: 'Automne' },
+        'october': { number: 10, short: 'Oct', season: 'Automne' },
+        'november': { number: 11, short: 'Nov', season: 'Automne' },
+        'december': { number: 12, short: 'Dec', season: 'Hiver' }
+    };
+    
+    const allMonths = { ...monthNames, ...englishMonths };
+    
+    const lowerSheetName = sheetName.toLowerCase();
+    
+    // Chercher les mois dans le nom de la feuille
+    for (const [monthKey, monthInfo] of Object.entries(allMonths)) {
+        if (lowerSheetName.includes(monthKey)) {
+            // Extraire l'année si possible
+            const yearMatch = sheetName.match(/20\d{2}/);
+            const year = yearMatch ? parseInt(yearMatch[0]) : new Date().getFullYear();
+            
+            return {
+                detected: true,
+                month: monthInfo.number,
+                monthName: monthKey.charAt(0).toUpperCase() + monthKey.slice(1),
+                monthShort: monthInfo.short,
+                season: monthInfo.season,
+                year: year,
+                fullDate: `${monthInfo.short} ${year}`,
+                originalText: sheetName
+            };
+        }
+    }
+    
+    // Chercher des patterns numériques (MM/YYYY, MM-YYYY, etc.)
+    const numericPatterns = [
+        /(\d{1,2})[\/\-_\s]+(20\d{2})/,  // MM/YYYY, MM-YYYY, etc.
+        /(20\d{2})[\/\-_\s]+(\d{1,2})/,  // YYYY/MM, YYYY-MM, etc.
+        /(\d{1,2})[\/\-_\s]+(\d{1,2})[\/\-_\s]+(20\d{2})/ // MM/DD/YYYY
+    ];
+    
+    for (const pattern of numericPatterns) {
+        const match = sheetName.match(pattern);
+        if (match) {
+            let month, year;
+            if (pattern.source.includes('20\\d{2}.*\\d{1,2}')) {
+                // YYYY/MM format
+                year = parseInt(match[1]);
+                month = parseInt(match[2]);
+            } else {
+                // MM/YYYY format
+                month = parseInt(match[1]);
+                year = parseInt(match[2]);
+            }
+            
+            if (month >= 1 && month <= 12) {
+                const monthInfo = Object.values(monthNames).find(m => m.number === month);
+                return {
+                    detected: true,
+                    month: month,
+                    monthName: Object.keys(monthNames).find(key => monthNames[key].number === month),
+                    monthShort: monthInfo.short,
+                    season: monthInfo.season,
+                    year: year,
+                    fullDate: `${monthInfo.short} ${year}`,
+                    originalText: sheetName
+                };
+            }
+        }
+    }
+    
+    return {
+        detected: false,
+        originalText: sheetName,
+        suggestion: 'Aucun mois détecté dans le nom de la feuille'
+    };
+}
+
+/**
  * Parser Excel (.xlsx) en utilisant SheetJS
  * @param {ArrayBuffer} arrayBuffer - Contenu du fichier Excel
+ * @param {string} selectedSheetName - Nom de la feuille sélectionnée
  * @returns {Object} Données parsées
  */
-function parseXLSX(arrayBuffer) {
+function parseXLSX(arrayBuffer, selectedSheetName = null) {
     try {
         console.log('🔍 DEBUG parseXLSX - Début parsing Excel');
         console.log('🔍 DEBUG parseXLSX - Type arrayBuffer:', typeof arrayBuffer);
@@ -979,17 +1223,19 @@ function parseXLSX(arrayBuffer) {
         
         console.log(`📊 Feuilles Excel disponibles: ${workbook.SheetNames.join(', ')}`);
         
-        // Prendre l'onglet 2 si disponible, sinon l'onglet 1
-        let targetSheetIndex = 1; // Onglet 2 (index 1)
+        // Utiliser la feuille sélectionnée ou la logique par défaut
         let targetSheetName;
+        let targetSheetIndex;
         
-        if (workbook.SheetNames.length > 1) {
-            targetSheetName = workbook.SheetNames[targetSheetIndex];
-            console.log(`📋 Utilisation de l'onglet 2: ${targetSheetName}`);
+        if (selectedSheetName && workbook.SheetNames.includes(selectedSheetName)) {
+            targetSheetName = selectedSheetName;
+            targetSheetIndex = workbook.SheetNames.indexOf(selectedSheetName);
+            console.log(`📋 Utilisation de la feuille sélectionnée: ${targetSheetName} (index ${targetSheetIndex})`);
         } else {
-            targetSheetIndex = 0;
+            // Logique par défaut : prendre l'onglet 2 si disponible, sinon l'onglet 1
+            targetSheetIndex = workbook.SheetNames.length > 1 ? 1 : 0;
             targetSheetName = workbook.SheetNames[targetSheetIndex];
-            console.log(`📋 Utilisation de l'onglet 1: ${targetSheetName} (onglet 2 non disponible)`);
+            console.log(`📋 Utilisation de la feuille par défaut: ${targetSheetName} (index ${targetSheetIndex})`);
         }
         
         const worksheet = workbook.Sheets[targetSheetName];
@@ -4201,4 +4447,153 @@ async function calculerSectionsDPSQL() {
     }
     
     return sections;
+}
+
+// ========================================
+// GESTION DE LA SÉLECTION DE FEUILLE EXCEL
+// ========================================
+
+/**
+ * Afficher l'interface de sélection de feuille Excel
+ * @param {Object} sheetsAnalysis - Analyse des feuilles Excel
+ */
+function afficherSelectionFeuille(sheetsAnalysis) {
+    console.log('📋 Affichage sélection de feuille:', sheetsAnalysis);
+    
+    window.excelSheetsAnalysis = sheetsAnalysis;
+    
+    const sheetSection = document.getElementById('sheet-selection-section');
+    const sheetList = document.getElementById('sheet-list');
+    
+    // Vider la liste précédente
+    sheetList.innerHTML = '';
+    
+    // Créer les éléments de feuille
+    sheetsAnalysis.sheets.forEach((sheet, index) => {
+        const sheetItem = document.createElement('div');
+        sheetItem.className = 'sheet-item';
+        sheetItem.dataset.sheetName = sheet.name;
+        
+        // Marquer comme recommandé si c'est le cas
+        if (sheet.isRecommended && index === 0) {
+            sheetItem.classList.add('selected');
+            window.selectedSheetName = sheet.name;
+            document.getElementById('confirm-sheet-btn').disabled = false;
+        }
+        
+        let monthBadge = '';
+        if (sheet.monthInfo.detected) {
+            monthBadge = `<span class="sheet-month">${sheet.monthInfo.fullDate}</span>`;
+        }
+        
+        sheetItem.innerHTML = `
+            <div class="sheet-name">${sheet.displayName}</div>
+            <div class="sheet-info">
+                <span class="sheet-rows">${sheet.estimatedRows} lignes</span>
+                ${monthBadge}
+            </div>
+        `;
+        
+        // Ajouter l'événement de clic
+        sheetItem.addEventListener('click', () => selectionnerFeuille(sheet.name));
+        
+        sheetList.appendChild(sheetItem);
+    });
+    
+    // Afficher la section et l'ouvrir par défaut
+    sheetSection.style.display = 'block';
+    
+    // Activer la LED et ouvrir la section
+    definirEtatIndicateur('sheet-selection-led', 'active');
+    
+    // S'assurer que la section est ouverte
+    const content = document.getElementById('sheet-selection-content');
+    const arrow = document.getElementById('sheet-selection-arrow');
+    if (content && arrow) {
+        content.style.display = 'block';
+        arrow.innerHTML = '<i class="fas fa-chevron-up"></i>';
+    }
+}
+
+/**
+ * Sélectionner une feuille Excel
+ * @param {string} sheetName - Nom de la feuille
+ */
+function selectionnerFeuille(sheetName) {
+    console.log('📋 Sélection de la feuille:', sheetName);
+    
+    // Désélectionner toutes les feuilles
+    document.querySelectorAll('.sheet-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    // Sélectionner la feuille cliquée
+    const selectedItem = document.querySelector(`[data-sheet-name="${sheetName}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+        window.selectedSheetName = sheetName;
+        document.getElementById('confirm-sheet-btn').disabled = false;
+    }
+}
+
+
+/**
+ * Confirmer la sélection de feuille et démarrer l'import
+ */
+function confirmerSelectionFeuille() {
+    if (!window.selectedSheetName) {
+        alert('Veuillez sélectionner une feuille.');
+        return;
+    }
+    
+    console.log('✅ Confirmation sélection feuille:', window.selectedSheetName);
+    
+    // Masquer la section de sélection
+    document.getElementById('sheet-selection-section').style.display = 'none';
+    
+    // Démarrer l'import avec la feuille sélectionnée
+    demarrerProcessusEnchaine();
+}
+
+/**
+ * Annuler la sélection de feuille
+ */
+function annulerSelectionFeuille() {
+    console.log('❌ Annulation sélection feuille');
+    
+    // Réinitialiser les variables
+    window.excelSheetsAnalysis = null;
+    window.selectedSheetName = null;
+    window.fichierCourant = null;
+    
+    // Masquer la section
+    document.getElementById('sheet-selection-section').style.display = 'none';
+    
+    // Réinitialiser le sélecteur de fichier
+    document.getElementById('selecteur-fichier').value = '';
+}
+
+/**
+ * Fermer automatiquement les sections dump et overview après l'import
+ */
+function fermerSectionsApresImport() {
+    console.log('📁 Fermeture automatique des sections après import');
+    
+    // Fermer la section dump si elle est ouverte
+    const dumpContent = document.getElementById('import-dump-content');
+    const dumpArrow = document.getElementById('import-dump-arrow');
+    if (dumpContent && dumpArrow && dumpContent.style.display !== 'none') {
+        dumpContent.style.display = 'none';
+        dumpArrow.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        console.log('📁 Section dump fermée');
+    }
+    
+    // Fermer la section overview si elle est ouverte
+    const overviewContent = document.getElementById('overview-content');
+    const overviewArrow = document.getElementById('overview-arrow');
+    if (overviewContent && overviewArrow && overviewContent.style.display !== 'none') {
+        overviewContent.style.display = 'none';
+        overviewArrow.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        console.log('📁 Section overview fermée');
+    }
 }
