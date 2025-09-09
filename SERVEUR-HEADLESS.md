@@ -5,9 +5,11 @@
 ### **📋 Contexte**
 Votre machine Linux virtuelle **sans interface graphique** ne peut pas lancer Firefox directement, mais vous pouvez accéder à DIOO de plusieurs façons.
 
+**💡 Important :** SSH Tunnel n'est PAS réservé au développement ! C'est une solution **professionnelle de premier plan** pour les clients, offrant sécurité maximale et simplicité d'usage.
+
 ---
 
-## **🚀 Solution 1: SSH Tunnel (Recommandée)**
+## **🚀 Solution 1: SSH Tunnel (Recommandée pour Clients)**
 
 ### **Sur le serveur Ubuntu (headless) :**
 ```bash
@@ -275,11 +277,11 @@ curl http://localhost:3020
 
 | Solution | Sécurité | Performance | Complexité | Usage |
 |----------|----------|-------------|------------|-------|
-| **SSH Tunnel** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | Développement |
+| **SSH Tunnel** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | **Clients & Production** |
 | **Accès Direct** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐ | Réseau local |
 | **X11 Forward** | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | Debug ponctuel |
 | **Docker** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | Déploiement |
-| **Nginx Proxy** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Production |
+| **Nginx Proxy** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Production web |
 
 ---
 
@@ -287,8 +289,10 @@ curl http://localhost:3020
 
 **Pour votre cas (VM headless via SSH) :**
 
-1. **Développement/Test** → **SSH Tunnel** (Solution 1)
-2. **Démonstration** → **Accès Direct** (Solution 2)  
-3. **Production** → **Nginx Proxy** (Solution 5)
+1. **Clients Professionnels** → **SSH Tunnel** (Solution 1) - Sécurité maximale
+2. **Accès Interne/Demo** → **Accès Direct** (Solution 2) - Simplicité  
+3. **Production Web Publique** → **Nginx Proxy** (Solution 5) - Performance
+
+**💡 SSH Tunnel est LA solution professionnelle pour clients !**
 
 **🎉 Le script `go.sh` détectera automatiquement votre environnement headless et vous guidera !**
