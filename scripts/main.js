@@ -2543,7 +2543,12 @@ function creerGraphiqueSection(section, data) {
         const stillPct = totalCritiques > 0 ? Math.round((stillToOnboard / totalCritiques) * 100) : 0;
         
         // Enregistrer le plugin datalabels pour ce graphique
-        Chart.register(ChartDataLabels);
+        if (typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+            console.log('Plugin ChartDataLabels enregistré');
+        } else {
+            console.warn('Plugin ChartDataLabels non disponible');
+        }
         
         window[`${section}Chart`] = new Chart(chartCtx, {
             type: 'doughnut',
@@ -2623,7 +2628,7 @@ function creerGraphiqueSection(section, data) {
                             padding: 6
                         }
                     },
-                    datalabels: {
+                    datalabels: typeof ChartDataLabels !== 'undefined' ? {
                         display: true,
                         formatter: function(value, context) {
                             const datasetIndex = context.datasetIndex;
@@ -2652,7 +2657,7 @@ function creerGraphiqueSection(section, data) {
                         textAlign: 'center',
                         anchor: 'center',
                         align: 'center'
-                    },
+                    } : false,
                     tooltip: {
                         callbacks: {
                             label: function(context) {
