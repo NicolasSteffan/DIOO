@@ -2733,24 +2733,46 @@ function creerGraphiqueSection(section, data) {
                         console.log(`🔍 Dataset ${datasetIndex}: ${meta.data.length} éléments`);
                         
                         meta.data.forEach((element, index) => {
-                            const centerX = element.x;
-                            const centerY = element.y;
-                            console.log(`📍 Élément ${datasetIndex}-${index}: position (${centerX}, ${centerY})`);
+                            // Calculer la position radiale du segment
+                            const model = element;
+                            const centerX = model.x;
+                            const centerY = model.y;
+                            
+                            // Calculer l'angle du milieu du segment
+                            const startAngle = model.startAngle;
+                            const endAngle = model.endAngle;
+                            const midAngle = startAngle + (endAngle - startAngle) / 2;
+                            
+                            // Calculer le rayon pour positionner le texte
+                            let radius;
+                            if (datasetIndex === 0) {
+                                // Couronne externe : position plus éloignée du centre
+                                radius = (model.innerRadius + model.outerRadius) / 2;
+                            } else {
+                                // Couronne interne : position plus proche du centre
+                                radius = (model.innerRadius + model.outerRadius) / 2;
+                            }
+                            
+                            // Calculer la position finale du texte
+                            const textX = centerX + Math.cos(midAngle) * radius;
+                            const textY = centerY + Math.sin(midAngle) * radius;
+                            
+                            console.log(`📍 Segment ${datasetIndex}-${index}: angle=${midAngle.toFixed(2)}, rayon=${radius.toFixed(1)}, position (${textX.toFixed(1)}, ${textY.toFixed(1)})`);
                             
                             let text;
                             let fontSize;
                             
                             if (datasetIndex === 0) {
-                                // Couronne externe : Critical Business Services
+                                // Couronne externe : Critical Business Services (valeur seule)
                                 text = totalCritiques.toString();
                                 fontSize = 16;
                                 console.log(`🔵 Couronne externe: "${text}" (${fontSize}px)`);
                             } else {
-                                // Couronne interne : Already + Still avec pourcentages
+                                // Couronne interne : Already + Still (valeurs seules, sans pourcentages)
                                 if (index === 0) {
-                                    text = `${alreadyOnboarded}\n(${alreadyPct}%)`;
+                                    text = alreadyOnboarded.toString();
                                 } else {
-                                    text = `${stillToOnboard}\n(${stillPct}%)`;
+                                    text = stillToOnboard.toString();
                                 }
                                 fontSize = 13;
                                 console.log(`🟢🟠 Couronne interne ${index}: "${text}" (${fontSize}px)`);
@@ -2761,16 +2783,9 @@ function creerGraphiqueSection(section, data) {
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
                             
-                            // Gérer les retours à la ligne
-                            const lines = text.split('\n');
-                            const lineHeight = fontSize * 1.2;
-                            const totalHeight = lines.length * lineHeight;
-                            
-                            lines.forEach((line, lineIndex) => {
-                                const y = centerY - (totalHeight / 2) + (lineIndex * lineHeight) + (lineHeight / 2);
-                                console.log(`✏️ Dessin ligne "${line}" à (${centerX}, ${y})`);
-                                ctx.fillText(line, centerX, y);
-                            });
+                            // Dessiner le texte à la position calculée
+                            console.log(`✏️ Dessin "${text}" à (${textX.toFixed(1)}, ${textY.toFixed(1)})`);
+                            ctx.fillText(text, textX, textY);
                         });
                     });
                     
