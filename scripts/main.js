@@ -26,8 +26,19 @@ class DiooApp {
      */
     setupEventListeners() {
         // Navigation entre les pages
-        const navButtons = document.querySelectorAll('.nav-btn');
+        const navButtons = document.querySelectorAll('.nav-btn[data-page]');
         console.log(`🔍 Boutons de navigation trouvés: ${navButtons.length}`);
+        
+        if (navButtons.length === 0) {
+            console.warn('⚠️ Aucun bouton de navigation trouvé avec data-page');
+            // Essayons de les trouver différemment
+            const allNavButtons = document.querySelectorAll('.nav-btn');
+            console.log(`🔍 Total boutons .nav-btn: ${allNavButtons.length}`);
+            allNavButtons.forEach((btn, i) => {
+                console.log(`🔍 Bouton ${i}: data-page="${btn.dataset.page}", text="${btn.textContent.trim()}"`);
+            });
+        }
+        
         navButtons.forEach((button, index) => {
             const page = button.dataset.page;
             console.log(`🔍 Bouton ${index + 1}: ${page}`);
@@ -428,7 +439,13 @@ const DiooUtils = {
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Créer une instance globale de l'application
-    window.diooApp = new DiooApp();
+    console.log('🚀 DOM chargé, initialisation de l\'application DIOO...');
+    try {
+        window.diooApp = new DiooApp();
+        console.log('✅ DiooApp créée avec succès');
+    } catch (error) {
+        console.error('❌ Erreur lors de la création de DiooApp:', error);
+    }
     
     // Exposer les utilitaires globalement
     window.DiooUtils = DiooUtils;
