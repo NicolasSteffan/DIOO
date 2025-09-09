@@ -2542,6 +2542,9 @@ function creerGraphiqueSection(section, data) {
         const alreadyPct = totalCritiques > 0 ? Math.round((alreadyOnboarded / totalCritiques) * 100) : 0;
         const stillPct = totalCritiques > 0 ? Math.round((stillToOnboard / totalCritiques) * 100) : 0;
         
+        // Enregistrer le plugin datalabels pour ce graphique
+        Chart.register(ChartDataLabels);
+        
         window[`${section}Chart`] = new Chart(chartCtx, {
             type: 'doughnut',
             data: {
@@ -2579,46 +2582,37 @@ function creerGraphiqueSection(section, data) {
                 responsive: true,
                 plugins: {
                     legend: {
+                        display: false  // Masquer les légendes pour éviter le débordement
+                    },
+                    datalabels: {
                         display: true,
-                        position: 'bottom',
-                        align: 'start',
-                        labels: {
-                            generateLabels: function(chart) {
-                                const labels = [];
-                                
-                                // Légende pour la couronne externe (Critical - sans pourcentage)
-                                labels.push({
-                                    text: `Critical Business Services: ${totalCritiques}`,
-                                    fillStyle: 'rgba(63, 182, 255, 0.8)',
-                                    strokeStyle: 'rgba(63, 182, 255, 1)',
-                                    lineWidth: 3,
-                                    fontColor: 'rgba(63, 182, 255, 1)'
-                                });
-                                
-                                // Légendes pour la couronne interne (avec pourcentages)
-                                labels.push({
-                                    text: `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`,
-                                    fillStyle: 'rgba(46, 204, 113, 0.8)',
-                                    strokeStyle: 'rgba(46, 204, 113, 1)',
-                                    lineWidth: 3,
-                                    fontColor: 'rgba(46, 204, 113, 1)'
-                                });
-                                
-                                labels.push({
-                                    text: `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`,
-                                    fillStyle: 'rgba(255, 193, 7, 0.8)',
-                                    strokeStyle: 'rgba(255, 193, 7, 1)',
-                                    lineWidth: 3,
-                                    fontColor: 'rgba(255, 193, 7, 1)'
-                                });
-                                
-                                return labels;
+                        formatter: function(value, context) {
+                            const datasetIndex = context.datasetIndex;
+                            const dataIndex = context.dataIndex;
+                            
+                            if (datasetIndex === 0) {
+                                // Couronne externe : Critical Business Services
+                                return totalCritiques;
+                            } else {
+                                // Couronne interne : Already + Still avec pourcentages
+                                if (dataIndex === 0) {
+                                    return `${alreadyOnboarded}\n(${alreadyPct}%)`;
+                                } else {
+                                    return `${stillToOnboard}\n(${stillPct}%)`;
+                                }
+                            }
+                        },
+                        color: 'white',
+                        font: {
+                            size: function(context) {
+                                const datasetIndex = context.datasetIndex;
+                                return datasetIndex === 0 ? 14 : 11;  // Plus grand pour couronne externe
                             },
-                            font: {
-                                size: 10
-                            },
-                            padding: 6
-                        }
+                            weight: 'bold'
+                        },
+                        textAlign: 'center',
+                        anchor: 'center',
+                        align: 'center'
                     },
                     tooltip: {
                         callbacks: {
