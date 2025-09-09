@@ -2719,59 +2719,134 @@ function creerGraphiqueSection(section, data) {
                         anchor: 'center',
                         align: 'center'
                     } : false
-                },
-                // Plugin personnalisé pour dessiner les labels si datalabels n'est pas disponible
-                plugins: typeof ChartDataLabels === 'undefined' ? [{
-                    id: 'customLabels',
-                    afterDatasetsDraw: function(chart) {
-                        const ctx = chart.ctx;
-                        ctx.save();
+                }
+            },
+            plugins: typeof ChartDataLabels === 'undefined' ? [{
+                id: 'customLabels',
+                afterDatasetsDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
                         
-                        chart.data.datasets.forEach((dataset, datasetIndex) => {
-                            const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((element, index) => {
+                            const centerX = element.x;
+                            const centerY = element.y;
                             
-                            meta.data.forEach((element, index) => {
-                                const centerX = element.x;
-                                const centerY = element.y;
-                                
-                                let text;
-                                let fontSize;
-                                
-                                if (datasetIndex === 0) {
-                                    // Couronne externe : Critical Business Services
-                                    text = totalCritiques.toString();
-                                    fontSize = 16;
+                            let text;
+                            let fontSize;
+                            
+                            if (datasetIndex === 0) {
+                                // Couronne externe : Critical Business Services
+                                text = totalCritiques.toString();
+                                fontSize = 16;
+                            } else {
+                                // Couronne interne : Already + Still avec pourcentages
+                                if (index === 0) {
+                                    text = `${alreadyOnboarded}\n(${alreadyPct}%)`;
                                 } else {
-                                    // Couronne interne : Already + Still avec pourcentages
-                                    if (index === 0) {
-                                        text = `${alreadyOnboarded}\n(${alreadyPct}%)`;
-                                    } else {
-                                        text = `${stillToOnboard}\n(${stillPct}%)`;
-                                    }
-                                    fontSize = 13;
+                                    text = `${stillToOnboard}\n(${stillPct}%)`;
                                 }
-                                
-                                ctx.fillStyle = 'white';
-                                ctx.font = `bold ${fontSize}px Arial`;
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'middle';
-                                
-                                // Gérer les retours à la ligne
-                                const lines = text.split('\n');
-                                const lineHeight = fontSize * 1.2;
-                                const totalHeight = lines.length * lineHeight;
-                                
-                                lines.forEach((line, lineIndex) => {
-                                    const y = centerY - (totalHeight / 2) + (lineIndex * lineHeight) + (lineHeight / 2);
-                                    ctx.fillText(line, centerX, y);
-                                });
+                                fontSize = 13;
+                            }
+                            
+                            ctx.fillStyle = 'white';
+                            ctx.font = `bold ${fontSize}px Arial`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Gérer les retours à la ligne
+                            const lines = text.split('\n');
+                            const lineHeight = fontSize * 1.2;
+                            const totalHeight = lines.length * lineHeight;
+                            
+                            lines.forEach((line, lineIndex) => {
+                                const y = centerY - (totalHeight / 2) + (lineIndex * lineHeight) + (lineHeight / 2);
+                                ctx.fillText(line, centerX, y);
                             });
                         });
-                        
-                        ctx.restore();
-                    }
-                }] : [],
-                tooltip: {
+                    });
+                    
+                    ctx.restore();
+                }
+            }] : [],
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: {
+                            generateLabels: function(chart) {
+                                const labels = [];
+                                
+                                // Légende pour la couronne externe (Critical - sans valeur)
+                                labels.push({
+                                    text: 'Critical Business Services',
+                                    fillStyle: 'rgba(63, 182, 255, 0.8)',
+                                    strokeStyle: 'rgba(63, 182, 255, 1)',
+                                    lineWidth: 3,
+                                    fontColor: 'rgba(63, 182, 255, 1)'
+                                });
+                                
+                                // Légendes pour la couronne interne (sans valeurs)
+                                labels.push({
+                                    text: 'Already onboarded',
+                                    fillStyle: 'rgba(46, 204, 113, 0.8)',
+                                    strokeStyle: 'rgba(46, 204, 113, 1)',
+                                    lineWidth: 3,
+                                    fontColor: 'rgba(46, 204, 113, 1)'
+                                });
+                                
+                                labels.push({
+                                    text: 'Still to be onboarded',
+                                    fillStyle: 'rgba(255, 193, 7, 0.8)',
+                                    strokeStyle: 'rgba(255, 193, 7, 1)',
+                                    lineWidth: 3,
+                                    fontColor: 'rgba(255, 193, 7, 1)'
+                                });
+                                
+                                return labels;
+                            },
+                            font: {
+                                size: 10
+                            },
+                            padding: 6
+                        }
+                    },
+                    datalabels: typeof ChartDataLabels !== 'undefined' ? {
+                        display: true,
+                        formatter: function(value, context) {
+                            const datasetIndex = context.datasetIndex;
+                            const dataIndex = context.dataIndex;
+                            
+                            if (datasetIndex === 0) {
+                                // Couronne externe : Critical Business Services
+                                return totalCritiques;
+                            } else {
+                                // Couronne interne : Already + Still avec pourcentages
+                                if (dataIndex === 0) {
+                                    return `${alreadyOnboarded}\n(${alreadyPct}%)`;
+                                } else {
+                                    return `${stillToOnboard}\n(${stillPct}%)`;
+                                }
+                            }
+                        },
+                        color: 'white',
+                        font: {
+                            size: function(context) {
+                                const datasetIndex = context.datasetIndex;
+                                return datasetIndex === 0 ? 16 : 13;  // Police plus grosse
+                            },
+                            weight: 'bold'
+                        },
+                        textAlign: 'center',
+                        anchor: 'center',
+                        align: 'center'
+                    } : false,
+                    tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const datasetIndex = context.datasetIndex;
