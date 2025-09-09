@@ -2473,9 +2473,11 @@ function mettreAJourSectionDP(resultats) {
     const dpData = resultats.sectionsDP?.dp;
     if (dpData) {
         const criticalElement = document.getElementById('critical-business-services');
+        const alreadyElement = document.getElementById('already-onboarded');
         const onboardElement = document.getElementById('still-to-onboard');
         
         if (criticalElement) criticalElement.textContent = dpData.criticalBusinessServices;
+        if (alreadyElement) alreadyElement.textContent = dpData.alreadyOnboarded;
         if (onboardElement) onboardElement.textContent = dpData.stillToOnboard;
     }
     
@@ -2531,84 +2533,110 @@ function creerGraphiqueSection(section, data) {
     }
     
     if (section === 'dp') {
-        // Graphique spécial pour DP : camembert représentant les proportions réelles
+        // Graphique spécial pour DP : camembert à 2 couches
         const totalCritiques = data.criticalBusinessServices;
+        const alreadyOnboarded = data.alreadyOnboarded;
         const stillToOnboard = data.stillToOnboard;
+        
+        // Calculer les pourcentages pour la couche interne
+        const alreadyPct = totalCritiques > 0 ? Math.round((alreadyOnboarded / totalCritiques) * 100) : 0;
+        const stillPct = totalCritiques > 0 ? Math.round((stillToOnboard / totalCritiques) * 100) : 0;
         
         window[`${section}Chart`] = new Chart(chartCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Critical Business Services', 'Still to be onboarded'],
-                datasets: [{
-                    data: [totalCritiques, stillToOnboard], // Valeurs absolues pour proportions correctes
-                    backgroundColor: [
-                        'rgba(63, 182, 255, 0.8)',    // Bleu pour Critical Business Services
-                        'rgba(255, 193, 7, 0.8)'      // Jaune/Orange pour Still to onboard
-                    ],
-                    borderColor: [
-                        'rgba(63, 182, 255, 1)',
-                        'rgba(255, 193, 7, 1)'
-                    ],
-                    borderWidth: 2
-                }]
+                labels: [
+                    `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`,
+                    `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`,
+                    `Critical Business Services: ${totalCritiques}`
+                ],
+                datasets: [
+                    // Couche interne : Already + Still (avec pourcentages)
+                    {
+                        data: [alreadyOnboarded, stillToOnboard],
+                        backgroundColor: [
+                            'rgba(46, 204, 113, 0.8)',   // Vert pour Already onboarded
+                            'rgba(255, 193, 7, 0.8)'     // Orange pour Still to onboard
+                        ],
+                        borderColor: [
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(255, 193, 7, 1)'
+                        ],
+                        borderWidth: 2,
+                        weight: 1,
+                        cutout: '40%'  // Espace pour la couche externe
+                    },
+                    // Couche externe : Critical Business Services (sans pourcentage)
+                    {
+                        data: [totalCritiques],
+                        backgroundColor: ['rgba(63, 182, 255, 0.6)'],  // Bleu plus transparent
+                        borderColor: ['rgba(63, 182, 255, 1)'],
+                        borderWidth: 2,
+                        weight: 0.5,
+                        cutout: '70%'  // Anneau externe plus fin
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: true,  // Afficher les légendes
+                        display: true,
                         position: 'bottom',
                         labels: {
-                            // Police de chaque légende de la couleur de son segment
                             generateLabels: function(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    return data.labels.map((label, i) => {
-                                        const dataset = data.datasets[0];
-                                        const backgroundColor = dataset.backgroundColor[i];
-                                        const borderColor = dataset.borderColor[i];
-                                        
-                                        // Logique spéciale pour le camembert DP
-                                        let text;
-                                        if (i === 0) {
-                                            // Critical Business Services : pas de pourcentage
-                                            text = `${label}: ${dataset.data[i]}`;
-                                        } else {
-                                            // Still to be onboarded : pourcentage par rapport à Critical Business Services
-                                            const criticalBusinessServices = dataset.data[0];
-                                            const percentage = criticalBusinessServices > 0 ? Math.round((dataset.data[i] / criticalBusinessServices) * 100) : 0;
-                                            text = `${label}: ${dataset.data[i]} (${percentage}%)`;
-                                        }
-                                        
-                                        return {
-                                            text: text,
-                                            fillStyle: backgroundColor,
-                                            strokeStyle: borderColor,
-                                            lineWidth: 2,
-                                            hidden: false,
-                                            index: i,
-                                            fontColor: borderColor  // Couleur du texte = couleur du segment
-                                        };
-                                    });
-                                }
-                                return [];
+                                const labels = [];
+                                
+                                // Légendes pour la couche interne (avec pourcentages)
+                                labels.push({
+                                    text: `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`,
+                                    fillStyle: 'rgba(46, 204, 113, 0.8)',
+                                    strokeStyle: 'rgba(46, 204, 113, 1)',
+                                    lineWidth: 2,
+                                    fontColor: 'rgba(46, 204, 113, 1)'
+                                });
+                                
+                                labels.push({
+                                    text: `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`,
+                                    fillStyle: 'rgba(255, 193, 7, 0.8)',
+                                    strokeStyle: 'rgba(255, 193, 7, 1)',
+                                    lineWidth: 2,
+                                    fontColor: 'rgba(255, 193, 7, 1)'
+                                });
+                                
+                                // Légende pour la couche externe (sans pourcentage)
+                                labels.push({
+                                    text: `Critical Business Services: ${totalCritiques}`,
+                                    fillStyle: 'rgba(63, 182, 255, 0.6)',
+                                    strokeStyle: 'rgba(63, 182, 255, 1)',
+                                    lineWidth: 2,
+                                    fontColor: 'rgba(63, 182, 255, 1)'
+                                });
+                                
+                                return labels;
                             },
                             font: {
-                                size: 11
+                                size: 10
                             },
-                            padding: 8
+                            padding: 6
                         }
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (context.dataIndex === 0) {
-                                    // Critical Business Services : pas de pourcentage
-                                    return `Critical Business Services: ${totalCritiques}`;
+                                const datasetIndex = context.datasetIndex;
+                                const dataIndex = context.dataIndex;
+                                
+                                if (datasetIndex === 0) {
+                                    // Couche interne
+                                    if (dataIndex === 0) {
+                                        return `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`;
+                                    } else {
+                                        return `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`;
+                                    }
                                 } else {
-                                    // Still to be onboarded : pourcentage par rapport à Critical Business Services
-                                    const percentage = totalCritiques > 0 ? Math.round((stillToOnboard / totalCritiques) * 100) : 0;
-                                    return `Still to onboard: ${stillToOnboard} (${percentage}%)`;
+                                    // Couche externe
+                                    return `Critical Business Services: ${totalCritiques}`;
                                 }
                             }
                         }
@@ -4336,9 +4364,13 @@ async function effectuerCalculsConsolidationSQL() {
         const pctMonitoredHCC = totalCritiques > 0 ? Math.round((monitoredHCC / totalCritiques) * 100) : 0;
         const pctNotRequiredHCC = totalCritiques > 0 ? Math.round((notRequiredHCC / totalCritiques) * 100) : 0;
         
+        // Calculer "Already onboarded" = BSM Monitored
+        const alreadyOnboarded = monitoredBSM;
+        
         // Créer la structure attendue pour la section DP principale
         const dpPrincipal = {
             criticalBusinessServices: totalCritiques,
+            alreadyOnboarded: alreadyOnboarded,
             stillToOnboard: stillToMonitor
         };
         
@@ -4348,6 +4380,7 @@ async function effectuerCalculsConsolidationSQL() {
         const resultats = {
             date: new Date().toISOString().split('T')[0],
             totalCritiques,
+            alreadyOnboarded,
             monitoredBSM,
             stillToMonitor,
             notRequiredBSM,
