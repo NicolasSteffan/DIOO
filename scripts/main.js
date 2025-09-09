@@ -2606,9 +2606,9 @@ function creerGraphiqueSection(section, data) {
         // Enregistrer le plugin datalabels pour ce graphique
         if (typeof ChartDataLabels !== 'undefined') {
             Chart.register(ChartDataLabels);
-            console.log('Plugin ChartDataLabels enregistré');
+            console.log('✅ Plugin ChartDataLabels enregistré - Utilisation du plugin officiel');
         } else {
-            console.warn('Plugin ChartDataLabels non disponible');
+            console.warn('⚠️ Plugin ChartDataLabels non disponible - Utilisation du plugin personnalisé');
         }
         
         window[`${section}Chart`] = new Chart(chartCtx, {
@@ -2724,15 +2724,18 @@ function creerGraphiqueSection(section, data) {
             plugins: typeof ChartDataLabels === 'undefined' ? [{
                 id: 'customLabels',
                 afterDatasetsDraw: function(chart) {
+                    console.log('🎨 Plugin customLabels activé - Dessin des labels');
                     const ctx = chart.ctx;
                     ctx.save();
                     
                     chart.data.datasets.forEach((dataset, datasetIndex) => {
                         const meta = chart.getDatasetMeta(datasetIndex);
+                        console.log(`🔍 Dataset ${datasetIndex}: ${meta.data.length} éléments`);
                         
                         meta.data.forEach((element, index) => {
                             const centerX = element.x;
                             const centerY = element.y;
+                            console.log(`📍 Élément ${datasetIndex}-${index}: position (${centerX}, ${centerY})`);
                             
                             let text;
                             let fontSize;
@@ -2741,6 +2744,7 @@ function creerGraphiqueSection(section, data) {
                                 // Couronne externe : Critical Business Services
                                 text = totalCritiques.toString();
                                 fontSize = 16;
+                                console.log(`🔵 Couronne externe: "${text}" (${fontSize}px)`);
                             } else {
                                 // Couronne interne : Already + Still avec pourcentages
                                 if (index === 0) {
@@ -2749,6 +2753,7 @@ function creerGraphiqueSection(section, data) {
                                     text = `${stillToOnboard}\n(${stillPct}%)`;
                                 }
                                 fontSize = 13;
+                                console.log(`🟢🟠 Couronne interne ${index}: "${text}" (${fontSize}px)`);
                             }
                             
                             ctx.fillStyle = 'white';
@@ -2763,6 +2768,7 @@ function creerGraphiqueSection(section, data) {
                             
                             lines.forEach((line, lineIndex) => {
                                 const y = centerY - (totalHeight / 2) + (lineIndex * lineHeight) + (lineHeight / 2);
+                                console.log(`✏️ Dessin ligne "${line}" à (${centerX}, ${y})`);
                                 ctx.fillText(line, centerX, y);
                             });
                         });
