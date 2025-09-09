@@ -2657,8 +2657,60 @@ function creerGraphiqueSection(section, data) {
                         textAlign: 'center',
                         anchor: 'center',
                         align: 'center'
-                    } : false,
-                    tooltip: {
+                    } : false
+                },
+                // Plugin personnalisé pour dessiner les labels si datalabels n'est pas disponible
+                plugins: typeof ChartDataLabels === 'undefined' ? [{
+                    id: 'customLabels',
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        
+                        chart.data.datasets.forEach((dataset, datasetIndex) => {
+                            const meta = chart.getDatasetMeta(datasetIndex);
+                            
+                            meta.data.forEach((element, index) => {
+                                const centerX = element.x;
+                                const centerY = element.y;
+                                
+                                let text;
+                                let fontSize;
+                                
+                                if (datasetIndex === 0) {
+                                    // Couronne externe : Critical Business Services
+                                    text = totalCritiques.toString();
+                                    fontSize = 16;
+                                } else {
+                                    // Couronne interne : Already + Still avec pourcentages
+                                    if (index === 0) {
+                                        text = `${alreadyOnboarded}\n(${alreadyPct}%)`;
+                                    } else {
+                                        text = `${stillToOnboard}\n(${stillPct}%)`;
+                                    }
+                                    fontSize = 13;
+                                }
+                                
+                                ctx.fillStyle = 'white';
+                                ctx.font = `bold ${fontSize}px Arial`;
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                
+                                // Gérer les retours à la ligne
+                                const lines = text.split('\n');
+                                const lineHeight = fontSize * 1.2;
+                                const totalHeight = lines.length * lineHeight;
+                                
+                                lines.forEach((line, lineIndex) => {
+                                    const y = centerY - (totalHeight / 2) + (lineIndex * lineHeight) + (lineHeight / 2);
+                                    ctx.fillText(line, centerX, y);
+                                });
+                            });
+                        });
+                        
+                        ctx.restore();
+                    }
+                }] : [],
+                tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const datasetIndex = context.datasetIndex;
