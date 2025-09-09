@@ -2546,12 +2546,20 @@ function creerGraphiqueSection(section, data) {
             type: 'doughnut',
             data: {
                 labels: [
+                    `Critical Business Services: ${totalCritiques}`,
                     `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`,
-                    `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`,
-                    `Critical Business Services: ${totalCritiques}`
+                    `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`
                 ],
                 datasets: [
-                    // Couche interne : Already + Still (avec pourcentages)
+                    // Couronne externe : Critical Business Services (bleu)
+                    {
+                        data: [totalCritiques],
+                        backgroundColor: ['rgba(63, 182, 255, 0.8)'],  // Bleu pour Critical
+                        borderColor: ['rgba(63, 182, 255, 1)'],
+                        borderWidth: 3,
+                        cutout: '60%'  // Couronne externe de 60% à 100%
+                    },
+                    // Couronne interne : Already + Still (vert/orange)
                     {
                         data: [alreadyOnboarded, stillToOnboard],
                         backgroundColor: [
@@ -2562,18 +2570,8 @@ function creerGraphiqueSection(section, data) {
                             'rgba(46, 204, 113, 1)',
                             'rgba(255, 193, 7, 1)'
                         ],
-                        borderWidth: 2,
-                        weight: 1,
-                        cutout: '40%'  // Espace pour la couche externe
-                    },
-                    // Couche externe : Critical Business Services (sans pourcentage)
-                    {
-                        data: [totalCritiques],
-                        backgroundColor: ['rgba(63, 182, 255, 0.6)'],  // Bleu plus transparent
-                        borderColor: ['rgba(63, 182, 255, 1)'],
-                        borderWidth: 2,
-                        weight: 0.5,
-                        cutout: '70%'  // Anneau externe plus fin
+                        borderWidth: 3,
+                        cutout: '25%'  // Couronne interne de 25% à 55%
                     }
                 ]
             },
@@ -2587,12 +2585,21 @@ function creerGraphiqueSection(section, data) {
                             generateLabels: function(chart) {
                                 const labels = [];
                                 
-                                // Légendes pour la couche interne (avec pourcentages)
+                                // Légende pour la couronne externe (Critical - sans pourcentage)
+                                labels.push({
+                                    text: `Critical Business Services: ${totalCritiques}`,
+                                    fillStyle: 'rgba(63, 182, 255, 0.8)',
+                                    strokeStyle: 'rgba(63, 182, 255, 1)',
+                                    lineWidth: 3,
+                                    fontColor: 'rgba(63, 182, 255, 1)'
+                                });
+                                
+                                // Légendes pour la couronne interne (avec pourcentages)
                                 labels.push({
                                     text: `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`,
                                     fillStyle: 'rgba(46, 204, 113, 0.8)',
                                     strokeStyle: 'rgba(46, 204, 113, 1)',
-                                    lineWidth: 2,
+                                    lineWidth: 3,
                                     fontColor: 'rgba(46, 204, 113, 1)'
                                 });
                                 
@@ -2600,17 +2607,8 @@ function creerGraphiqueSection(section, data) {
                                     text: `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`,
                                     fillStyle: 'rgba(255, 193, 7, 0.8)',
                                     strokeStyle: 'rgba(255, 193, 7, 1)',
-                                    lineWidth: 2,
+                                    lineWidth: 3,
                                     fontColor: 'rgba(255, 193, 7, 1)'
-                                });
-                                
-                                // Légende pour la couche externe (sans pourcentage)
-                                labels.push({
-                                    text: `Critical Business Services: ${totalCritiques}`,
-                                    fillStyle: 'rgba(63, 182, 255, 0.6)',
-                                    strokeStyle: 'rgba(63, 182, 255, 1)',
-                                    lineWidth: 2,
-                                    fontColor: 'rgba(63, 182, 255, 1)'
                                 });
                                 
                                 return labels;
@@ -2628,15 +2626,15 @@ function creerGraphiqueSection(section, data) {
                                 const dataIndex = context.dataIndex;
                                 
                                 if (datasetIndex === 0) {
-                                    // Couche interne
+                                    // Couronne externe : Critical Business Services
+                                    return `Critical Business Services: ${totalCritiques}`;
+                                } else {
+                                    // Couronne interne : Already + Still
                                     if (dataIndex === 0) {
                                         return `Already onboarded: ${alreadyOnboarded} (${alreadyPct}%)`;
                                     } else {
                                         return `Still to be onboarded: ${stillToOnboard} (${stillPct}%)`;
                                     }
-                                } else {
-                                    // Couche externe
-                                    return `Critical Business Services: ${totalCritiques}`;
                                 }
                             }
                         }
