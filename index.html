@@ -7,15 +7,8 @@
     <link rel="stylesheet" href="styles/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Styles pour la section requêtes SQL -->
+    <!-- Styles harmonisés pour les sections -->
     <style>
-        .sql-queries-section {
-            margin: 20px 0;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #f9f9f9;
-        }
-        
         .sql-query-list {
             max-height: 400px;
             overflow-y: auto;
@@ -23,12 +16,17 @@
         }
         
         .sql-query-item {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            background: rgba(63,182,255,0.05);
+            border: 1px solid rgba(63,182,255,0.2);
+            border-radius: 8px;
             margin-bottom: 15px;
             padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .sql-query-item:hover {
+            background: rgba(63,182,255,0.1);
+            border-color: rgba(63,182,255,0.3);
         }
         
         .sql-query-header {
@@ -37,54 +35,55 @@
             align-items: center;
             margin-bottom: 10px;
             padding-bottom: 8px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(63,182,255,0.2);
         }
         
         .sql-query-title {
-            font-weight: bold;
-            color: #2c3e50;
+            font-weight: 600;
+            color: var(--accent);
             font-size: 14px;
         }
         
         .sql-query-time {
             font-size: 12px;
-            color: #7f8c8d;
+            color: rgba(255,255,255,0.7);
         }
         
         .sql-query-code {
-            background: #2c3e50;
+            background: rgba(44,62,80,0.9);
             color: #ecf0f1;
             padding: 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-family: 'Courier New', monospace;
             font-size: 13px;
             line-height: 1.4;
             white-space: pre-wrap;
             word-break: break-all;
             margin: 8px 0;
+            border: 1px solid rgba(63,182,255,0.2);
         }
         
         .sql-query-result {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
+            background: rgba(46,204,113,0.1);
+            border: 1px solid rgba(46,204,113,0.3);
             padding: 8px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 12px;
-            color: #2d5a2d;
+            color: #27ae60;
         }
         
         .sql-query-error {
-            background: #ffeaea;
-            border: 1px solid #ffcdd2;
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
             padding: 8px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 12px;
-            color: #c62828;
+            color: #e74c3c;
         }
         
         .no-queries {
             text-align: center;
-            color: #7f8c8d;
+            color: rgba(255,255,255,0.6);
             font-style: italic;
             padding: 20px;
         }
@@ -97,8 +96,8 @@
         }
         
         .sheet-item {
-            background: white;
-            border: 2px solid #e1e8ed;
+            background: rgba(63,182,255,0.1);
+            border: 2px solid rgba(63,182,255,0.2);
             border-radius: 8px;
             padding: 16px;
             cursor: pointer;
@@ -107,14 +106,15 @@
         }
         
         .sheet-item:hover {
-            border-color: #3498db;
-            box-shadow: 0 3px 12px rgba(52, 152, 219, 0.15);
+            background: rgba(63,182,255,0.15);
+            border-color: rgba(63,182,255,0.4);
+            box-shadow: 0 3px 12px rgba(63,182,255,0.2);
             transform: translateY(-1px);
         }
         
         .sheet-item.selected {
             border-color: #2ecc71;
-            background: #f8fff8;
+            background: rgba(46, 204, 113, 0.1);
             box-shadow: 0 4px 16px rgba(46, 204, 113, 0.2);
         }
         
@@ -547,11 +547,11 @@
                         </div>
                         
                         <!-- Section Requêtes SQL -->
-                        <div class="sql-queries-section" id="sql-queries-section" style="display: none;">
+                        <div class="summary-section" id="sql-queries-section" style="display: none;">
                             <div class="summary-header" onclick="toggleSection('sql-queries-content')">
                                 <div class="section-title">
                                     <div class="led-indicator" id="sql-queries-led"></div>
-                                    <h4>🔍 Requêtes SQL Exécutées</h4>
+                                    <h4>Requêtes SQL Exécutées</h4>
                                 </div>
                                 <div class="arrow-indicator" id="sql-queries-arrow">
                                     <i class="fas fa-chevron-down"></i>
