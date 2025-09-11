@@ -1362,7 +1362,7 @@ button:active {
   display: flex;
   align-items: stretch;
   gap: 15px;
-  border: 5px solid rgba(63, 182, 255, 0.3);
+  border: 0px;
   border-radius: 12px;
   padding: 15px;
   position: relative;
@@ -1370,20 +1370,6 @@ button:active {
   width: 100%;
 }
 
-.stacked-row::before {
-  content: "stacked-row";
-  position: absolute;
-  top: -20px;
-  left: 15px;
-  background: white;
-  color: rgba(63, 182, 255, 1);
-  font-size: 12px;
-  font-weight: bold;
-  padding: 3px 8px;
-  border-radius: 4px;
-  z-index: 15;
-  border: 2px solid rgba(63, 182, 255, 0.3);
-}
 
 .stacked-cards-container {
   width: calc(50% - 7.5px);
@@ -1391,26 +1377,13 @@ button:active {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  border: 5px solid rgba(63, 182, 255, 0.2);
+  border: 0px;
   border-radius: 8px;
   padding: 15px;
   position: relative;
   box-sizing: border-box;
 }
 
-.stacked-cards-container::before {
-  content: "stacked-cards-container";
-  position: absolute;
-  top: -15px;
-  left: 10px;
-  background: white;
-  color: rgba(63, 182, 255, 0.8);
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 3px;
-  z-index: 10;
-}
 
 .cards-row {
   display: flex;
@@ -1419,19 +1392,6 @@ button:active {
   position: relative;
 }
 
-.cards-row::before {
-  content: "cards-row";
-  position: absolute;
-  top: -12px;
-  left: 5px;
-  background: rgba(255, 255, 255, 0.9);
-  color: rgba(63, 182, 255, 0.7);
-  font-size: 8px;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 2px;
-  z-index: 5;
-}
 
 .stacked-card {
   flex: 1;
@@ -1442,24 +1402,11 @@ button:active {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 5px solid rgba(63, 182, 255, 0.2);
+  border: 0px;
   border-radius: 8px;
   position: relative;
 }
 
-.stacked-card::before {
-  content: "stacked-card";
-  position: absolute;
-  top: -10px;
-  left: 3px;
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(63, 182, 255, 0.6);
-  font-size: 7px;
-  font-weight: bold;
-  padding: 1px 3px;
-  border-radius: 2px;
-  z-index: 3;
-}
 
 .stacked-card .metric-label-monitoring {
   font-size: 12px;
@@ -1482,44 +1429,17 @@ button:active {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 5px solid rgba(63, 182, 255, 0.2);
+  border: 0px;
   border-radius: 8px;
   box-sizing: border-box;
 }
 
-.tall-chart-card::before {
-  content: "tall-chart-card";
-  position: absolute;
-  top: -15px;
-  left: 10px;
-  background: white;
-  color: rgba(63, 182, 255, 0.8);
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 3px;
-  z-index: 10;
-}
 
 /* Styles pour le nouveau stacked-row avec 2 colonnes */
 .stacked-row-2col {
   margin-bottom: 20px;
 }
 
-.stacked-row-2col::before {
-  content: "stacked-row-2col";
-  position: absolute;
-  top: -20px;
-  left: 15px;
-  background: white;
-  color: rgba(63, 182, 255, 1);
-  font-size: 12px;
-  font-weight: bold;
-  padding: 3px 8px;
-  border-radius: 4px;
-  z-index: 15;
-  border: 2px solid rgba(63, 182, 255, 0.3);
-}
 
 .column-container {
   width: calc(50% - 7.5px);
@@ -1528,7 +1448,7 @@ button:active {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 5px solid rgba(63, 182, 255, 0.2);
+  border: 0px;
   border-radius: 8px;
   padding: 15px;
   position: relative;
@@ -1548,31 +1468,12 @@ button:active {
   min-height: 320px;
 }
 
-.column-container::before {
-  content: "column-container";
-  position: absolute;
-  top: -15px;
-  left: 10px;
-  background: white;
-  color: rgba(63, 182, 255, 0.8);
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 3px;
-  z-index: 10;
-}
 
-.column-left::before {
-  content: "column-left";
-}
 
-.column-right::before {
-  content: "column-right";
-}
 
 .column-card {
   width: 100%;
-  border: 5px solid rgba(63, 182, 255, 0.15);
+  border: 0px;
   border-radius: 6px;
   padding: 20px;
   text-align: center;
@@ -1580,19 +1481,6 @@ button:active {
   box-sizing: border-box;
 }
 
-.column-card::before {
-  content: "column-card";
-  position: absolute;
-  top: -10px;
-  left: 5px;
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(63, 182, 255, 0.6);
-  font-size: 8px;
-  font-weight: bold;
-  padding: 1px 3px;
-  border-radius: 2px;
-  z-index: 3;
-}
 
 /* Grille de 4 mini-cartes dans column-left */
 .mini-cards-grid {
@@ -1607,22 +1495,9 @@ button:active {
   aspect-ratio: 1;
 }
 
-.mini-cards-grid::before {
-  content: "mini-cards-grid";
-  position: absolute;
-  top: -12px;
-  left: 5px;
-  background: rgba(255, 255, 255, 0.9);
-  color: rgba(63, 182, 255, 0.7);
-  font-size: 9px;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 2px;
-  z-index: 8;
-}
 
 .mini-card {
-  border: 5px solid rgba(63, 182, 255, 0.15);
+  border: 0px;
   border-radius: 6px;
   padding: 10px;
   display: flex;
@@ -1637,19 +1512,6 @@ button:active {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.mini-card::before {
-  content: "mini-card";
-  position: absolute;
-  top: -8px;
-  left: 2px;
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(63, 182, 255, 0.5);
-  font-size: 7px;
-  font-weight: bold;
-  padding: 1px 2px;
-  border-radius: 2px;
-  z-index: 2;
-}
 
 .mini-card-label {
   font-size: 10px;
@@ -1696,11 +1558,23 @@ button:active {
   justify-content: center !important;
 }
 
-/* Styles spécifiques pour les cartes C et D - même style que in-hcc-card */
-.mini-card-c,
+/* Styles spécifiques pour la carte C - même style que quick-effort-card */
+.mini-card-c {
+  background: rgba(255, 140, 0, 0.1) !important;  /* Même fond que Quick effort */
+  border: 2px solid #ff8c00 !important;  /* Même bordure que Quick effort */
+  padding: 1.5rem !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Styles spécifiques pour la carte D - même style que big-effort-card */
 .mini-card-d {
-  background: rgba(46, 204, 113, 0.1) !important;  /* Même fond que In HCC */
-  border: 2px solid rgba(46, 204, 113, 1) !important;  /* Même bordure que In HCC */
+  background: rgba(255, 69, 0, 0.1) !important;  /* Même fond que Big effort */
+  border: 2px solid #ff4500 !important;  /* Même bordure que Big effort */
   padding: 1.5rem !important;
   text-align: center !important;
   transition: all 0.3s ease !important;
@@ -1732,14 +1606,14 @@ button:active {
 
 .mini-card-c .mini-card-value,
 .tbd-hcc-value {
-  color: rgba(255, 193, 7, 1) !important;  /* Orange - même que Still to be onboarded */
+  color: #ff8c00 !important;  /* Orange - même que Quick effort */
   font-weight: bold !important;
   font-size: 2em !important;
 }
 
 .mini-card-d .mini-card-value,
 .empty-hcc-value {
-  color: rgba(255, 193, 7, 1) !important;  /* Orange - même que Still to be onboarded */
+  color: #ff4500 !important;  /* Orange - même que Big effort */
   font-weight: bold !important;
   font-size: 2em !important;
 }
@@ -1768,19 +1642,6 @@ button:active {
   max-height: 280px;
 }
 
-.column-chart-container::before {
-  content: "column-chart-container";
-  position: absolute;
-  top: -12px;
-  left: 5px;
-  background: rgba(255, 255, 255, 0.9);
-  color: rgba(63, 182, 255, 0.7);
-  font-size: 9px;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 2px;
-  z-index: 8;
-}
 
 .column-chart-title {
   text-align: center;
@@ -1792,19 +1653,6 @@ button:active {
   position: relative;
 }
 
-.column-chart-title::before {
-  content: "column-chart-title";
-  position: absolute;
-  top: -10px;
-  left: 0;
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(63, 182, 255, 0.6);
-  font-size: 7px;
-  font-weight: bold;
-  padding: 1px 2px;
-  border-radius: 2px;
-  z-index: 2;
-}
 
 #column-right-chart {
   max-width: 100%;
@@ -1814,19 +1662,6 @@ button:active {
   position: relative;
 }
 
-#column-right-chart::before {
-  content: "column-right-chart";
-  position: absolute;
-  top: -8px;
-  left: 2px;
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(63, 182, 255, 0.5);
-  font-size: 7px;
-  font-weight: bold;
-  padding: 1px 2px;
-  border-radius: 2px;
-  z-index: 1;
-}
 
 .metric-value {
   font-size: 2.5rem;
@@ -2039,9 +1874,6 @@ button:active {
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
   font-weight: bold;
-}
-  font-style: italic;
-  padding: 2rem;
 }
 
 .error-message {

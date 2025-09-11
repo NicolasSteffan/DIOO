@@ -3316,14 +3316,14 @@ function creerCamembertColumnRight(resultats = null) {
                 backgroundColor: [
                     'rgba(46, 204, 113, 0.8)',   // Vert intense - Carte A (In HCC)
                     '#7ed321',                    // Vert plus clair - Carte B (Not Eligible HCC)
-                    'rgba(255, 193, 7, 1)',      // Orange - Carte C (HCC TBD) - même que Still to be onboarded
-                    'rgba(255, 193, 7, 1)'       // Orange - Carte D (HCC Empty) - même que Still to be onboarded
+                    '#ff8c00',                    // Orange - Carte C (HCC TBD) - même que Quick effort
+                    '#ff4500'                     // Orange - Carte D (HCC Empty) - même que Big effort
                 ],
                 borderColor: [
                     'rgba(46, 204, 113, 1)',     // Vert intense - Carte A
                     '#7ed321',                    // Vert plus clair - Carte B
-                    'rgba(255, 193, 7, 1)',      // Orange - Carte C - même que Still to be onboarded
-                    'rgba(255, 193, 7, 1)'       // Orange - Carte D - même que Still to be onboarded
+                    '#ff8c00',                    // Orange - Carte C - même que Quick effort
+                    '#ff4500'                     // Orange - Carte D - même que Big effort
                 ],
                 borderWidth: 2
             }]
