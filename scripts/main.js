@@ -2259,11 +2259,34 @@ async function calculerConsolidationAsync() {
         // Effectuer les calculs avec des vraies requêtes SQL
         const resultats = await effectuerCalculsConsolidationSQL();
         
+        // Effectuer les calculs pour toutes les sections DP*
+        const resultatsDPA = await effectuerCalculsConsolidationDPASQL();
+        const resultatsDPB = await effectuerCalculsConsolidationDPBSQL();
+        const resultatsDPC = await effectuerCalculsConsolidationDPCSQL();
+        const resultatsDPP = await effectuerCalculsConsolidationDPPSQL();
+        const resultatsDPS = await effectuerCalculsConsolidationDPSSQL();
+        
         // Sauvegarder dans Dioo_Summary
         sauvegarderDansHistorique(resultats);
         
         // Afficher les résultats
         afficherResultatsConsolidation(resultats);
+        
+        // Mettre à jour et afficher les résultats pour toutes les sections
+        mettreAJourSectionDPA(resultatsDPA);
+        creerGraphiquesDPA(resultatsDPA);
+        
+        mettreAJourSectionDPB(resultatsDPB);
+        creerGraphiquesDPB(resultatsDPB);
+        
+        mettreAJourSectionDPC(resultatsDPC);
+        creerGraphiquesDPC(resultatsDPC);
+        
+        mettreAJourSectionDPP(resultatsDPP);
+        creerGraphiquesDPP(resultatsDPP);
+        
+        mettreAJourSectionDPS(resultatsDPS);
+        creerGraphiquesDPS(resultatsDPS);
         
         // Marquer comme terminé
         definirEtatIndicateur('calcul-status', 'completed');
@@ -2619,6 +2642,84 @@ function mettreAJourSectionDP(resultats) {
 }
 
 /**
+ * Mettre à jour la section DPA avec les données spécifiques
+ */
+function mettreAJourSectionDPA(resultats) {
+    // Mise à jour des cartes principales DPA
+    const dpaData = resultats.sectionsDP?.dpa;
+    if (dpaData) {
+        const criticalElement = document.getElementById('dpa-critical-business-services');
+        const alreadyElement = document.getElementById('dpa-already-onboarded');
+        const onboardElement = document.getElementById('dpa-still-to-onboard');
+        
+        if (criticalElement) criticalElement.textContent = dpaData.criticalBusinessServices;
+        if (alreadyElement) alreadyElement.textContent = dpaData.alreadyOnboarded;
+        if (onboardElement) onboardElement.textContent = dpaData.stillToOnboard;
+    }
+    
+    // Mise à jour des nouvelles cartes Quick effort DPA
+    const quickEffortCountElement = document.getElementById('dpa-quick-effort-count');
+    const quickEffortAppsElement = document.getElementById('dpa-quick-effort-apps');
+    
+    if (quickEffortCountElement) {
+        quickEffortCountElement.textContent = resultats.quickEffortCount || 0;
+    }
+    
+    if (quickEffortAppsElement) {
+        const apps = resultats.quickEffortApps || [];
+        if (apps.length > 0) {
+            quickEffortAppsElement.innerHTML = apps
+                .map(app => `<div class="app-list-item">${app}</div>`)
+                .join('');
+        } else {
+            quickEffortAppsElement.innerHTML = '<div class="app-list-empty">Aucune application trouvée</div>';
+        }
+    }
+    
+    // Mise à jour des nouvelles cartes HCC DPA
+    const inHCCCountElement = document.getElementById('dpa-in-hcc-count');
+    const notInHCCCountElement = document.getElementById('dpa-not-in-hcc-count');
+    
+    if (inHCCCountElement) {
+        inHCCCountElement.textContent = resultats.inHCCCount || 0;
+    }
+    
+    if (notInHCCCountElement) {
+        notInHCCCountElement.textContent = resultats.notInHCCCount || 0;
+    }
+    
+    // Mise à jour des nouvelles cartes Big Effort DPA
+    const bigEffortCountElement = document.getElementById('dpa-big-effort-count');
+    const bigEffortAppsElement = document.getElementById('dpa-big-effort-apps');
+    
+    if (bigEffortCountElement) {
+        bigEffortCountElement.textContent = resultats.bigEffortCount || 0;
+    }
+    
+    if (bigEffortAppsElement) {
+        const apps = resultats.bigEffortApps || [];
+        if (apps.length > 0) {
+            bigEffortAppsElement.innerHTML = apps
+                .map(app => `<div class="app-list-item">${app}</div>`)
+                .join('');
+        } else {
+            bigEffortAppsElement.innerHTML = '<div class="app-list-empty">Aucune application trouvée</div>';
+        }
+    }
+    
+    // Mise à jour des cartes A à D DPA
+    const miniCardAElement = document.getElementById('dpa-mini-card-a');
+    const miniCardBElement = document.getElementById('dpa-mini-card-b');
+    const miniCardCElement = document.getElementById('dpa-mini-card-c');
+    const miniCardDElement = document.getElementById('dpa-mini-card-d');
+    
+    if (miniCardAElement) miniCardAElement.textContent = resultats.miniCardA || 0;
+    if (miniCardBElement) miniCardBElement.textContent = resultats.miniCardB || 0;
+    if (miniCardCElement) miniCardCElement.textContent = resultats.miniCardC || 0;
+    if (miniCardDElement) miniCardDElement.textContent = resultats.miniCardD || 0;
+}
+
+/**
  * Créer les graphiques pour les sections DP*
  */
 function creerGraphiquesDP(resultats) {
@@ -2652,6 +2753,320 @@ function creerGraphiquesDP(resultats) {
 }
 
 /**
+ * Créer les graphiques pour la section DPA
+ */
+function creerGraphiquesDPA(resultats) {
+    console.log('🎯 Création des graphiques DPA avec resultats:', resultats);
+    
+    // Créer le graphique spécial pour DPA
+    const dpaData = resultats.sectionsDP?.dpa;
+    console.log('📊 DPA Data:', dpaData);
+    if (dpaData) {
+        creerGraphiqueSection('dpa', dpaData);
+    }
+    
+    // Créer les nouveaux graphiques BSM et HCC pour DPA
+    creerGraphiquesBSMHCCDPA(resultats);
+    
+    // Créer le camembert HCC pour DPA
+    const hccData = {
+        criticalBusinessServices: resultats.totalCritiques,
+        alreadyOnboarded: resultats.inHCCCount,
+        stillToOnboard: resultats.notInHCCCount
+    };
+    console.log('📊 HCC Data pour DPA:', hccData);
+    creerGraphiqueSection('dpa-hcc', hccData);
+    
+    // Créer le camembert pour column-right DPA avec les données des cartes A à D
+    console.log('📊 Données cartes A-D pour DPA:', {
+        miniCardA: resultats.miniCardA,
+        miniCardB: resultats.miniCardB,
+        miniCardC: resultats.miniCardC,
+        miniCardD: resultats.miniCardD
+    });
+    creerCamembertColumnRightDPA(resultats);
+}
+
+/**
+ * Mettre à jour la section DPB avec les données spécifiques
+ */
+function mettreAJourSectionDPB(resultats) {
+    mettreAJourSectionDPX('dpb', resultats);
+}
+
+/**
+ * Mettre à jour la section DPC avec les données spécifiques
+ */
+function mettreAJourSectionDPC(resultats) {
+    mettreAJourSectionDPX('dpc', resultats);
+}
+
+/**
+ * Mettre à jour la section DPP avec les données spécifiques
+ */
+function mettreAJourSectionDPP(resultats) {
+    mettreAJourSectionDPX('dpp', resultats);
+}
+
+/**
+ * Mettre à jour la section DPS avec les données spécifiques
+ */
+function mettreAJourSectionDPS(resultats) {
+    mettreAJourSectionDPX('dps', resultats);
+}
+
+/**
+ * Fonction générique pour mettre à jour une section DPX
+ */
+function mettreAJourSectionDPX(section, resultats) {
+    // Mise à jour des cartes principales
+    const sectionData = resultats.sectionsDP?.[section];
+    if (sectionData) {
+        const criticalElement = document.getElementById(`${section}-critical-business-services`);
+        const alreadyElement = document.getElementById(`${section}-already-onboarded`);
+        const onboardElement = document.getElementById(`${section}-still-to-onboard`);
+        
+        if (criticalElement) criticalElement.textContent = sectionData.criticalBusinessServices;
+        if (alreadyElement) alreadyElement.textContent = sectionData.alreadyOnboarded;
+        if (onboardElement) onboardElement.textContent = sectionData.stillToOnboard;
+    }
+    
+    // Mise à jour des nouvelles cartes Quick effort
+    const quickEffortCountElement = document.getElementById(`${section}-quick-effort-count`);
+    const quickEffortAppsElement = document.getElementById(`${section}-quick-effort-apps`);
+    
+    if (quickEffortCountElement) {
+        quickEffortCountElement.textContent = resultats.quickEffortCount || 0;
+    }
+    
+    if (quickEffortAppsElement) {
+        const apps = resultats.quickEffortApps || [];
+        if (apps.length > 0) {
+            quickEffortAppsElement.innerHTML = apps
+                .map(app => `<div class="app-list-item">${app}</div>`)
+                .join('');
+        } else {
+            quickEffortAppsElement.innerHTML = '<div class="app-list-empty">Aucune application trouvée</div>';
+        }
+    }
+    
+    // Mise à jour des nouvelles cartes HCC
+    const inHCCCountElement = document.getElementById(`${section}-in-hcc-count`);
+    const notInHCCCountElement = document.getElementById(`${section}-not-in-hcc-count`);
+    
+    if (inHCCCountElement) {
+        inHCCCountElement.textContent = resultats.inHCCCount || 0;
+    }
+    
+    if (notInHCCCountElement) {
+        notInHCCCountElement.textContent = resultats.notInHCCCount || 0;
+    }
+    
+    // Mise à jour des nouvelles cartes Big Effort
+    const bigEffortCountElement = document.getElementById(`${section}-big-effort-count`);
+    const bigEffortAppsElement = document.getElementById(`${section}-big-effort-apps`);
+    
+    if (bigEffortCountElement) {
+        bigEffortCountElement.textContent = resultats.bigEffortCount || 0;
+    }
+    
+    if (bigEffortAppsElement) {
+        const apps = resultats.bigEffortApps || [];
+        if (apps.length > 0) {
+            bigEffortAppsElement.innerHTML = apps
+                .map(app => `<div class="app-list-item">${app}</div>`)
+                .join('');
+        } else {
+            bigEffortAppsElement.innerHTML = '<div class="app-list-empty">Aucune application trouvée</div>';
+        }
+    }
+    
+    // Mise à jour des cartes A à D
+    const miniCardAElement = document.getElementById(`${section}-mini-card-a`);
+    const miniCardBElement = document.getElementById(`${section}-mini-card-b`);
+    const miniCardCElement = document.getElementById(`${section}-mini-card-c`);
+    const miniCardDElement = document.getElementById(`${section}-mini-card-d`);
+    
+    if (miniCardAElement) miniCardAElement.textContent = resultats.miniCardA || 0;
+    if (miniCardBElement) miniCardBElement.textContent = resultats.miniCardB || 0;
+    if (miniCardCElement) miniCardCElement.textContent = resultats.miniCardC || 0;
+    if (miniCardDElement) miniCardDElement.textContent = resultats.miniCardD || 0;
+}
+
+/**
+ * Créer les graphiques pour la section DPB
+ */
+function creerGraphiquesDPB(resultats) {
+    creerGraphiquesDPX('dpb', resultats);
+}
+
+/**
+ * Créer les graphiques pour la section DPC
+ */
+function creerGraphiquesDPC(resultats) {
+    creerGraphiquesDPX('dpc', resultats);
+}
+
+/**
+ * Créer les graphiques pour la section DPP
+ */
+function creerGraphiquesDPP(resultats) {
+    creerGraphiquesDPX('dpp', resultats);
+}
+
+/**
+ * Créer les graphiques pour la section DPS
+ */
+function creerGraphiquesDPS(resultats) {
+    creerGraphiquesDPX('dps', resultats);
+}
+
+/**
+ * Fonction générique pour créer les graphiques d'une section DPX
+ */
+function creerGraphiquesDPX(section, resultats) {
+    console.log(`🎯 Création des graphiques ${section.toUpperCase()} avec resultats:`, resultats);
+    
+    // Créer le graphique spécial pour la section
+    const sectionData = resultats.sectionsDP?.[section];
+    console.log(`📊 ${section.toUpperCase()} Data:`, sectionData);
+    if (sectionData) {
+        creerGraphiqueSection(section, sectionData);
+    }
+    
+    // Créer le camembert HCC pour la section
+    const hccData = {
+        criticalBusinessServices: resultats.totalCritiques,
+        alreadyOnboarded: resultats.inHCCCount,
+        stillToOnboard: resultats.notInHCCCount
+    };
+    console.log(`📊 HCC Data pour ${section.toUpperCase()}:`, hccData);
+    creerGraphiqueSection(`${section}-hcc`, hccData);
+    
+    // Créer le camembert pour column-right avec les données des cartes A à D
+    console.log(`📊 Données cartes A-D pour ${section.toUpperCase()}:`, {
+        miniCardA: resultats.miniCardA,
+        miniCardB: resultats.miniCardB,
+        miniCardC: resultats.miniCardC,
+        miniCardD: resultats.miniCardD
+    });
+    creerCamembertColumnRightDPX(section, resultats);
+}
+
+/**
+ * Créer le camembert column-right pour une section DPX
+ */
+function creerCamembertColumnRightDPX(section, resultats = null) {
+    const chartCtx = document.getElementById(`${section}-column-right-chart`);
+    if (!chartCtx) return;
+    
+    // Détruire le graphique existant s'il y en a un
+    if (window[`${section}ColumnRightChart`]) {
+        window[`${section}ColumnRightChart`].destroy();
+    }
+    
+    // Utiliser les vraies données des cartes A à D si disponibles
+    const data = resultats ? [
+        resultats.miniCardA || 0,
+        resultats.miniCardB || 0,
+        resultats.miniCardC || 0,
+        resultats.miniCardD || 0
+    ] : [25, 30, 20, 25];
+    
+    const labels = ['In HCC', 'Not Eligible HCC', 'HCC TBD', 'HCC Empty'];
+    const total = data.reduce((sum, val) => sum + val, 0);
+    
+    // Calculer les pourcentages
+    const percentages = data.map(val => total > 0 ? Math.round((val / total) * 100) : 0);
+    
+    window[`${section}ColumnRightChart`] = new Chart(chartCtx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.map((label, i) => `${label}: ${data[i]} (${percentages[i]}%)`),
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.8)',   // Vert intense - Carte A (In HCC)
+                    '#7ed321',                    // Vert plus clair - Carte B (Not Eligible HCC)
+                    '#ff8c00',                    // Orange - Carte C (HCC TBD) - même que Quick effort
+                    '#ff4500'                     // Orange - Carte D (HCC Empty) - même que Big effort
+                ],
+                borderColor: [
+                    'rgba(46, 204, 113, 1)',     // Vert intense - Carte A
+                    '#7ed321',                    // Vert plus clair - Carte B
+                    '#ff8c00',                    // Orange - Carte C - même que Quick effort
+                    '#ff4500'                     // Orange - Carte D - même que Big effort
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const dataset = data.datasets[0];
+                                    const backgroundColor = dataset.backgroundColor[i];
+                                    const borderColor = dataset.borderColor[i];
+                                    
+                                    return {
+                                        text: label,
+                                        fillStyle: backgroundColor,
+                                        strokeStyle: borderColor,
+                                        lineWidth: 2,
+                                        hidden: false,
+                                        index: i,
+                                        fontColor: borderColor
+                                    };
+                                });
+                            }
+                            return [];
+                        },
+                        usePointStyle: true,
+                        padding: 10,
+                        font: {
+                            size: 10
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = labels[context.dataIndex];
+                            const value = context.parsed;
+                            const percentage = percentages[context.dataIndex];
+                            return [`${label}: ${value}`, `Pourcentage: ${percentage}%`];
+                        }
+                    }
+                },
+                datalabels: {
+                    display: true,
+                    color: 'white',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: (value, context) => {
+                        if (value === 0) return '';
+                        const percentage = percentages[context.dataIndex];
+                        return `${value}\n(${percentage}%)`;
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+/**
  * Créer un graphique pour une section DP*
  */
 function creerGraphiqueSection(section, data) {
@@ -2665,8 +3080,8 @@ function creerGraphiqueSection(section, data) {
         window[`${section}Chart`].destroy();
     }
     
-    if (section === 'dp') {
-        // Graphique spécial pour DP : camembert à 2 couches
+    if (section === 'dp' || section === 'dpa' || section === 'dpb' || section === 'dpc' || section === 'dpp' || section === 'dps') {
+        // Graphique spécial pour DP et toutes les sections DPX : camembert à 2 couches
         const totalCritiques = data.criticalBusinessServices;
         const alreadyOnboarded = data.alreadyOnboarded;
         const stillToOnboard = data.stillToOnboard;
@@ -2755,6 +3170,7 @@ function creerGraphiqueSection(section, data) {
                                 
                                 return labels;
                             },
+                            usePointStyle: true,
                             font: {
                                 size: 10
                             },
@@ -2903,6 +3319,7 @@ function creerGraphiqueSection(section, data) {
                                 
                                 return labels;
                             },
+                            usePointStyle: true,
                             font: {
                                 size: 10
                             },
@@ -3095,6 +3512,7 @@ function creerGraphiqueSection(section, data) {
                                 
                                 return labels;
                             },
+                            usePointStyle: true,
                             font: {
                                 size: 11
                             },
@@ -3187,6 +3605,7 @@ function creerGraphiqueSection(section, data) {
                         position: 'bottom',
                         align: 'start',
                         labels: {
+                            usePointStyle: true,
                             font: {
                                 size: 10
                             },
@@ -3214,6 +3633,83 @@ function creerGraphiqueSection(section, data) {
                     }
                 }
             }
+        });
+    } else if (section === 'hcc' || section === 'dpa-hcc' || section === 'dpb-hcc' || section === 'dpc-hcc' || section === 'dpp-hcc' || section === 'dps-hcc') {
+        // Graphique spécial pour HCC : In HCC vs Not In HCC
+        const inHCC = data.alreadyOnboarded || 0;
+        const notInHCC = data.stillToOnboard || 0;
+        const total = inHCC + notInHCC;
+        
+        window[`${section}Chart`] = new Chart(chartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['In HCC', 'Not In HCC'],
+                datasets: [{
+                    data: [inHCC, notInHCC],
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.8)',  // Vert pour In HCC
+                        'rgba(255, 140, 0, 0.8)'    // Orange pour Not In HCC
+                    ],
+                    borderColor: [
+                        'rgba(46, 204, 113, 1)',
+                        'rgba(255, 140, 0, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const dataset = data.datasets[0];
+                                        const backgroundColor = dataset.backgroundColor[i];
+                                        const borderColor = dataset.borderColor[i];
+                                        const value = dataset.data[i];
+                                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                        
+                                        return {
+                                            text: `${label}: ${value} (${percentage}%)`,
+                                            fillStyle: backgroundColor,
+                                            strokeStyle: borderColor,
+                                            lineWidth: 2,
+                                            hidden: false,
+                                            index: i,
+                                            fontColor: borderColor
+                                        };
+                                    });
+                                }
+                                return [];
+                            },
+                            usePointStyle: true,
+                            padding: 10,
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        color: 'white',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        formatter: (value, context) => {
+                            if (value === 0) return '';
+                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return `${value}\n(${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
         });
     } else {
         // Graphique standard pour les autres sections DPx
@@ -3358,6 +3854,7 @@ function creerCamembertColumnRight(resultats = null) {
                             }
                             return [];
                         },
+                        usePointStyle: true,
                         font: {
                             size: 10,
                             weight: 'bold'
@@ -3497,6 +3994,7 @@ function creerPetitCamembert(canvasId, labels, data, colors) {
                             }
                             return [];
                         },
+                        usePointStyle: true,
                         font: {
                             size: 9  // Taille réduite pour les petits camemberts
                         },
@@ -3514,6 +4012,128 @@ function creerPetitCamembert(canvasId, labels, data, colors) {
                 }
             }
         }
+    });
+}
+
+/**
+ * Créer les graphiques BSM et HCC pour DPA
+ */
+function creerGraphiquesBSMHCCDPA(resultats) {
+    // Cette fonction sera identique à creerGraphiquesBSMHCC mais pour les éléments DPA
+    // Pour l'instant, on peut la laisser vide car les graphiques BSM/HCC ne sont pas présents dans la section DPA actuelle
+    console.log('🎯 Graphiques BSM/HCC DPA - Non implémentés dans cette version');
+}
+
+/**
+ * Créer le camembert column-right pour DPA
+ */
+function creerCamembertColumnRightDPA(resultats = null) {
+    const chartCtx = document.getElementById('dpa-column-right-chart');
+    if (!chartCtx) return;
+    
+    // Détruire le graphique existant s'il y en a un
+    if (window.dpaColumnRightChart) {
+        window.dpaColumnRightChart.destroy();
+    }
+    
+    // Utiliser les vraies données des cartes A à D DPA si disponibles
+    const data = resultats ? [
+        resultats.miniCardA || 0,
+        resultats.miniCardB || 0,
+        resultats.miniCardC || 0,
+        resultats.miniCardD || 0
+    ] : [25, 30, 20, 25];
+    
+    const labels = ['In HCC', 'Not Eligible HCC', 'HCC TBD', 'HCC Empty'];
+    const total = data.reduce((sum, val) => sum + val, 0);
+    
+    // Calculer les pourcentages
+    const percentages = data.map(val => total > 0 ? Math.round((val / total) * 100) : 0);
+    
+    window.dpaColumnRightChart = new Chart(chartCtx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.map((label, i) => `${label}: ${data[i]} (${percentages[i]}%)`),
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.8)',   // Vert intense - Carte A (In HCC)
+                    '#7ed321',                    // Vert plus clair - Carte B (Not Eligible HCC)
+                    '#ff8c00',                    // Orange - Carte C (HCC TBD) - même que Quick effort
+                    '#ff4500'                     // Orange - Carte D (HCC Empty) - même que Big effort
+                ],
+                borderColor: [
+                    'rgba(46, 204, 113, 1)',     // Vert intense - Carte A
+                    '#7ed321',                    // Vert plus clair - Carte B
+                    '#ff8c00',                    // Orange - Carte C - même que Quick effort
+                    '#ff4500'                     // Orange - Carte D - même que Big effort
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const dataset = data.datasets[0];
+                                    const backgroundColor = dataset.backgroundColor[i];
+                                    const borderColor = dataset.borderColor[i];
+                                    
+                                    return {
+                                        text: label,
+                                        fillStyle: backgroundColor,
+                                        strokeStyle: borderColor,
+                                        lineWidth: 2,
+                                        hidden: false,
+                                        index: i,
+                                        fontColor: borderColor
+                                    };
+                                });
+                            }
+                            return [];
+                        },
+                        usePointStyle: true,
+                        padding: 10,
+                        font: {
+                            size: 10
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = labels[context.dataIndex];
+                            const value = context.parsed;
+                            const percentage = percentages[context.dataIndex];
+                            return [`${label}: ${value}`, `Pourcentage: ${percentage}%`];
+                        }
+                    }
+                },
+                datalabels: {
+                    display: true,
+                    color: 'white',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: (value, context) => {
+                        if (value === 0) return '';
+                        const percentage = percentages[context.dataIndex];
+                        return `${value}\n(${percentage}%)`;
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
     });
 }
 
@@ -5299,6 +5919,516 @@ async function calculerSectionsDPSQL() {
     }
     
     return sections;
+}
+
+/**
+ * Effectuer les calculs de consolidation DPA avec SQL natif
+ */
+async function effectuerCalculsConsolidationDPASQL() {
+    console.log('🎯 Calculs de consolidation DPA avec requêtes SQL natives');
+    
+    try {
+        // 1. Compter le total d'applications critiques DPA
+        const queryTotalCritiques = `
+            SELECT COUNT(*) as total 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Business criticality") = 'CRITICAL'        `;
+        
+        const totalCritiques = await executerRequeteSQL('DPA - Total Applications Critiques', queryTotalCritiques);
+        
+        // 2. BSM - Monitored in BSM
+        const queryMonitoredBSM = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+        `;
+        
+        const monitoredBSM = await executerRequeteSQL('DPA - BSM Monitored', queryMonitoredBSM);
+        
+        // 3. BSM - Still To Be Monitored
+        const queryStillToMonitor = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+        `;
+        
+        const stillToMonitor = await executerRequeteSQL('DPA - BSM Still To Monitor', queryStillToMonitor);
+        
+        // 4. HCC - Confirmed Not Required in BSM
+        const queryNotRequiredBSM = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const notRequiredBSM = await executerRequeteSQL('DPA - HCC Not Required BSM', queryNotRequiredBSM);
+        
+        // 5. HCC - Monitored in HCC
+        const queryMonitoredHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("In HCC") = 'YES'
+        `;
+        
+        const monitoredHCC = await executerRequeteSQL('DPA - HCC Monitored', queryMonitoredHCC);
+        
+        // 6. HCC - Confirmed not required in HCC
+        const queryNotRequiredHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const notRequiredHCC = await executerRequeteSQL('DPA - HCC Not Required', queryNotRequiredHCC);
+        
+        // 7. Quick effort - Monitoring BSM - Not in HCC
+        const queryQuickEffort = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const quickEffortCount = await executerRequeteSQL('DPA - Quick effort BSM Not in HCC', queryQuickEffort);
+        
+        // 8. Liste des applications Quick effort
+        const queryQuickEffortApps = `
+            SELECT "App Appli" as appName
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const quickEffortAppsResult = await window.DatabaseManager.executeQuery(queryQuickEffortApps);
+        const quickEffortApps = quickEffortAppsResult.map(row => row.appName).filter(name => name && name.trim());
+        
+        ajouterRequeteSQL('DPA - Quick effort Liste Apps', queryQuickEffortApps, quickEffortApps.length);
+        
+        // 9. In HCC
+        const queryInHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("In HCC") = 'YES'
+        `;
+        
+        const inHCCCount = await executerRequeteSQL('DPA - In HCC', queryInHCC);
+        
+        // 10. Not In HCC
+        const queryNotInHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const notInHCCCount = await executerRequeteSQL('DPA - Not In HCC', queryNotInHCC);
+        
+        // 11. Big Effort - Not monitored in BSM - Not in HCC
+        const queryBigEffort = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const bigEffortCount = await executerRequeteSQL('DPA - Big Effort Not monitored BSM Not in HCC', queryBigEffort);
+        
+        // 12. Liste des applications Big Effort
+        const queryBigEffortApps = `
+            SELECT "App Appli" as appName
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const bigEffortAppsResult = await window.DatabaseManager.executeQuery(queryBigEffortApps);
+        const bigEffortApps = bigEffortAppsResult.map(row => row.appName).filter(name => name && name.trim());
+        
+        ajouterRequeteSQL('DPA - Big Effort Liste Apps', queryBigEffortApps, bigEffortApps.length);
+        
+        // 13. Carte B - Monitoring not needed - Not in HCC - Not Eligible HCC
+        const queryCarteB = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const carteBCount = await executerRequeteSQL('DPA - Carte B Not Eligible HCC', queryCarteB);
+        
+        // 14. Carte C - Under discussion - Not in HCC - Eligible HCC TBD
+        const queryCarteC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'TBC'
+        `;
+        
+        const carteCCount = await executerRequeteSQL('DPA - Carte C HCC TBD', queryCarteC);
+        
+        // 15. Carte D - Under discussion - Not in HCC - Eligible HCC empty
+        const queryCarteD = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DPA%'
+            AND UPPER("In HCC") = 'NO'
+            AND (UPPER("HCC eligibility") = '' OR UPPER("HCC eligibility") IS NULL)
+        `;
+        
+        const carteDCount = await executerRequeteSQL('DPA - Carte D HCC Empty', queryCarteD);
+        
+        // Calculer "Already onboarded" = BSM Monitored
+        const alreadyOnboarded = monitoredBSM;
+        
+        // Créer la structure attendue pour la section DPA
+        const dpaData = {
+            criticalBusinessServices: totalCritiques,
+            alreadyOnboarded: alreadyOnboarded,
+            stillToOnboard: stillToMonitor,
+            percentage: totalCritiques > 0 ? Math.round((stillToMonitor / totalCritiques) * 100) : 0
+        };
+        
+        return {
+            totalCritiques,
+            monitoredBSM,
+            stillToMonitor,
+            notRequiredBSM,
+            monitoredHCC,
+            notRequiredHCC,
+            quickEffortCount,
+            quickEffortApps,
+            inHCCCount,
+            notInHCCCount,
+            bigEffortCount,
+            bigEffortApps,
+            miniCardA: inHCCCount,
+            miniCardB: carteBCount,
+            miniCardC: carteCCount,
+            miniCardD: carteDCount,
+            sectionsDP: {
+                dpa: dpaData
+            }
+        };
+        
+    } catch (error) {
+        console.error('❌ Erreur lors des calculs DPA:', error);
+        throw error;
+    }
+}
+
+/**
+ * Effectuer les calculs de consolidation DPB avec SQL natif
+ */
+async function effectuerCalculsConsolidationDPBSQL() {
+    console.log('🎯 Calculs de consolidation DPB avec requêtes SQL natives');
+    return await effectuerCalculsConsolidationDPXSQL('DPB');
+}
+
+/**
+ * Effectuer les calculs de consolidation DPC avec SQL natif
+ */
+async function effectuerCalculsConsolidationDPCSQL() {
+    console.log('🎯 Calculs de consolidation DPC avec requêtes SQL natives');
+    return await effectuerCalculsConsolidationDPXSQL('DPC');
+}
+
+/**
+ * Effectuer les calculs de consolidation DPP avec SQL natif
+ */
+async function effectuerCalculsConsolidationDPPSQL() {
+    console.log('🎯 Calculs de consolidation DPP avec requêtes SQL natives');
+    return await effectuerCalculsConsolidationDPXSQL('DPP');
+}
+
+/**
+ * Effectuer les calculs de consolidation DPS avec SQL natif
+ */
+async function effectuerCalculsConsolidationDPSSQL() {
+    console.log('🎯 Calculs de consolidation DPS avec requêtes SQL natives');
+    return await effectuerCalculsConsolidationDPXSQL('DPS');
+}
+
+/**
+ * Fonction générique pour effectuer les calculs de consolidation DPX avec SQL natif
+ */
+async function effectuerCalculsConsolidationDPXSQL(section) {
+    console.log(`🎯 Calculs de consolidation ${section} avec requêtes SQL natives`);
+    
+    try {
+        // 1. Compter le total d'applications critiques
+        const queryTotalCritiques = `
+            SELECT COUNT(*) as total 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Business criticality") = 'CRITICAL'        `;
+        
+        const totalCritiques = await executerRequeteSQL(`${section} - Total Applications Critiques`, queryTotalCritiques);
+        
+        // 2. BSM - Monitored in BSM
+        const queryMonitoredBSM = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+        `;
+        
+        const monitoredBSM = await executerRequeteSQL(`${section} - BSM Monitored`, queryMonitoredBSM);
+        
+        // 3. BSM - Still To Be Monitored
+        const queryStillToMonitor = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+        `;
+        
+        const stillToMonitor = await executerRequeteSQL(`${section} - BSM Still To Monitor`, queryStillToMonitor);
+        
+        // 4. HCC - Confirmed Not Required in BSM
+        const queryNotRequiredBSM = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const notRequiredBSM = await executerRequeteSQL(`${section} - HCC Not Required BSM`, queryNotRequiredBSM);
+        
+        // 5. HCC - Monitored in HCC
+        const queryMonitoredHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("In HCC") = 'YES'
+        `;
+        
+        const monitoredHCC = await executerRequeteSQL(`${section} - HCC Monitored`, queryMonitoredHCC);
+        
+        // 6. HCC - Confirmed not required in HCC
+        const queryNotRequiredHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const notRequiredHCC = await executerRequeteSQL(`${section} - HCC Not Required`, queryNotRequiredHCC);
+        
+        // 7. Quick effort - Monitoring BSM - Not in HCC
+        const queryQuickEffort = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const quickEffortCount = await executerRequeteSQL(`${section} - Quick effort BSM Not in HCC`, queryQuickEffort);
+        
+        // 8. Liste des applications Quick effort
+        const queryQuickEffortApps = `
+            SELECT "App Appli" as appName
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const quickEffortAppsResult = await window.DatabaseManager.executeQuery(queryQuickEffortApps);
+        const quickEffortApps = quickEffortAppsResult.map(row => row.appName).filter(name => name && name.trim());
+        
+        ajouterRequeteSQL(`${section} - Quick effort Liste Apps`, queryQuickEffortApps, quickEffortApps.length);
+        
+        // 9. In HCC
+        const queryInHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("In HCC") = 'YES'
+        `;
+        
+        const inHCCCount = await executerRequeteSQL(`${section} - In HCC`, queryInHCC);
+        
+        // 10. Not In HCC
+        const queryNotInHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const notInHCCCount = await executerRequeteSQL(`${section} - Not In HCC`, queryNotInHCC);
+        
+        // 11. Big Effort - Not monitored in BSM - Not in HCC
+        const queryBigEffort = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const bigEffortCount = await executerRequeteSQL(`${section} - Big Effort Not monitored BSM Not in HCC`, queryBigEffort);
+        
+        // 12. Liste des applications Big Effort
+        const queryBigEffortApps = `
+            SELECT "App Appli" as appName
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const bigEffortAppsResult = await window.DatabaseManager.executeQuery(queryBigEffortApps);
+        const bigEffortApps = bigEffortAppsResult.map(row => row.appName).filter(name => name && name.trim());
+        
+        ajouterRequeteSQL(`${section} - Big Effort Liste Apps`, queryBigEffortApps, bigEffortApps.length);
+        
+        // 13. Carte B - Monitoring not needed - Not in HCC - Not Eligible HCC
+        const queryCarteB = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const carteBCount = await executerRequeteSQL(`${section} - Carte B Not Eligible HCC`, queryCarteB);
+        
+        // 14. Carte C - Under discussion - Not in HCC - Eligible HCC TBD
+        const queryCarteC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'TBC'
+        `;
+        
+        const carteCCount = await executerRequeteSQL(`${section} - Carte C HCC TBD`, queryCarteC);
+        
+        // 15. Carte D - Under discussion - Not in HCC - Eligible HCC empty
+        const queryCarteD = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like '${section}%'
+            AND UPPER("In HCC") = 'NO'
+            AND (UPPER("HCC eligibility") = '' OR UPPER("HCC eligibility") IS NULL)
+        `;
+        
+        const carteDCount = await executerRequeteSQL(`${section} - Carte D HCC Empty`, queryCarteD);
+        
+        // Calculer "Already onboarded" = BSM Monitored
+        const alreadyOnboarded = monitoredBSM;
+        
+        // Créer la structure attendue pour la section
+        const sectionData = {
+            criticalBusinessServices: totalCritiques,
+            alreadyOnboarded: alreadyOnboarded,
+            stillToOnboard: stillToMonitor,
+            percentage: totalCritiques > 0 ? Math.round((stillToMonitor / totalCritiques) * 100) : 0
+        };
+        
+        return {
+            totalCritiques,
+            monitoredBSM,
+            stillToMonitor,
+            notRequiredBSM,
+            monitoredHCC,
+            notRequiredHCC,
+            quickEffortCount,
+            quickEffortApps,
+            inHCCCount,
+            notInHCCCount,
+            bigEffortCount,
+            bigEffortApps,
+            miniCardA: inHCCCount,
+            miniCardB: carteBCount,
+            miniCardC: carteCCount,
+            miniCardD: carteDCount,
+            sectionsDP: {
+                [section.toLowerCase()]: sectionData
+            }
+        };
+        
+    } catch (error) {
+        console.error(`❌ Erreur lors des calculs ${section}:`, error);
+        throw error;
+    }
 }
 
 // ========================================

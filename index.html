@@ -690,18 +690,96 @@
                                 </div>
                             </div>
                             <div class="summary-content" id="dpa-content">
-                                <div class="metric-grid">
+                                <div class="dp-layout">
                                     <div class="metric-card">
-                                        <div class="metric-label-monitoring">Total DPA Critiques</div>
-                                        <div class="metric-value-monitoring" id="dpa-total">0</div>
+                                        <div class="metric-label-monitoring">Critical Business Services</div>
+                                        <div class="metric-value-monitoring" id="dpa-critical-business-services">0</div>
                                     </div>
-                                    <div class="metric-card">
-                                        <div class="metric-label-monitoring">DPA Monitored</div>
-                                        <div class="metric-value-monitoring" id="dpa-monitored">0</div>
+                                    <div class="metric-card already-onboarded">
+                                        <div class="metric-label-monitoring">Already onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpa-already-onboarded">0</div>
+                                    </div>
+                                    <div class="metric-card still-to-onboard">
+                                        <div class="metric-label-monitoring">Still to be onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpa-still-to-onboard">0</div>
+                                    </div>
+                                    <div class="chart-card">
+                                        <canvas id="dpa-chart" width="200" height="75"></canvas>
                                     </div>
                                 </div>
-                                <div class="chart-container">
-                                    <canvas id="dpa-chart" width="400" height="200"></canvas>
+                                
+                                <!-- Nouvelle ligne: Quick effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card quick-effort-card">
+                                        <div class="metric-label-monitoring">Quick effort -<br>Monitoring BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring quick-effort-value" id="dpa-quick-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpa-quick-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: Big Effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card big-effort-card">
+                                        <div class="metric-label-monitoring">Big Effort -<br>Not monitored in BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring big-effort-value" id="dpa-big-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpa-big-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: HCC -->
+                                <div class="chart-row">
+                                    <div class="metric-card in-hcc-card">
+                                        <div class="metric-label-monitoring">In HCC</div>
+                                        <div class="metric-value-monitoring in-hcc-value" id="dpa-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="metric-card not-in-hcc-card">
+                                        <div class="metric-label-monitoring">Not In HCC</div>
+                                        <div class="metric-value-monitoring not-in-hcc-value" id="dpa-not-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="chart-card hcc-chart-card">
+                                        <h5 class="chart-title">HCC Status</h5>
+                                        <canvas id="dpa-hcc-chart" width="180" height="65"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: 2 colonnes -->
+                                <div class="chart-row stacked-row stacked-row-2col">
+                                    <div class="column-container column-left">
+                                        <div class="mini-cards-grid">
+                                            <div class="mini-card mini-card-a">
+                                                <div class="mini-card-label">In HCC</div>
+                                                <div class="mini-card-value in-hcc-value" id="dpa-mini-card-a">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-b">
+                                                <div class="mini-card-label">Monitoring not needed -<br>Not in HCC - Not Eligible HCC</div>
+                                                <div class="mini-card-value not-eligible-hcc-value" id="dpa-mini-card-b">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-c">
+                                                <div class="mini-card-label">Under discussion -<br>Not in HCC - Eligible HCC TBD</div>
+                                                <div class="mini-card-value tbd-hcc-value" id="dpa-mini-card-c">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-d">
+                                                <div class="mini-card-label">To be launched -<br>Not in HCC - Eligible HCC empty</div>
+                                                <div class="mini-card-value empty-hcc-value" id="dpa-mini-card-d">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column-container column-right">
+                                        <div class="column-chart-container">
+                                            <h5 class="column-chart-title">Distribution</h5>
+                                            <canvas id="dpa-column-right-chart" width="280" height="280"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -718,18 +796,96 @@
                                 </div>
                             </div>
                             <div class="summary-content" id="dpb-content">
-                                <div class="metric-grid">
+                                <div class="dp-layout">
                                     <div class="metric-card">
-                                        <div class="metric-label-monitoring">Total DPB Critiques</div>
-                                        <div class="metric-value-monitoring" id="dpb-total">0</div>
+                                        <div class="metric-label-monitoring">Critical Business Services</div>
+                                        <div class="metric-value-monitoring" id="dpb-critical-business-services">0</div>
                                     </div>
-                                    <div class="metric-card">
-                                        <div class="metric-label-monitoring">DPB Monitored</div>
-                                        <div class="metric-value-monitoring" id="dpb-monitored">0</div>
+                                    <div class="metric-card already-onboarded">
+                                        <div class="metric-label-monitoring">Already onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpb-already-onboarded">0</div>
+                                    </div>
+                                    <div class="metric-card still-to-onboard">
+                                        <div class="metric-label-monitoring">Still to be onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpb-still-to-onboard">0</div>
+                                    </div>
+                                    <div class="chart-card">
+                                        <canvas id="dpb-chart" width="200" height="75"></canvas>
                                     </div>
                                 </div>
-                                <div class="chart-container">
-                                    <canvas id="dpb-chart" width="400" height="200"></canvas>
+                                
+                                <!-- Nouvelle ligne: Quick effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card quick-effort-card">
+                                        <div class="metric-label-monitoring">Quick effort -<br>Monitoring BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring quick-effort-value" id="dpb-quick-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpb-quick-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: Big Effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card big-effort-card">
+                                        <div class="metric-label-monitoring">Big Effort -<br>Not monitored in BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring big-effort-value" id="dpb-big-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpb-big-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: HCC -->
+                                <div class="chart-row">
+                                    <div class="metric-card in-hcc-card">
+                                        <div class="metric-label-monitoring">In HCC</div>
+                                        <div class="metric-value-monitoring in-hcc-value" id="dpb-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="metric-card not-in-hcc-card">
+                                        <div class="metric-label-monitoring">Not In HCC</div>
+                                        <div class="metric-value-monitoring not-in-hcc-value" id="dpb-not-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="chart-card hcc-chart-card">
+                                        <h5 class="chart-title">HCC Status</h5>
+                                        <canvas id="dpb-hcc-chart" width="180" height="65"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: 2 colonnes -->
+                                <div class="chart-row stacked-row stacked-row-2col">
+                                    <div class="column-container column-left">
+                                        <div class="mini-cards-grid">
+                                            <div class="mini-card mini-card-a">
+                                                <div class="mini-card-label">In HCC</div>
+                                                <div class="mini-card-value in-hcc-value" id="dpb-mini-card-a">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-b">
+                                                <div class="mini-card-label">Monitoring not needed -<br>Not in HCC - Not Eligible HCC</div>
+                                                <div class="mini-card-value not-eligible-hcc-value" id="dpb-mini-card-b">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-c">
+                                                <div class="mini-card-label">Under discussion -<br>Not in HCC - Eligible HCC TBD</div>
+                                                <div class="mini-card-value tbd-hcc-value" id="dpb-mini-card-c">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-d">
+                                                <div class="mini-card-label">To be launched -<br>Not in HCC - Eligible HCC empty</div>
+                                                <div class="mini-card-value empty-hcc-value" id="dpb-mini-card-d">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column-container column-right">
+                                        <div class="column-chart-container">
+                                            <h5 class="column-chart-title">Distribution</h5>
+                                            <canvas id="dpb-column-right-chart" width="280" height="280"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -746,18 +902,96 @@
                                 </div>
                             </div>
                             <div class="summary-content" id="dpc-content">
-                                <div class="metric-grid">
+                                <div class="dp-layout">
                                     <div class="metric-card">
-                                        <div class="metric-label-monitoring">Total DPC Critiques</div>
-                                        <div class="metric-value-monitoring" id="dpc-total">0</div>
+                                        <div class="metric-label-monitoring">Critical Business Services</div>
+                                        <div class="metric-value-monitoring" id="dpc-critical-business-services">0</div>
                                     </div>
-                                    <div class="metric-card">
-                                        <div class="metric-label-monitoring">DPC Monitored</div>
-                                        <div class="metric-value-monitoring" id="dpc-monitored">0</div>
+                                    <div class="metric-card already-onboarded">
+                                        <div class="metric-label-monitoring">Already onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpc-already-onboarded">0</div>
+                                    </div>
+                                    <div class="metric-card still-to-onboard">
+                                        <div class="metric-label-monitoring">Still to be onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpc-still-to-onboard">0</div>
+                                    </div>
+                                    <div class="chart-card">
+                                        <canvas id="dpc-chart" width="200" height="75"></canvas>
                                     </div>
                                 </div>
-                                <div class="chart-container">
-                                    <canvas id="dpc-chart" width="400" height="200"></canvas>
+                                
+                                <!-- Nouvelle ligne: Quick effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card quick-effort-card">
+                                        <div class="metric-label-monitoring">Quick effort -<br>Monitoring BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring quick-effort-value" id="dpc-quick-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpc-quick-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: Big Effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card big-effort-card">
+                                        <div class="metric-label-monitoring">Big Effort -<br>Not monitored in BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring big-effort-value" id="dpc-big-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpc-big-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: HCC -->
+                                <div class="chart-row">
+                                    <div class="metric-card in-hcc-card">
+                                        <div class="metric-label-monitoring">In HCC</div>
+                                        <div class="metric-value-monitoring in-hcc-value" id="dpc-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="metric-card not-in-hcc-card">
+                                        <div class="metric-label-monitoring">Not In HCC</div>
+                                        <div class="metric-value-monitoring not-in-hcc-value" id="dpc-not-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="chart-card hcc-chart-card">
+                                        <h5 class="chart-title">HCC Status</h5>
+                                        <canvas id="dpc-hcc-chart" width="180" height="65"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: 2 colonnes -->
+                                <div class="chart-row stacked-row stacked-row-2col">
+                                    <div class="column-container column-left">
+                                        <div class="mini-cards-grid">
+                                            <div class="mini-card mini-card-a">
+                                                <div class="mini-card-label">In HCC</div>
+                                                <div class="mini-card-value in-hcc-value" id="dpc-mini-card-a">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-b">
+                                                <div class="mini-card-label">Monitoring not needed -<br>Not in HCC - Not Eligible HCC</div>
+                                                <div class="mini-card-value not-eligible-hcc-value" id="dpc-mini-card-b">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-c">
+                                                <div class="mini-card-label">Under discussion -<br>Not in HCC - Eligible HCC TBD</div>
+                                                <div class="mini-card-value tbd-hcc-value" id="dpc-mini-card-c">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-d">
+                                                <div class="mini-card-label">To be launched -<br>Not in HCC - Eligible HCC empty</div>
+                                                <div class="mini-card-value empty-hcc-value" id="dpc-mini-card-d">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column-container column-right">
+                                        <div class="column-chart-container">
+                                            <h5 class="column-chart-title">Distribution</h5>
+                                            <canvas id="dpc-column-right-chart" width="280" height="280"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -774,18 +1008,96 @@
                                 </div>
                             </div>
                             <div class="summary-content" id="dpp-content">
-                                <div class="metric-grid">
+                                <div class="dp-layout">
                                     <div class="metric-card">
-                                        <div class="metric-label-monitoring">Total DPP Critiques</div>
-                                        <div class="metric-value-monitoring" id="dpp-total">0</div>
+                                        <div class="metric-label-monitoring">Critical Business Services</div>
+                                        <div class="metric-value-monitoring" id="dpp-critical-business-services">0</div>
                                     </div>
-                                    <div class="metric-card">
-                                        <div class="metric-label-monitoring">DPP Monitored</div>
-                                        <div class="metric-value-monitoring" id="dpp-monitored">0</div>
+                                    <div class="metric-card already-onboarded">
+                                        <div class="metric-label-monitoring">Already onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpp-already-onboarded">0</div>
+                                    </div>
+                                    <div class="metric-card still-to-onboard">
+                                        <div class="metric-label-monitoring">Still to be onboarded</div>
+                                        <div class="metric-value-monitoring" id="dpp-still-to-onboard">0</div>
+                                    </div>
+                                    <div class="chart-card">
+                                        <canvas id="dpp-chart" width="200" height="75"></canvas>
                                     </div>
                                 </div>
-                                <div class="chart-container">
-                                    <canvas id="dpp-chart" width="400" height="200"></canvas>
+                                
+                                <!-- Nouvelle ligne: Quick effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card quick-effort-card">
+                                        <div class="metric-label-monitoring">Quick effort -<br>Monitoring BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring quick-effort-value" id="dpp-quick-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpp-quick-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: Big Effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card big-effort-card">
+                                        <div class="metric-label-monitoring">Big Effort -<br>Not monitored in BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring big-effort-value" id="dpp-big-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dpp-big-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: HCC -->
+                                <div class="chart-row">
+                                    <div class="metric-card in-hcc-card">
+                                        <div class="metric-label-monitoring">In HCC</div>
+                                        <div class="metric-value-monitoring in-hcc-value" id="dpp-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="metric-card not-in-hcc-card">
+                                        <div class="metric-label-monitoring">Not In HCC</div>
+                                        <div class="metric-value-monitoring not-in-hcc-value" id="dpp-not-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="chart-card hcc-chart-card">
+                                        <h5 class="chart-title">HCC Status</h5>
+                                        <canvas id="dpp-hcc-chart" width="180" height="65"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: 2 colonnes -->
+                                <div class="chart-row stacked-row stacked-row-2col">
+                                    <div class="column-container column-left">
+                                        <div class="mini-cards-grid">
+                                            <div class="mini-card mini-card-a">
+                                                <div class="mini-card-label">In HCC</div>
+                                                <div class="mini-card-value in-hcc-value" id="dpp-mini-card-a">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-b">
+                                                <div class="mini-card-label">Monitoring not needed -<br>Not in HCC - Not Eligible HCC</div>
+                                                <div class="mini-card-value not-eligible-hcc-value" id="dpp-mini-card-b">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-c">
+                                                <div class="mini-card-label">Under discussion -<br>Not in HCC - Eligible HCC TBD</div>
+                                                <div class="mini-card-value tbd-hcc-value" id="dpp-mini-card-c">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-d">
+                                                <div class="mini-card-label">To be launched -<br>Not in HCC - Eligible HCC empty</div>
+                                                <div class="mini-card-value empty-hcc-value" id="dpp-mini-card-d">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column-container column-right">
+                                        <div class="column-chart-container">
+                                            <h5 class="column-chart-title">Distribution</h5>
+                                            <canvas id="dpp-column-right-chart" width="280" height="280"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -802,18 +1114,96 @@
                                 </div>
                             </div>
                             <div class="summary-content" id="dps-content">
-                                <div class="metric-grid">
+                                <div class="dp-layout">
                                     <div class="metric-card">
-                                        <div class="metric-label-monitoring">Total DPS Critiques</div>
-                                        <div class="metric-value-monitoring" id="dps-total">0</div>
+                                        <div class="metric-label-monitoring">Critical Business Services</div>
+                                        <div class="metric-value-monitoring" id="dps-critical-business-services">0</div>
                                     </div>
-                                    <div class="metric-card">
-                                        <div class="metric-label-monitoring">DPS Monitored</div>
-                                        <div class="metric-value-monitoring" id="dps-monitored">0</div>
+                                    <div class="metric-card already-onboarded">
+                                        <div class="metric-label-monitoring">Already onboarded</div>
+                                        <div class="metric-value-monitoring" id="dps-already-onboarded">0</div>
+                                    </div>
+                                    <div class="metric-card still-to-onboard">
+                                        <div class="metric-label-monitoring">Still to be onboarded</div>
+                                        <div class="metric-value-monitoring" id="dps-still-to-onboard">0</div>
+                                    </div>
+                                    <div class="chart-card">
+                                        <canvas id="dps-chart" width="200" height="75"></canvas>
                                     </div>
                                 </div>
-                                <div class="chart-container">
-                                    <canvas id="dps-chart" width="400" height="200"></canvas>
+                                
+                                <!-- Nouvelle ligne: Quick effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card quick-effort-card">
+                                        <div class="metric-label-monitoring">Quick effort -<br>Monitoring BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring quick-effort-value" id="dps-quick-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dps-quick-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: Big Effort -->
+                                <div class="chart-row">
+                                    <div class="metric-card big-effort-card">
+                                        <div class="metric-label-monitoring">Big Effort -<br>Not monitored in BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring big-effort-value" id="dps-big-effort-count">0</div>
+                                    </div>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="dps-big-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: HCC -->
+                                <div class="chart-row">
+                                    <div class="metric-card in-hcc-card">
+                                        <div class="metric-label-monitoring">In HCC</div>
+                                        <div class="metric-value-monitoring in-hcc-value" id="dps-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="metric-card not-in-hcc-card">
+                                        <div class="metric-label-monitoring">Not In HCC</div>
+                                        <div class="metric-value-monitoring not-in-hcc-value" id="dps-not-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="chart-card hcc-chart-card">
+                                        <h5 class="chart-title">HCC Status</h5>
+                                        <canvas id="dps-hcc-chart" width="180" height="65"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: 2 colonnes -->
+                                <div class="chart-row stacked-row stacked-row-2col">
+                                    <div class="column-container column-left">
+                                        <div class="mini-cards-grid">
+                                            <div class="mini-card mini-card-a">
+                                                <div class="mini-card-label">In HCC</div>
+                                                <div class="mini-card-value in-hcc-value" id="dps-mini-card-a">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-b">
+                                                <div class="mini-card-label">Monitoring not needed -<br>Not in HCC - Not Eligible HCC</div>
+                                                <div class="mini-card-value not-eligible-hcc-value" id="dps-mini-card-b">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-c">
+                                                <div class="mini-card-label">Under discussion -<br>Not in HCC - Eligible HCC TBD</div>
+                                                <div class="mini-card-value tbd-hcc-value" id="dps-mini-card-c">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-d">
+                                                <div class="mini-card-label">To be launched -<br>Not in HCC - Eligible HCC empty</div>
+                                                <div class="mini-card-value empty-hcc-value" id="dps-mini-card-d">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column-container column-right">
+                                        <div class="column-chart-container">
+                                            <h5 class="column-chart-title">Distribution</h5>
+                                            <canvas id="dps-column-right-chart" width="280" height="280"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
