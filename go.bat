@@ -2,10 +2,11 @@
 setlocal EnableDelayedExpansion
 
 :: =============================================================================
-:: Script de lancement DIOO
+:: Script de lancement DIOO - Point d'entrée unique
 :: Description: Lance l'application DIOO sur le port 3020
 :: Auteur: Nicolas Steffan
-:: Version: 1.1.0
+:: Version: 1.2.0 - Solution 1 SSH Tunnel Ready
+:: Conforme à la bible du projet - POO + Structure organisée
 :: =============================================================================
 
 :: Centrer la fenêtre DOS actuelle
@@ -89,7 +90,7 @@ echo [ETAPE 3] Lancement du serveur...
 echo [INFO] Demarrage sur le port %PORT%...
 
 :: Lancer le serveur en arrière-plan
-start "DIOO Server" /MIN cmd /c "http-server . -p %PORT% -c-1 --cors --silent"
+start "DIOO Server" /MIN cmd /c "set NODE_NO_WARNINGS=1 && http-server . -p %PORT% -c-1 --cors --silent"
 
 :: Attendre que le serveur démarre
 echo [INFO] Attente du demarrage du serveur...
@@ -164,6 +165,22 @@ echo - Ctrl+C dans la fenetre serveur pour arreter
 echo - F5 dans le navigateur pour actualiser
 echo - Alt+1 : Module Chargement
 echo - Alt+2 : Module Monitoring
+echo.
+echo ===============================================
+echo        SOLUTION 1 SSH TUNNEL - READY
+echo ===============================================
+echo.
+echo [INFO] Pour serveur headless Ubuntu, utilisez:
+echo   1. Copiez ce projet sur Ubuntu
+echo   2. Executez: chmod +x go.sh ^&^& ./go.sh
+echo   3. Le script detectera automatiquement l'environnement
+echo   4. Instructions SSH tunnel affichees automatiquement
+echo.
+echo [INFO] Architecture conforme bible du projet:
+echo   - POO avec classes et methodes claires
+echo   - Structure organisee en dossiers logiques
+echo   - CSS separe dans style/ClaudS4/
+echo   - Point d'entree unique: go.bat (Windows) / go.sh (Ubuntu)
 echo.
 echo ===============================================
 echo             APPLICATION LANCEE

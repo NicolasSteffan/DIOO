@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIOO - Application de Gestion</title>
+    <title>HCC Monitoring - Application de Gestion</title>
     <link rel="stylesheet" href="styles/main.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -237,9 +237,15 @@
         
         .chart-row {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             margin: 20px 0;
             gap: 15px;
+        }
+        
+        .chart-row .metric-card,
+        .chart-row .chart-card {
+            flex: 1;
+            max-width: calc(33.333% - 10px);
         }
         
         .chart-item {
@@ -293,7 +299,7 @@
                 
                 <div class="logo">
                     <i class="fas fa-cube"></i>
-                    <h1>DIOO</h1>
+                    <h1>HCC Monitoring</h1>
                 </div>
                 
                 <nav class="main-navigation">
@@ -333,12 +339,12 @@
                                     <div class="empty-state">
                     <i class="fas fa-rocket"></i>
                     <h3>Module Chargement</h3>
-                    <p>Interface de gestion pour le chargement et l'import de données dans le système DIOO.</p>
+                    <p>Interface de gestion pour le chargement et l'import de données dans le système HCC Monitoring.</p>
                                             <div class="feature-list">
-                        <!-- 1. Charger fichier DIOO -->
+                        <!-- 1. Charger fichier HCC Monitoring -->
                         <div class="feature-item clickable-item" id="charger-fichier" onclick="gererClicCharger()">
                             <i class="fas fa-file-upload"></i>
-                            <span>Charger fichier DIOO</span>
+                            <span>Charger fichier HCC Monitoring</span>
                             <div class="state-indicator" id="charger-status">
                                 <i class="fas fa-circle"></i>
                             </div>
@@ -535,7 +541,7 @@
                     <div class="empty-state">
                         <i class="fas fa-satellite-dish"></i>
                         <h3>Module Monitoring</h3>
-                        <p>Interface de surveillance et d'analyse des applications critiques DIOO.</p>
+                        <p>Interface de surveillance et d'analyse des applications critiques HCC Monitoring.</p>
                         
                         <!-- Contrôles de monitoring -->
                         <div class="monitoring-controls">
@@ -596,35 +602,77 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Ligne 1: BSM -->
+                                <!-- Nouvelle ligne: Quick effort -->
                                 <div class="chart-row">
-                                    <div class="chart-item">
-                                        <h5>Monitored in BSM</h5>
-                                        <canvas id="monitored-bsm-chart" width="120" height="120"></canvas>
+                                    <div class="metric-card quick-effort-card">
+                                        <div class="metric-label-monitoring">Quick effort -<br>Monitoring BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring quick-effort-value" id="quick-effort-count">0</div>
                                     </div>
-                                    <div class="chart-item">
-                                        <h5>Confirmed Not required in BSM</h5>
-                                        <canvas id="not-required-bsm-chart" width="120" height="120"></canvas>
-                                    </div>
-                                    <div class="chart-item">
-                                        <h5>Critical eligible onboarded</h5>
-                                        <canvas id="critical-eligible-bsm-chart" width="120" height="120"></canvas>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="quick-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Ligne 2: HCC -->
+                                <!-- Nouvelle ligne: Big Effort -->
                                 <div class="chart-row">
-                                    <div class="chart-item">
-                                        <h5>Onboarded in HCC</h5>
-                                        <canvas id="onboarded-hcc-chart" width="120" height="120"></canvas>
+                                    <div class="metric-card big-effort-card">
+                                        <div class="metric-label-monitoring">Big Effort -<br>Not monitored in BSM -<br>Not in HCC</div>
+                                        <div class="metric-value-monitoring big-effort-value" id="big-effort-count">0</div>
                                     </div>
-                                    <div class="chart-item">
-                                        <h5>Confirmed Not required in HCC</h5>
-                                        <canvas id="not-required-hcc-chart" width="120" height="120"></canvas>
+                                    <div class="app-list-card">
+                                        <div class="app-list-header">Applications concernées</div>
+                                        <div class="app-list-content" id="big-effort-apps">
+                                            <div class="app-list-empty">Aucune application trouvée</div>
+                                        </div>
                                     </div>
-                                    <div class="chart-item">
-                                        <h5>Critical eligible onboarded</h5>
-                                        <canvas id="critical-eligible-hcc-chart" width="120" height="120"></canvas>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: HCC -->
+                                <div class="chart-row">
+                                    <div class="metric-card in-hcc-card">
+                                        <div class="metric-label-monitoring">In HCC</div>
+                                        <div class="metric-value-monitoring in-hcc-value" id="in-hcc-count">0</div>
+                                    </div>
+                                    <div class="metric-card not-in-hcc-card">
+                                        <div class="metric-label-monitoring">Not In HCC</div>
+                                        <div class="metric-value-monitoring not-in-hcc-value" id="not-in-hcc-count">0</div>
+                                    </div>
+                                    <div class="chart-card hcc-chart-card">
+                                        <h5 class="chart-title">HCC Status</h5>
+                                        <canvas id="hcc-chart" width="180" height="65"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nouvelle ligne: 2 colonnes -->
+                                <div class="chart-row stacked-row stacked-row-2col">
+                                    <div class="column-container column-left">
+                                        <div class="mini-cards-grid">
+                                            <div class="mini-card mini-card-a">
+                                                <div class="mini-card-label">In HCC</div>
+                                                <div class="mini-card-value in-hcc-value" id="mini-card-a">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-b">
+                                                <div class="mini-card-label">Monitoring not needed -<br>Not in HCC - Not Eligible HCC</div>
+                                                <div class="mini-card-value not-eligible-hcc-value" id="mini-card-b">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-c">
+                                                <div class="mini-card-label">Under discussion -<br>Not in HCC - Eligible HCC TBD</div>
+                                                <div class="mini-card-value tbd-hcc-value" id="mini-card-c">0</div>
+                                            </div>
+                                            <div class="mini-card mini-card-d">
+                                                <div class="mini-card-label">To be launched -<br>Not in HCC - Eligible HCC empty</div>
+                                                <div class="mini-card-value empty-hcc-value" id="mini-card-d">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column-container column-right">
+                                        <div class="column-chart-container">
+                                            <h5 class="column-chart-title">Distribution</h5>
+                                            <canvas id="column-right-chart" width="280" height="280"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -907,7 +955,7 @@ FROM dioo_donnees;</textarea>
         <!-- Footer -->
         <footer class="app-footer">
             <div class="footer-content">
-                <p>&copy; 2025 DIOO - Application de Gestion</p>
+                <p>&copy; 2025 HCC Monitoring - Application de Gestion</p>
                 <div class="footer-info">
                     <span class="version">v0.000-stable-extract-viewer-database</span>
                     <span class="status">

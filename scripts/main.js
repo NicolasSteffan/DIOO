@@ -2542,6 +2542,67 @@ function mettreAJourSectionDP(resultats) {
         if (onboardElement) onboardElement.textContent = dpData.stillToOnboard;
     }
     
+    // Mise à jour des nouvelles cartes Quick effort
+    const quickEffortCountElement = document.getElementById('quick-effort-count');
+    const quickEffortAppsElement = document.getElementById('quick-effort-apps');
+    
+    if (quickEffortCountElement) {
+        quickEffortCountElement.textContent = resultats.quickEffortCount || 0;
+    }
+    
+    if (quickEffortAppsElement) {
+        const apps = resultats.quickEffortApps || [];
+        if (apps.length > 0) {
+            quickEffortAppsElement.innerHTML = apps
+                .map(app => `<div class="app-list-item">${app}</div>`)
+                .join('');
+        } else {
+            quickEffortAppsElement.innerHTML = '<div class="app-list-empty">Aucune application trouvée</div>';
+        }
+    }
+    
+    // Mise à jour des nouvelles cartes HCC
+    const inHCCCountElement = document.getElementById('in-hcc-count');
+    const notInHCCCountElement = document.getElementById('not-in-hcc-count');
+    
+    if (inHCCCountElement) {
+        inHCCCountElement.textContent = resultats.inHCCCount || 0;
+    }
+    
+    if (notInHCCCountElement) {
+        notInHCCCountElement.textContent = resultats.notInHCCCount || 0;
+    }
+    
+    // Mise à jour des nouvelles cartes Big Effort
+    const bigEffortCountElement = document.getElementById('big-effort-count');
+    const bigEffortAppsElement = document.getElementById('big-effort-apps');
+    
+    if (bigEffortCountElement) {
+        bigEffortCountElement.textContent = resultats.bigEffortCount || 0;
+    }
+    
+    if (bigEffortAppsElement) {
+        const apps = resultats.bigEffortApps || [];
+        if (apps.length > 0) {
+            bigEffortAppsElement.innerHTML = apps
+                .map(app => `<div class="app-list-item">${app}</div>`)
+                .join('');
+        } else {
+            bigEffortAppsElement.innerHTML = '<div class="app-list-empty">Aucune application trouvée</div>';
+        }
+    }
+    
+    // Mise à jour des cartes A à D
+    const miniCardAElement = document.getElementById('mini-card-a');
+    const miniCardBElement = document.getElementById('mini-card-b');
+    const miniCardCElement = document.getElementById('mini-card-c');
+    const miniCardDElement = document.getElementById('mini-card-d');
+    
+    if (miniCardAElement) miniCardAElement.textContent = resultats.miniCardA || 0;
+    if (miniCardBElement) miniCardBElement.textContent = resultats.miniCardB || 0;
+    if (miniCardCElement) miniCardCElement.textContent = resultats.miniCardC || 0;
+    if (miniCardDElement) miniCardDElement.textContent = resultats.miniCardD || 0;
+    
     // Mise à jour pour les autres sections DPx
     const sections = ['dpa', 'dpb', 'dpc', 'dpp', 'dps'];
     
@@ -2577,6 +2638,17 @@ function creerGraphiquesDP(resultats) {
     
     // Créer les nouveaux graphiques BSM et HCC
     creerGraphiquesBSMHCC(resultats);
+    
+    // Créer le camembert HCC
+    const hccData = {
+        criticalBusinessServices: resultats.totalCritiques,
+        inHCC: resultats.inHCCCount,
+        notInHCC: resultats.notInHCCCount
+    };
+    creerGraphiqueSection('hcc', hccData);
+    
+    // Créer le camembert pour column-right avec les données des cartes A à D
+    creerCamembertColumnRight(resultats);
 }
 
 /**
@@ -2874,6 +2946,275 @@ function creerGraphiqueSection(section, data) {
                 }
             }
         });
+    } else if (section === 'hcc') {
+        // Graphique spécial pour HCC : camembert à 2 couches (même style que DP)
+        const totalCritiques = data.criticalBusinessServices;
+        const inHCC = data.inHCC;
+        const notInHCC = data.notInHCC;
+        
+        // Calculer les pourcentages pour la couche interne
+        const inHCCPct = totalCritiques > 0 ? Math.round((inHCC / totalCritiques) * 100) : 0;
+        const notInHCCPct = totalCritiques > 0 ? Math.round((notInHCC / totalCritiques) * 100) : 0;
+        
+        // Plugin personnalisé pour dessiner les labels
+        const customLabelsHCC = {
+            id: 'customLabelsHCC',
+            afterDraw(chart) {
+                const ctx = chart.ctx;
+                ctx.save();
+                
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    const meta = chart.getDatasetMeta(datasetIndex);
+                    
+                    meta.data.forEach((element, index) => {
+                        // Calculer la position radiale du segment
+                        const model = element;
+                        const centerX = model.x;
+                        const centerY = model.y;
+                        
+                        // Calculer l'angle du milieu du segment
+                        const startAngle = model.startAngle;
+                        const endAngle = model.endAngle;
+                        const midAngle = startAngle + (endAngle - startAngle) / 2;
+                        
+                        // Calculer le rayon pour positionner le texte
+                        let radius;
+                        if (datasetIndex === 0) {
+                            // Couronne externe : position plus éloignée du centre
+                            radius = (model.innerRadius + model.outerRadius) / 2;
+                        } else {
+                            // Couronne interne : position plus proche du centre
+                            radius = (model.innerRadius + model.outerRadius) / 2;
+                        }
+                        
+                        // Calculer la position finale du texte
+                        const textX = centerX + Math.cos(midAngle) * radius;
+                        const textY = centerY + Math.sin(midAngle) * radius;
+                        
+                        let text;
+                        let fontSize;
+                        
+                        if (datasetIndex === 0) {
+                            // Couronne externe : Critical Business Services (valeur seule)
+                            text = totalCritiques.toString();
+                            fontSize = 16;
+                        } else {
+                            // Couronne interne : In HCC + Not In HCC (valeurs seules, sans pourcentages)
+                            if (index === 0) {
+                                text = inHCC.toString();
+                            } else {
+                                text = notInHCC.toString();
+                            }
+                            fontSize = 13;
+                        }
+                        
+                        ctx.fillStyle = 'white';
+                        ctx.font = `bold ${fontSize}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        // Dessiner le texte à la position calculée
+                        ctx.fillText(text, textX, textY);
+                    });
+                });
+                
+                ctx.restore();
+            }
+        };
+        
+        window[`${section}Chart`] = new Chart(chartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    `Critical Business Services: ${totalCritiques}`,
+                    `In HCC: ${inHCC} (${inHCCPct}%)`,
+                    `Not In HCC: ${notInHCC} (${notInHCCPct}%)`
+                ],
+                datasets: [
+                    // Couronne externe : Critical Business Services (bleu)
+                    {
+                        data: [totalCritiques],
+                        backgroundColor: ['rgba(63, 182, 255, 0.8)'],  // Bleu pour Critical
+                        borderColor: ['rgba(63, 182, 255, 1)'],
+                        borderWidth: 3,
+                        cutout: '60%'  // Couronne externe de 60% à 100%
+                    },
+                    // Couronne interne : In HCC + Not In HCC (vert/orange)
+                    {
+                        data: [inHCC, notInHCC],
+                        backgroundColor: [
+                            'rgba(46, 204, 113, 0.8)',   // Vert pour In HCC
+                            'rgba(255, 140, 0, 0.8)'     // Orange pour Not In HCC
+                        ],
+                        borderColor: [
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(255, 140, 0, 1)'
+                        ],
+                        borderWidth: 3,
+                        cutout: '25%'  // Couronne interne de 25% à 55%
+                    }
+                ]
+            },
+            plugins: [customLabelsHCC],
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: {
+                            generateLabels: function(chart) {
+                                const labels = [];
+                                
+                                // Légende pour la couronne externe (Critical - sans valeur)
+                                labels.push({
+                                    text: 'Critical Business Services',
+                                    fillStyle: 'rgba(63, 182, 255, 0.8)',
+                                    strokeStyle: 'rgba(63, 182, 255, 1)',
+                                    lineWidth: 3,
+                                    hidden: false
+                                });
+                                
+                                // Légendes pour la couronne interne (In HCC + Not In HCC - sans valeurs)
+                                labels.push({
+                                    text: 'In HCC',
+                                    fillStyle: 'rgba(46, 204, 113, 0.8)',
+                                    strokeStyle: 'rgba(46, 204, 113, 1)',
+                                    lineWidth: 3,
+                                    hidden: false
+                                });
+                                
+                                labels.push({
+                                    text: 'Not In HCC',
+                                    fillStyle: 'rgba(255, 140, 0, 0.8)',
+                                    strokeStyle: 'rgba(255, 140, 0, 1)',
+                                    lineWidth: 3,
+                                    hidden: false
+                                });
+                                
+                                return labels;
+                            },
+                            font: {
+                                size: 11
+                            },
+                            padding: 6
+                        }
+                    },
+                    datalabels: {
+                        display: false  // Désactiver le plugin officiel pour éviter les conflits
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const datasetIndex = context.datasetIndex;
+                                const dataIndex = context.dataIndex;
+                                
+                                if (datasetIndex === 0) {
+                                    // Couronne externe : Critical Business Services
+                                    return [`Critical Business Services:`, `${totalCritiques} applications`];
+                                } else {
+                                    // Couronne interne : In HCC + Not In HCC
+                                    if (dataIndex === 0) {
+                                        return [`In HCC:`, `${inHCC} applications`, `(${inHCCPct}% of Critical)`];
+                                    } else {
+                                        return [`Not In HCC:`, `${notInHCC} applications`, `(${notInHCCPct}% of Critical)`];
+                                    }
+                                }
+                            }
+                        },
+                        displayColors: true,
+                        bodySpacing: 4,
+                        titleSpacing: 4,
+                        cornerRadius: 6,
+                        bodyFont: {
+                            size: 12
+                        },
+                        titleFont: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+    } else if (section === 'stacked') {
+        // Graphique spécial pour les cartes empilées : camembert simple
+        const card1 = data.card1 || 0;
+        const card2 = data.card2 || 0;
+        const card3 = data.card3 || 0;
+        const card4 = data.card4 || 0;
+        const total = card1 + card2 + card3 + card4;
+        
+        // Calculer les pourcentages
+        const card1Pct = total > 0 ? Math.round((card1 / total) * 100) : 0;
+        const card2Pct = total > 0 ? Math.round((card2 / total) * 100) : 0;
+        const card3Pct = total > 0 ? Math.round((card3 / total) * 100) : 0;
+        const card4Pct = total > 0 ? Math.round((card4 / total) * 100) : 0;
+        
+        window[`${section}Chart`] = new Chart(chartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    `Carte 1: ${card1} (${card1Pct}%)`,
+                    `Carte 2: ${card2} (${card2Pct}%)`,
+                    `Carte 3: ${card3} (${card3Pct}%)`,
+                    `Carte 4: ${card4} (${card4Pct}%)`
+                ],
+                datasets: [{
+                    data: [card1, card2, card3, card4],
+                    backgroundColor: [
+                        'rgba(63, 182, 255, 0.8)',   // Bleu
+                        'rgba(46, 204, 113, 0.8)',   // Vert
+                        'rgba(255, 193, 7, 0.8)',    // Jaune
+                        'rgba(255, 69, 0, 0.8)'      // Rouge-orange
+                    ],
+                    borderColor: [
+                        'rgba(63, 182, 255, 1)',
+                        'rgba(46, 204, 113, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(255, 69, 0, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: {
+                            font: {
+                                size: 10
+                            },
+                            padding: 4
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                return [label];
+                            }
+                        },
+                        displayColors: true,
+                        bodySpacing: 4,
+                        titleSpacing: 4,
+                        cornerRadius: 6,
+                        bodyFont: {
+                            size: 11
+                        },
+                        titleFont: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
     } else {
         // Graphique standard pour les autres sections DPx
         window[`${section}Chart`] = new Chart(chartCtx, {
@@ -2936,6 +3277,122 @@ function creerGraphiqueSection(section, data) {
             }
         });
     }
+}
+
+/**
+ * Créer le camembert pour column-right
+ */
+function creerCamembertColumnRight(resultats = null) {
+    const ctx = document.getElementById('column-right-chart');
+    if (!ctx) return;
+    
+    const chartCtx = ctx.getContext('2d');
+    
+    // Détruire le graphique existant s'il y en a un
+    if (window.columnRightChart) {
+        window.columnRightChart.destroy();
+    }
+    
+    // Utiliser les vraies données des cartes A à D si disponibles
+    const data = resultats ? [
+        resultats.miniCardA || 0,
+        resultats.miniCardB || 0,
+        resultats.miniCardC || 0,
+        resultats.miniCardD || 0
+    ] : [25, 30, 20, 25];
+    
+    const labels = ['In HCC', 'Not Eligible HCC', 'HCC TBD', 'HCC Empty'];
+    const total = data.reduce((sum, val) => sum + val, 0);
+    
+    // Calculer les pourcentages
+    const percentages = data.map(val => total > 0 ? Math.round((val / total) * 100) : 0);
+    
+    window.columnRightChart = new Chart(chartCtx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.map((label, i) => `${label}: ${data[i]} (${percentages[i]}%)`),
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.8)',   // Vert intense - Carte A (In HCC)
+                    '#7ed321',                    // Vert plus clair - Carte B (Not Eligible HCC)
+                    'rgba(255, 193, 7, 1)',      // Orange - Carte C (HCC TBD) - même que Still to be onboarded
+                    'rgba(255, 193, 7, 1)'       // Orange - Carte D (HCC Empty) - même que Still to be onboarded
+                ],
+                borderColor: [
+                    'rgba(46, 204, 113, 1)',     // Vert intense - Carte A
+                    '#7ed321',                    // Vert plus clair - Carte B
+                    'rgba(255, 193, 7, 1)',      // Orange - Carte C - même que Still to be onboarded
+                    'rgba(255, 193, 7, 1)'       // Orange - Carte D - même que Still to be onboarded
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const dataset = data.datasets[0];
+                                    const backgroundColor = dataset.backgroundColor[i];
+                                    const borderColor = dataset.borderColor[i];
+                                    
+                                    return {
+                                        text: `${labels[i]}: ${percentages[i]}%`,
+                                        fillStyle: backgroundColor,
+                                        strokeStyle: borderColor,
+                                        lineWidth: 2,
+                                        hidden: false,
+                                        index: i,
+                                        fontColor: borderColor
+                                    };
+                                });
+                            }
+                            return [];
+                        },
+                        font: {
+                            size: 10,
+                            weight: 'bold'
+                        },
+                        padding: 6
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = labels[context.dataIndex];
+                            const value = context.parsed;
+                            const percentage = percentages[context.dataIndex];
+                            return [`${label}: ${value}`, `Pourcentage: ${percentage}%`];
+                        }
+                    }
+                },
+                // Plugin pour afficher les valeurs sur le camembert
+                datalabels: {
+                    display: true,
+                    color: 'white',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    formatter: function(value, context) {
+                        const percentage = percentages[context.dataIndex];
+                        return `${value}\n${percentage}%`;
+                    },
+                    textAlign: 'center'
+                }
+            },
+            cutout: '40%'
+        }
+    });
 }
 
 /**
@@ -4538,7 +4995,7 @@ async function effectuerCalculsConsolidationSQL() {
             WHERE UPPER("Dx") = 'DP' 
             AND UPPER("Business criticality") = 'CRITICAL'
             AND UPPER("Operator/Department") like 'DP%'
-            AND UPPER("In HCC") = 'NO'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
         `;
         
         const stillToMonitor = await executerRequeteSQL('BSM - Still To Monitor', queryStillToMonitor);
@@ -4581,6 +5038,127 @@ async function effectuerCalculsConsolidationSQL() {
         
         const notRequiredHCC = await executerRequeteSQL('HCC - Not Required', queryNotRequiredHCC);
         
+        // 7. Quick effort - Monitoring BSM - Not in HCC
+        const queryQuickEffort = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const quickEffortCount = await executerRequeteSQL('Quick effort - BSM Not in HCC', queryQuickEffort);
+        
+        // 8. Liste des applications Quick effort
+        const queryQuickEffortApps = `
+            SELECT "App Appli" as appName
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("Functional monitoring (BSM)") = 'YES'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const quickEffortAppsResult = await window.DatabaseManager.executeQuery(queryQuickEffortApps);
+        const quickEffortApps = quickEffortAppsResult.map(row => row.appName).filter(name => name && name.trim());
+        
+        ajouterRequeteSQL('Quick effort - Liste Apps', queryQuickEffortApps, quickEffortApps.length);
+        
+        // 9. In HCC
+        const queryInHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("In HCC") = 'YES'
+        `;
+        
+        const inHCCCount = await executerRequeteSQL('In HCC', queryInHCC);
+        
+        // 10. Not In HCC
+        const queryNotInHCC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const notInHCCCount = await executerRequeteSQL('Not In HCC', queryNotInHCC);
+        
+        // 11. Big Effort - Not monitored in BSM - Not in HCC
+        const queryBigEffort = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const bigEffortCount = await executerRequeteSQL('Big Effort - Not monitored BSM Not in HCC', queryBigEffort);
+        
+        // 12. Liste des applications Big Effort
+        const queryBigEffortApps = `
+            SELECT "App Appli" as appName
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("Functional monitoring (BSM)") = 'NO'
+            AND UPPER("In HCC") = 'NO'
+        `;
+        
+        const bigEffortAppsResult = await window.DatabaseManager.executeQuery(queryBigEffortApps);
+        const bigEffortApps = bigEffortAppsResult.map(row => row.appName).filter(name => name && name.trim());
+        
+        ajouterRequeteSQL('Big Effort - Liste Apps', queryBigEffortApps, bigEffortApps.length);
+        
+        // 13. Carte B - Monitoring not needed - Not in HCC - Not Eligible HCC
+        const queryCarteB = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'NO'
+        `;
+        
+        const carteBCount = await executerRequeteSQL('Carte B - Not Eligible HCC', queryCarteB);
+        
+        // 14. Carte C - Under discussion - Not in HCC - Eligible HCC TBD
+        const queryCarteC = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("In HCC") = 'NO'
+            AND UPPER("HCC eligibility") = 'TBC'
+        `;
+        
+        const carteCCount = await executerRequeteSQL('Carte C - HCC TBD', queryCarteC);
+        
+        // 15. Carte D - Under discussion - Not in HCC - Eligible HCC empty
+        const queryCarteD = `
+            SELECT COUNT(*) as count 
+            FROM dioo_donnees 
+            WHERE UPPER("Dx") = 'DP' 
+            AND UPPER("Business criticality") = 'CRITICAL'
+            AND UPPER("Operator/Department") like 'DP%'
+            AND UPPER("In HCC") = 'NO'
+            AND (UPPER("HCC eligibility") = '' OR UPPER("HCC eligibility") IS NULL)
+        `;
+        
+        const carteDCount = await executerRequeteSQL('Carte D - HCC Empty', queryCarteD);
+        
         // Calculer les sections DP avec SQL
         const sectionsDP = await calculerSectionsDPSQL();
 
@@ -4621,6 +5199,17 @@ async function effectuerCalculsConsolidationSQL() {
             pctNotRequiredHCC,
             pctSectionsDP,
             totalSectionsDP,
+            quickEffortCount,
+            quickEffortApps,
+            inHCCCount,
+            notInHCCCount,
+            bigEffortCount,
+            bigEffortApps,
+            // Données pour les cartes A à D
+            miniCardA: inHCCCount,
+            miniCardB: carteBCount,
+            miniCardC: carteCCount,
+            miniCardD: carteDCount,
             sectionsDP: sectionsDP
         };
         
